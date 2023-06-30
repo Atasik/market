@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+
+  market:
+    build: ./
+    command: ./wait-for-postgres.sh db ./market
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    environment:
+      - DB_PASSWORD=qwerty
+      - CLOUD=
+      - KEY=
+      - SECRET=
+
+  db:
+    restart: always
+    image: postgres:latest
+    volumes:
+      - ./schema/:/docker-entrypoint-initdb.d/
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "qwerty"
+      POSTGRES_DB: "database"
+    ports:
+      - 5436:5432
