@@ -380,8 +380,17 @@ func (h *MarketHandler) UpdateProductForm(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "update_product.html", prod)
+	err = h.Tmpl.ExecuteTemplate(w, "update_product.html", struct {
+		Product    product.Product
+		Session    *session.Session
+		TotalCount int
+	}{
+		Product:    prod,
+		Session:    sess,
+		TotalCount: 0,
+	})
 	if err != nil {
+		print(err.Error())
 		http.Error(w, `Template errror`, http.StatusInternalServerError)
 		return
 	}
