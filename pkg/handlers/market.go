@@ -28,6 +28,10 @@ type MarketHandler struct {
 	ImageService services.ImageService
 }
 
+const (
+	restrictedMsg = "Access denied, you are not admin"
+)
+
 func (h *MarketHandler) Index(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 	sess, err := session.SessionFromContext(r.Context())
@@ -42,13 +46,11 @@ func (h *MarketHandler) Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	elems, err := h.ProductRepo.GetAll(orderBy)
+	products, err := h.ProductRepo.GetAll(orderBy)
 	if err != nil {
 		http.Error(w, `Database Error`, http.StatusInternalServerError)
 		return
 	}
-
-	print(elems)
 
 	w.Header().Set("Content-Type", "text/html")
 	err = h.Tmpl.ExecuteTemplate(w, "index.html", struct {
@@ -56,7 +58,7 @@ func (h *MarketHandler) Index(w http.ResponseWriter, r *http.Request) {
 		Session    *session.Session
 		TotalCount int
 	}{
-		Products:   elems,
+		Products:   products,
 		Session:    sess,
 		TotalCount: 0,
 	})
@@ -241,9 +243,13 @@ func (h *MarketHandler) Basket(w http.ResponseWriter, r *http.Request) {
 	err = h.Tmpl.ExecuteTemplate(w, "basket.html", struct {
 		Products   []product.Product
 		TotalPrice int
+		Session    *session.Session
+		TotalCount int
 	}{
 		Products:   products,
 		TotalPrice: 0,
+		Session:    sess,
+		TotalCount: 0,
 	})
 	if err != nil {
 		http.Error(w, "Template error", http.StatusInternalServerError)
@@ -258,7 +264,7 @@ func (h *MarketHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if sess.UserType != "admin" {
-		http.Error(w, "Access denied, you are not admin", http.StatusForbidden)
+		http.Error(w, restrictedMsg, http.StatusForbidden)
 		return
 	}
 
@@ -290,67 +296,153 @@ func (h *MarketHandler) AddProductForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if sess.UserType != "admin" {
-		http.Error(w, "Access denied, you are not admin", http.StatusForbidden)
+		http.Error(w, restrictedMsg, http.StatusForbidden)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "createproduct.html", nil)
+	err = h.Tmpl.ExecuteTemplate(w, "create_product.html", nil)
 	if err != nil {
 		http.Error(w, `Template errror`, http.StatusInternalServerError)
 		return
 	}
 }
 
-// func (h *MarketHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-// 	sess, err := session.SessionFromContext(r.Context())
-// 	if err != nil {
-// 		http.Error(w, "Session Error", http.StatusBadRequest)
-// 		return
-// 	}
-// 	if sess.UserType != "admin" {
-// 		http.Error(w, "Access denied, you are not admin", http.StatusForbidden)
-// 		return
-// 	}
+func (h *MarketHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
+	sess, err := session.SessionFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Session Error", http.StatusBadRequest)
+		return
+	}
+	if sess.UserType != "admin" {
+		http.Error(w, restrictedMsg, http.StatusForbidden)
+		return
+	}
 
-// 	vars := mux.Vars(r)
-// 	id, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, `Bad id`, http.StatusBadRequest)
-// 		return
-// 	}
+	r.ParseMultipartForm(10 << 20)
+	product := product.Product{}
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	err = decoder.Decode(&product, r.PostForm)
+	if err != nil {
+		print(err.Error())
+		http.Error(w, `Bad form`, http.StatusBadRequest)
+		return
+	}
 
-// 	r.ParseForm()
-// 	prod := product.Product{}
-// 	decoder := schema.NewDecoder()
-// 	decoder.IgnoreUnknownKeys(true)
-// 	err = decoder.Decode(prod, r.PostForm)
-// 	if err != nil {
-// 		http.Error(w, `Bad form`, http.StatusBadRequest)
-// 		return
-// 	}
-// 	prod.ID = int(id)
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Error Retrieving the File", http.StatusBadRequest)
+		return
+	}
 
-// 	input := product.UpdateProductInput{
-// 		Title:       &prod.Title,
-// 		Price:       &prod.Price,
-// 		Tag:         &prod.Tag,
-// 		Type:        &prod.Type,
-// 		Description: &prod.Description,
-// 		Count:       &prod.Count,
-// 		ImageURL:    &prod.ImageURL,
-// 	}
+	url, err := h.ImageService.Upload(file)
+	if err != nil {
+		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
+		return
+	}
 
-// 	ok, err := h.ProductRepo.Update(prod.ID, input)
-// 	if err != nil {
-// 		http.Error(w, `Database error`, http.StatusInternalServerError)
-// 		return
-// 	}
+	product.ImageURL = url
 
-// 	h.Logger.Infof("update: %v %v", prod, ok)
+	defer file.Close()
 
-// 	http.Redirect(w, r, "/", http.StatusFound)
-// }
+	lastID, err := h.ProductRepo.Create(product)
+	if err != nil {
+		http.Error(w, `Database Error`, http.StatusInternalServerError)
+		return
+	}
+	h.Logger.Infof("Insert into Products with id LastInsertId: %v", lastID)
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (h *MarketHandler) UpdateProductForm(w http.ResponseWriter, r *http.Request) {
+	sess, err := session.SessionFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Session Error", http.StatusBadRequest)
+		return
+	}
+	if sess.UserType != "admin" {
+		http.Error(w, restrictedMsg, http.StatusForbidden)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, `Bad id`, http.StatusBadRequest)
+		return
+	}
+
+	prod, err := h.ProductRepo.GetByID(id)
+	if err != nil {
+		http.Error(w, `Database Error`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	err = h.Tmpl.ExecuteTemplate(w, "update_product.html", prod)
+	if err != nil {
+		http.Error(w, `Template errror`, http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *MarketHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	sess, err := session.SessionFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Session Error", http.StatusBadRequest)
+		return
+	}
+	if sess.UserType != "admin" {
+		http.Error(w, restrictedMsg, http.StatusForbidden)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, `Bad id`, http.StatusBadRequest)
+		return
+	}
+
+	r.ParseMultipartForm(10 << 20)
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	var input product.UpdateProductInput
+	err = decoder.Decode(&input, r.PostForm)
+	if err != nil {
+		http.Error(w, `Bad form`, http.StatusBadRequest)
+		return
+	}
+
+	file, _, err := r.FormFile("file")
+	switch err {
+	case nil:
+		url, err := h.ImageService.Upload(file)
+		if err != nil {
+			http.Error(w, `ImageService Error`, http.StatusInternalServerError)
+			return
+		}
+
+		input.ImageURL = &url
+		defer file.Close()
+	case http.ErrMissingFile:
+		fmt.Println("no file")
+	default:
+		http.Error(w, "Error Retrieving the File", http.StatusBadRequest)
+		return
+	}
+
+	ok, err := h.ProductRepo.Update(id, input)
+	if err != nil {
+		http.Error(w, `Database error`, http.StatusInternalServerError)
+		return
+	}
+
+	h.Logger.Infof("update: %v %v", "heh", ok)
+
+	http.Redirect(w, r, "/", http.StatusFound)
+}
 
 func (h *MarketHandler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
@@ -370,59 +462,12 @@ func (h *MarketHandler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
 		DeliveryDate: time.Now().Add(4 * 24 * time.Hour),
 	}
 
-	id, err := h.OrderRepo.Create(sess.UserID, order, products)
+	lastID, err := h.OrderRepo.Create(sess.UserID, order, products)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Print("kekw", id)
-	http.Redirect(w, r, "/", http.StatusFound)
-}
 
-func (h *MarketHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-	if sess.UserType != "admin" {
-		http.Error(w, "Access denied, you are not admin", http.StatusForbidden)
-		return
-	}
-
-	r.ParseMultipartForm(10 << 20)
-	product := product.Product{}
-	decoder := schema.NewDecoder()
-	decoder.IgnoreUnknownKeys(true)
-	err = decoder.Decode(&product, r.PostForm)
-	if err != nil {
-		print(err.Error())
-		http.Error(w, `Bad form`, http.StatusBadRequest)
-		return
-	}
-
-	file, _, err := r.FormFile("file")
-	if err != nil {
-		fmt.Println("Error Retrieving the File")
-		fmt.Println(err)
-		return
-	}
-
-	url, err := h.ImageService.Upload(file)
-	if err != nil {
-		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
-		return
-	}
-
-	product.ImageURL = url
-
-	defer file.Close()
-
-	lastID, err := h.ProductRepo.Create(product)
-	if err != nil {
-		http.Error(w, `Database Error`, http.StatusInternalServerError)
-		return
-	}
-	h.Logger.Infof("Insert with id LastInsertId: %v", lastID)
+	h.Logger.Infof("Insert into Orders with id LastInsertId: %v", lastID)
 	http.Redirect(w, r, "/", http.StatusFound)
 }

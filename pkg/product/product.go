@@ -21,14 +21,14 @@ type Product struct {
 }
 
 type UpdateProductInput struct {
-	Title       *string
-	Price       *float32
-	Tag         *string
-	Type        *string
-	Description *string
-	Count       *int
-	Views       *int
-	ImageURL    *string
+	Title       *string  `schema:"title"`
+	Price       *float32 `schema:"price"`
+	Tag         *string  `schema:"tag"`
+	Type        *string  `schema:"type"`
+	Description *string  `schema:"description"`
+	Count       *int     `schema:"count"`
+	Views       *int     `schema:"views"`
+	ImageURL    *string  `schema:"image_url"`
 }
 
 func (i UpdateProductInput) Validate() error {

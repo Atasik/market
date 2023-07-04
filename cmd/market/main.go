@@ -103,7 +103,8 @@ func main() {
 
 	r.HandleFunc("/products/new", productHandler.AddProductForm).Methods("GET")
 	r.HandleFunc("/products/new", productHandler.AddProduct).Methods("POST")
-	//r.HandleFunc("/products/update/{id}", productHandler.AddProduct).Methods("POST")
+	r.HandleFunc("/products/update/{id}", productHandler.UpdateProductForm).Methods("GET")
+	r.HandleFunc("/products/update/{id}", productHandler.UpdateProduct).Methods("POST")
 	r.HandleFunc("/products/{id}", productHandler.Product).Methods("PUT")
 	r.HandleFunc("/products/{id}", productHandler.Product).Methods("GET")
 	r.HandleFunc("/products/{id}", productHandler.DeleteProduct).Methods("DELETE")
