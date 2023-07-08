@@ -97,16 +97,6 @@
                                     <h5>{{.TotalPrice}} rub.</h5>
                                  </div>
                                  <a href="/register_order" class="btn btn-dark btn-block btn-lg" data-mdb-ripple-color="dark">Buy</a>
-                                 <script>
-                                    function execute(){
-                                      var box = document.getElementById('products');
-                                      var count = box.childElementCount;
-                                      document.getElementById('out').innerHTML = 'Amount of products: ' + (count-1) ;
-                                    }
-                                 </script>
-                                 <script>
-                                    execute()
-                                 </script>
                               </div>
                            </div>
                         </div>
@@ -134,6 +124,16 @@
              },
            });
          })
+      </script>
+      <script>
+         function execute(){
+           var box = document.getElementById('products');
+           var count = box.childElementCount;
+           document.getElementById('out').innerHTML = 'Amount of products: ' + (count-1) ;
+         }
+      </script>
+      <script>
+         execute()
       </script>
    </body>
 </html>
