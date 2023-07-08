@@ -218,9 +218,13 @@ func (h *MarketHandler) History(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	err = h.Tmpl.ExecuteTemplate(w, "history.html", struct {
-		Landings []order.Order
+		Landings   []order.Order
+		Session    *session.Session
+		TotalCount int
 	}{
-		Landings: orders,
+		Landings:   orders,
+		Session:    sess,
+		TotalCount: 0,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
