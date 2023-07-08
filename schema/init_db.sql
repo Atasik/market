@@ -36,6 +36,17 @@ CREATE TABLE orders
   delivery_date date   not null
 );
 
+CREATE TABLE reviews
+(
+  id              serial                                         not null unique,
+  creation_date   date                                           not null,
+  product_id      int references products (id) on delete cascade not null,
+  user_id         int references users    (id)                   not null,
+  username        varchar(255)                                   not null,
+  review_text     varchar(255)                                   not null,
+  rating          int                                            not null
+);
+
 CREATE TABLE products_users
 (
   id              serial                                         not null unique,

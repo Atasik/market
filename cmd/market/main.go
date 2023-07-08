@@ -127,6 +127,7 @@ func main() {
 	mux = middleware.AccessLog(logger, mux)
 	mux = middleware.Panic(mux)
 
+	//поменять
 	addr := ":" + viper.GetString("port")
 	logger.Infow("starting server",
 		"type", "START",
