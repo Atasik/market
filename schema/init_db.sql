@@ -24,22 +24,22 @@ CREATE TABLE products
   type          varchar(255) not null,
   description   varchar(255) not null,
   count         int          not null,
-  creation_date date         not null,
+  creation_date timestamp    not null,
   views         int          not null,
   image_url     varchar(255) not null
 );
 
 CREATE TABLE orders
 (
-  id            serial not null unique,
-  creation_date date   not null,
-  delivery_date date   not null
+  id            serial      not null unique,
+  creation_date timestamp   not null,
+  delivery_date timestamp   not null
 );
 
 CREATE TABLE reviews
 (
   id              serial                                         not null unique,
-  creation_date   date                                           not null,
+  creation_date   timestamp                                      not null,
   product_id      int references products (id) on delete cascade not null,
   user_id         int references users    (id)                   not null,
   username        varchar(255)                                   not null,

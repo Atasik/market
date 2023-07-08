@@ -27,8 +27,8 @@
                                  <div class="d-flex justify-content-between align-items-center mb-5">
                                     <h1 class="fw-bold mb-0 text-black">Shopping Cart</h1>
                                  </div>
+                                 <hr class="my-4">
                                  <div class="products" id="products">
-                                    <hr class="my-4">
                                     {{range .Products}}
                                     <div class="row mb-4 d-flex justify-content-between align-items-center" id="product">
                                        <div class="col-md-2 col-lg-2 col-xl-2">
@@ -40,18 +40,6 @@
                                           <h6 class="text-muted">{{.Title}}</h6>
                                           <h6 class="text-black mb-0">{{.Description}}</h6>
                                        </div>
-                                       <div class="col-md-3 col-lg-3 col-xl-2 d-flex">
-                                          <button class="btn btn-link px-2"
-                                             onclick="this.parentNode.querySelector('input[type=number]').stepDown()">
-                                          <i class="fas fa-minus"></i>
-                                          </button>
-                                          <input id="form1" min="0" name="quantity" value="1" type="number"
-                                             class="form-control form-control-sm" />
-                                          <button class="btn btn-link px-2"
-                                             onclick="this.parentNode.querySelector('input[type=number]').stepUp()">
-                                          <i class="fas fa-plus"></i>
-                                          </button>
-                                       </div>
                                        <div class="col-md-2 col-lg-2" id="price">
                                           <span class="mb-0">{{.Price}} </span>rub.
                                        </div>
@@ -62,6 +50,7 @@
                                     </div>
                                     {{end}}
                                  </div>
+                                 </hr>
                                  <hr class="my-4">
                                  <div class="pt-5">
                                     <h6 class="mb-0"><a href="/" class="btn btn-outline-dark" role="button"><i
@@ -75,7 +64,6 @@
                                  <hr class="my-4">
                                  <div class="d-flex justify-content-between mb-4">
                                     <h5 class="text-uppercase" id="out" aria-valuenow=""></h5>
-                                    <h5>{{.TotalPrice}} rub.</h5>
                                  </div>
                                  <h5 class="text-uppercase mb-3">Shipping</h5>
                                  <div class="mb-4 pb-2">
@@ -93,8 +81,6 @@
                                  </div>
                                  <hr class="my-4">
                                  <div class="d-flex justify-content-between mb-5">
-                                    <h5 class="text-uppercase">Total price</h5>
-                                    <h5>{{.TotalPrice}} rub.</h5>
                                  </div>
                                  <a href="/register_order" class="btn btn-dark btn-block btn-lg" data-mdb-ripple-color="dark">Buy</a>
                               </div>
@@ -127,9 +113,15 @@
       </script>
       <script>
          function execute(){
-           var box = document.getElementById('products');
-           var count = box.childElementCount;
-           document.getElementById('out').innerHTML = 'Amount of products: ' + (count-1) ;
+           var products = document.querySelectorAll('[id="price"]');
+           var total = 0;
+           for (var i = 0; i < products.length; i++) {
+              var priceElement = products[i];
+              var priceText = priceElement.textContent.trim();
+              var price = parseFloat(priceText);
+              total += price;
+           }
+           document.getElementById('out').innerHTML = '<h5> Amount of products: ' + products.length + '</h5>' + '<h5 class="text-uppercase"> Total Price: ' + total + ' rub.</h5>';
          }
       </script>
       <script>
