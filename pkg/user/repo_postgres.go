@@ -42,20 +42,14 @@ func (repo *UserPostgresqlRepository) Authorize(login, pass string) (User, error
 }
 
 func (repo *UserPostgresqlRepository) Register(login, pass string) (int, error) {
-	tx, err := repo.DB.Begin()
-	if err != nil {
-		return 0, err
-	}
-
 	var id int
 	query := "INSERT INTO users (username, user_mode, password) VALUES ($1, $2, $3) RETURNING id"
 
-	row := tx.QueryRow(query, login, "user", pass)
-	err = row.Scan(&id)
+	row := repo.DB.QueryRow(query, login, "user", pass)
+	err := row.Scan(&id)
 	if err != nil {
-		tx.Rollback()
 		return 0, ErrUserExists
 	}
 
-	return id, tx.Commit()
+	return id, nil
 }

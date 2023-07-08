@@ -477,10 +477,18 @@ func (h *MarketHandler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
 
 	lastID, err := h.OrderRepo.Create(sess.UserID, order, products)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, `Database error`, http.StatusInternalServerError)
 		return
 	}
 
 	h.Logger.Infof("Insert into Orders with id LastInsertId: %v", lastID)
+
+	_, err = h.BasketRepo.DeleteAll(sess.UserID)
+	if err != nil {
+		http.Error(w, `Database error`, http.StatusInternalServerError)
+		return
+	}
+	sess.PurgeBasket()
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }

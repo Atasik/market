@@ -29,6 +29,10 @@ func (s *Session) DeletePurchase(id int) {
 	delete(s.Purchases, id)
 }
 
+func (s *Session) PurgeBasket() {
+	s.Purchases = make(map[int]struct{})
+}
+
 func NewSession(userID int, userName, userType string) *Session {
 	// лучше генерировать из заданного алфавита, но так писать меньше и для учебного примера ОК
 	randID := make([]byte, 16)

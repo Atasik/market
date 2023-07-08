@@ -53,3 +53,12 @@ func (repo *BasketPostgresqlRepository) DeleteProduct(userId, productId int) (bo
 	}
 	return true, nil
 }
+
+func (repo *BasketPostgresqlRepository) DeleteAll(userId int) (bool, error) {
+	query := `DELETE FROM products_users WHERE user_id = $1`
+	_, err := repo.DB.Exec(query, userId)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
