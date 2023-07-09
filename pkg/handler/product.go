@@ -3,33 +3,20 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"market/pkg/model"
-	"market/pkg/repository"
-	"market/pkg/service"
 	"market/pkg/session"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
-	"go.uber.org/zap"
 )
-
-type MarketHandler struct {
-	Tmpl         *template.Template
-	Logger       *zap.SugaredLogger
-	Sessions     *session.SessionsManager
-	Repository   *repository.Repository
-	ImageService service.ImageService
-}
 
 const (
 	restrictedMsg = "Access denied, you are not admin"
 )
 
-func (h *MarketHandler) Index(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 	sess, err := session.SessionFromContext(r.Context())
 	if err == nil {
@@ -65,7 +52,7 @@ func (h *MarketHandler) Index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *MarketHandler) About(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) About(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	err := h.Tmpl.ExecuteTemplate(w, "about.html", nil)
 	if err != nil {
@@ -74,16 +61,7 @@ func (h *MarketHandler) About(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *MarketHandler) Privacy(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	err := h.Tmpl.ExecuteTemplate(w, "privacy.html", nil)
-	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *MarketHandler) Product(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Product(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		print("no sess")
@@ -143,122 +121,7 @@ func (h *MarketHandler) Product(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *MarketHandler) AddProductToBasket(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	if err != nil {
-		fmt.Print(err.Error())
-		http.Error(w, "Database Error", http.StatusBadRequest)
-		return
-	}
-	vars := mux.Vars(r)
-	productId, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		fmt.Print(err.Error())
-		http.Error(w, "Bad Id", http.StatusBadGateway)
-		return
-	}
-
-	basketId, err := h.Repository.BasketRepo.AddProduct(sess.UserID, productId)
-	if err != nil {
-		fmt.Print(err.Error())
-		http.Error(w, "Database Error", http.StatusInternalServerError)
-		return
-	}
-
-	sess.AddPurchase(productId)
-	w.Header().Set("Content-type", "application/json")
-	respJSON, _ := json.Marshal(map[string]int{
-		"updated": basketId,
-	})
-	w.Write(respJSON)
-}
-
-func (h *MarketHandler) DeleteProductFromBasket(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-	vars := mux.Vars(r)
-	id, err := strconv.ParseUint(vars["id"], 10, 32)
-	if err != nil {
-		http.Error(w, "Bad Id", http.StatusBadGateway)
-		return
-	}
-
-	_, err = h.Repository.BasketRepo.DeleteProduct(sess.UserID, int(id))
-	if err != nil {
-		http.Error(w, "Database Error", http.StatusInternalServerError)
-		return
-	}
-
-	sess.DeletePurchase(int(id))
-	w.Header().Set("Content-type", "application/json")
-	respJSON, _ := json.Marshal(map[string]uint32{
-		"updated": uint32(id),
-	})
-	w.Write(respJSON)
-}
-
-func (h *MarketHandler) History(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-
-	orders, err := h.Repository.OrderRepo.GetAll(sess.UserID)
-	if err != nil {
-		http.Error(w, "Database Error", http.StatusBadRequest)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "history.html", struct {
-		Landings   []model.Order
-		Session    *session.Session
-		TotalCount int
-	}{
-		Landings:   orders,
-		Session:    sess,
-		TotalCount: 0,
-	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *MarketHandler) Basket(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	products := []model.Product{}
-	if err == nil {
-		products, err = h.Repository.BasketRepo.GetByID(sess.UserID)
-		if err != nil {
-			http.Error(w, `Database Error`, http.StatusInternalServerError)
-			return
-		}
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "basket.html", struct {
-		Products   []model.Product
-		TotalPrice int
-		Session    *session.Session
-		TotalCount int
-	}{
-		Products:   products,
-		TotalPrice: 0,
-		Session:    sess,
-		TotalCount: 0,
-	})
-	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *MarketHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Session Error", http.StatusBadRequest)
@@ -290,7 +153,7 @@ func (h *MarketHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write(respJSON)
 }
 
-func (h *MarketHandler) AddProductForm(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AddProductForm(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Session Error", http.StatusBadRequest)
@@ -309,7 +172,7 @@ func (h *MarketHandler) AddProductForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *MarketHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AddProduct(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Session Error", http.StatusBadRequest)
@@ -356,7 +219,7 @@ func (h *MarketHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func (h *MarketHandler) UpdateProductForm(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateProductForm(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Session Error", http.StatusBadRequest)
@@ -397,7 +260,7 @@ func (h *MarketHandler) UpdateProductForm(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (h *MarketHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Session Error", http.StatusBadRequest)
@@ -450,42 +313,6 @@ func (h *MarketHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Infof("update: %v %v", "heh", ok)
-
-	http.Redirect(w, r, "/", http.StatusFound)
-}
-
-func (h *MarketHandler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-
-	products, err := h.Repository.BasketRepo.GetByID(sess.UserID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	order := model.Order{
-		CreationDate: time.Now(),
-		DeliveryDate: time.Now().Add(4 * 24 * time.Hour),
-	}
-
-	lastID, err := h.Repository.OrderRepo.Create(sess.UserID, order, products)
-	if err != nil {
-		http.Error(w, `Database error`, http.StatusInternalServerError)
-		return
-	}
-
-	h.Logger.Infof("Insert into Orders with id LastInsertId: %v", lastID)
-
-	_, err = h.Repository.BasketRepo.DeleteAll(sess.UserID)
-	if err != nil {
-		http.Error(w, `Database error`, http.StatusInternalServerError)
-		return
-	}
-	sess.PurgeBasket()
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }

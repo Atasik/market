@@ -19,7 +19,6 @@ var (
 		"/":        {},
 		"/product": {},
 		"/about":   {},
-		"/privacy": {},
 		"/basket":  {},
 	}
 )
