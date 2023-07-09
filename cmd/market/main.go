@@ -1,26 +1,20 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 
 	"market/middleware"
-	"market/pkg/basket"
-	"market/pkg/handlers"
-	"market/pkg/order"
-	"market/pkg/product"
-	"market/pkg/services"
+	"market/pkg/handler"
+	"market/pkg/repository"
+	"market/pkg/service"
 	"market/pkg/session"
-	"market/pkg/user"
 
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 
-	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -30,40 +24,31 @@ func main() {
 		panic(err)
 	}
 
-	cloud := os.Getenv("cloud")
-	key := os.Getenv("key")
-	secret := os.Getenv("secret")
-	password := os.Getenv("db_password")
-
 	templates := template.Must(template.ParseGlob("./static/html/*"))
 
-	psqlconn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", viper.GetString("db.host"), viper.GetString("db.port"), viper.GetString("db.username"), password, viper.GetString("db.dbname"))
-	db, err := sqlx.Connect("postgres", psqlconn)
+	db, err := repository.NewPostgresqlDB(repository.Config{
+		Host:     viper.GetString("db.host"),
+		Port:     viper.GetString("db.port"),
+		Username: viper.GetString("db.username"),
+		DBName:   viper.GetString("db.dbname"),
+		SSLMode:  viper.GetString("db.sslmode"),
+		Password: os.Getenv("db_password"),
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	//проверка на то, что произошёл коннект
-	err = db.Ping()
+	cld, err := service.NewCloudinary(service.Config{
+		Cloud:  os.Getenv("cloud"),
+		Key:    os.Getenv("key"),
+		Secret: os.Getenv("secret"),
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	cld, err := cloudinary.NewFromParams(cloud, key, secret)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = cld.Admin.Ping(context.TODO())
-	if err != nil {
-		panic(err)
-	}
-
-	newCloud := services.NewImageServiceCloudinary(cld)
-	userRepo := user.NewPostgresqlRepo(db)
-	productRepo := product.NewPostgresqlRepo(db)
-	orderRepo := order.NewPostgresqlRepo(db)
-	basketRepo := basket.NewPostgresqlRepo(db)
+	newCloud := service.NewImageServiceCloudinary(cld)
+	repos := repository.NewRepository(db)
 	sessionManager := session.NewSessionsManager()
 	zapLogger, err := zap.NewProduction()
 	if err != nil {
@@ -72,19 +57,17 @@ func main() {
 	defer zapLogger.Sync() // flushes buffer, if any
 	logger := zapLogger.Sugar()
 
-	userHandler := &handlers.UserHandler{
-		Tmpl:     templates,
-		Sessions: sessionManager,
-		UserRepo: userRepo,
-		Logger:   logger,
+	userHandler := &handler.UserHandler{
+		Tmpl:       templates,
+		Sessions:   sessionManager,
+		Repository: repos,
+		Logger:     logger,
 	}
 
-	productHandler := &handlers.MarketHandler{
+	productHandler := &handler.MarketHandler{
 		Tmpl:         templates,
 		Sessions:     sessionManager,
-		ProductRepo:  productRepo,
-		OrderRepo:    orderRepo,
-		BasketRepo:   basketRepo,
+		Repository:   repos,
 		Logger:       logger,
 		ImageService: newCloud,
 	}
@@ -133,7 +116,8 @@ func main() {
 		"type", "START",
 		"addr", addr,
 	)
-	http.ListenAndServe(addr, mux)
+
+	log.Fatalln(http.ListenAndServe(addr, mux))
 }
 
 func initConfig() error {

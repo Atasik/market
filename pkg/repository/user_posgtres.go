@@ -1,12 +1,18 @@
-package user
+package repository
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"market/pkg/model"
 
 	"github.com/jmoiron/sqlx"
 )
+
+type UserRepo interface {
+	Authorize(login, pass string) (model.User, error)
+	Register(login, pass string) (int, error)
+}
 
 var (
 	ErrNoUser     = errors.New("no user found")
@@ -18,24 +24,24 @@ type UserPostgresqlRepository struct {
 	DB *sqlx.DB
 }
 
-func NewPostgresqlRepo(db *sqlx.DB) *UserPostgresqlRepository {
+func NewUserPostgresqlRepo(db *sqlx.DB) *UserPostgresqlRepository {
 	return &UserPostgresqlRepository{DB: db}
 }
 
-func (repo *UserPostgresqlRepository) Authorize(login, pass string) (User, error) {
-	var user User
-	query := "SELECT * FROM users WHERE username = $1"
+func (repo *UserPostgresqlRepository) Authorize(login, pass string) (model.User, error) {
+	var user model.User
+	query := fmt.Sprintf("SELECT * FROM %s WHERE username = $1", usersTable)
 
 	if err := repo.DB.Get(&user, query, login); err != nil {
 		fmt.Print(user)
 		if err == sql.ErrNoRows {
-			return User{}, ErrNoUser
+			return model.User{}, ErrNoUser
 		}
-		return User{}, err
+		return model.User{}, err
 	}
 
 	if user.Password != pass {
-		return User{}, ErrBadPass
+		return model.User{}, ErrBadPass
 	}
 
 	return user, nil
@@ -43,7 +49,7 @@ func (repo *UserPostgresqlRepository) Authorize(login, pass string) (User, error
 
 func (repo *UserPostgresqlRepository) Register(login, pass string) (int, error) {
 	var id int
-	query := "INSERT INTO users (username, user_mode, password) VALUES ($1, $2, $3) RETURNING id"
+	query := fmt.Sprintf("INSERT INTO %s (username, user_mode, password) VALUES ($1, $2, $3) RETURNING id", usersTable)
 
 	row := repo.DB.QueryRow(query, login, "user", pass)
 	err := row.Scan(&id)

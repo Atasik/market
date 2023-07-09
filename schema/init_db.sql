@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS products_users;
 DROP TABLE IF EXISTS products_orders;
 DROP TABLE IF EXISTS orders_users;

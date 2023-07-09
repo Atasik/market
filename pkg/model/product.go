@@ -1,4 +1,4 @@
-package product
+package model
 
 import (
 	"errors"
@@ -37,13 +37,4 @@ func (i UpdateProductInput) Validate() error {
 	}
 
 	return nil
-}
-
-type ProductRepo interface {
-	GetAll(orderBy string) ([]Product, error)
-	GetByID(productId int) (Product, error)
-	Create(product Product) (int, error)
-	Update(productId int, input UpdateProductInput) (bool, error)
-	Delete(productId int) (bool, error)
-	GetByType(productType string, limit int) ([]Product, error)
 }

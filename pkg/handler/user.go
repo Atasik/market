@@ -1,19 +1,19 @@
-package handlers
+package handler
 
 import (
 	"html/template"
+	"market/pkg/repository"
 	"market/pkg/session"
-	"market/pkg/user"
 	"net/http"
 
 	"go.uber.org/zap"
 )
 
 type UserHandler struct {
-	Tmpl     *template.Template
-	Logger   *zap.SugaredLogger
-	Sessions *session.SessionsManager
-	UserRepo user.UserRepo
+	Tmpl       *template.Template
+	Logger     *zap.SugaredLogger
+	Sessions   *session.SessionsManager
+	Repository *repository.Repository
 }
 
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -29,8 +29,8 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	login := r.FormValue("login")
 	password := r.FormValue("password")
 
-	id, err := h.UserRepo.Register(login, password)
-	if err == user.ErrUserExists {
+	id, err := h.Repository.Register(login, password)
+	if err == repository.ErrUserExists {
 		http.Error(w, `User already exists Error`, http.StatusBadRequest)
 		return
 	}
@@ -55,12 +55,12 @@ func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
-	u, err := h.UserRepo.Authorize(r.FormValue("login"), r.FormValue("password"))
-	if err == user.ErrNoUser {
+	u, err := h.Repository.UserRepo.Authorize(r.FormValue("login"), r.FormValue("password"))
+	if err == repository.ErrNoUser {
 		http.Error(w, `User doesn't exist Error`, http.StatusUnauthorized)
 		return
 	}
-	if err == user.ErrBadPass {
+	if err == repository.ErrBadPass {
 		http.Error(w, `Bad password Error`, http.StatusUnauthorized)
 		return
 	}

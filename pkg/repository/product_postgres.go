@@ -1,29 +1,39 @@
-package product
+package repository
 
 import (
 	"fmt"
+	"market/pkg/model"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
 
+type ProductRepo interface {
+	GetAll(orderBy string) ([]model.Product, error)
+	GetByID(productId int) (model.Product, error)
+	Create(product model.Product) (int, error)
+	Update(productId int, input model.UpdateProductInput) (bool, error)
+	Delete(productId int) (bool, error)
+	GetByType(productType string, limit int) ([]model.Product, error)
+}
+
 type ProductPostgresqlRepository struct {
 	DB *sqlx.DB
 }
 
-func NewPostgresqlRepo(db *sqlx.DB) *ProductPostgresqlRepository {
+func NewProductPostgresqlRepo(db *sqlx.DB) *ProductPostgresqlRepository {
 	return &ProductPostgresqlRepository{DB: db}
 }
 
-func (repo *ProductPostgresqlRepository) GetAll(orderBy string) ([]Product, error) {
-	var products []Product
+func (repo *ProductPostgresqlRepository) GetAll(orderBy string) ([]model.Product, error) {
+	var products []model.Product
 	var setValue string
 
 	if orderBy != "" {
 		setValue = fmt.Sprintf("ORDER BY %s DESC", orderBy)
 	}
 
-	query := fmt.Sprintf("SELECT * FROM products %s", setValue)
+	query := fmt.Sprintf("SELECT * FROM %s %s", productsTable, setValue)
 
 	if err := repo.DB.Select(&products, query); err != nil {
 		print(err.Error())
@@ -33,20 +43,20 @@ func (repo *ProductPostgresqlRepository) GetAll(orderBy string) ([]Product, erro
 	return products, nil
 }
 
-func (repo *ProductPostgresqlRepository) GetByID(productId int) (Product, error) {
-	var product Product
-	query := "SELECT * FROM products WHERE id = $1"
+func (repo *ProductPostgresqlRepository) GetByID(productId int) (model.Product, error) {
+	var product model.Product
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", productsTable)
 
 	if err := repo.DB.Get(&product, query, productId); err != nil {
-		return Product{}, err
+		return model.Product{}, err
 	}
 
 	return product, nil
 }
 
-func (repo *ProductPostgresqlRepository) Create(product Product) (int, error) {
+func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, error) {
 	var productId int
-	query := "INSERT INTO products (title, price, tag, type, description, count, creation_date, views, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
+	query := fmt.Sprintf("INSERT INTO %s (title, price, tag, type, description, count, creation_date, views, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id", productsTable)
 
 	row := repo.DB.QueryRow(query, product.Title, product.Price, product.Tag, product.Type, product.Description, product.Count, product.CreationDate, product.Views, product.ImageURL)
 	err := row.Scan(&productId)
@@ -57,7 +67,7 @@ func (repo *ProductPostgresqlRepository) Create(product Product) (int, error) {
 	return productId, nil
 }
 
-func (repo *ProductPostgresqlRepository) Update(productId int, input UpdateProductInput) (bool, error) {
+func (repo *ProductPostgresqlRepository) Update(productId int, input model.UpdateProductInput) (bool, error) {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -110,7 +120,7 @@ func (repo *ProductPostgresqlRepository) Update(productId int, input UpdateProdu
 
 	setQuery := strings.Join(setValues, ", ")
 
-	query := fmt.Sprintf(`UPDATE products SET %s WHERE id = $%d`, setQuery, argId)
+	query := fmt.Sprintf(`UPDATE %s SET %s WHERE id = $%d`, productsTable, setQuery, argId)
 	args = append(args, productId)
 
 	_, err := repo.DB.Exec(query, args...)
@@ -121,7 +131,7 @@ func (repo *ProductPostgresqlRepository) Update(productId int, input UpdateProdu
 }
 
 func (repo *ProductPostgresqlRepository) Delete(productId int) (bool, error) {
-	query := "DELETE FROM products WHERE id = $1"
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", productsTable)
 
 	_, err := repo.DB.Exec(query, productId)
 	if err != nil {
@@ -130,9 +140,9 @@ func (repo *ProductPostgresqlRepository) Delete(productId int) (bool, error) {
 	return true, nil
 }
 
-func (repo *ProductPostgresqlRepository) GetByType(productType string, limit int) ([]Product, error) {
-	var products []Product
-	query := "SELECT * FROM products WHERE type = $1"
+func (repo *ProductPostgresqlRepository) GetByType(productType string, limit int) ([]model.Product, error) {
+	var products []model.Product
+	query := fmt.Sprintf("SELECT * FROM %s WHERE type = $1", productsTable)
 
 	if err := repo.DB.Select(&products, query, productType); err != nil {
 		print(err.Error())

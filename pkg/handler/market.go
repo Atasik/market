@@ -1,13 +1,12 @@
-package handlers
+package handler
 
 import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"market/pkg/basket"
-	"market/pkg/order"
-	"market/pkg/product"
-	"market/pkg/services"
+	"market/pkg/model"
+	"market/pkg/repository"
+	"market/pkg/service"
 	"market/pkg/session"
 	"net/http"
 	"strconv"
@@ -22,10 +21,8 @@ type MarketHandler struct {
 	Tmpl         *template.Template
 	Logger       *zap.SugaredLogger
 	Sessions     *session.SessionsManager
-	ProductRepo  product.ProductRepo
-	OrderRepo    order.OrderRepo
-	BasketRepo   basket.BasketRepo
-	ImageService services.ImageService
+	Repository   *repository.Repository
+	ImageService service.ImageService
 }
 
 const (
@@ -36,7 +33,7 @@ func (h *MarketHandler) Index(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 	sess, err := session.SessionFromContext(r.Context())
 	if err == nil {
-		products, err := h.BasketRepo.GetByID(sess.UserID)
+		products, err := h.Repository.BasketRepo.GetByID(sess.UserID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -46,7 +43,7 @@ func (h *MarketHandler) Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	products, err := h.ProductRepo.GetAll(orderBy)
+	products, err := h.Repository.ProductRepo.GetAll(orderBy)
 	if err != nil {
 		http.Error(w, `Database Error`, http.StatusInternalServerError)
 		return
@@ -54,7 +51,7 @@ func (h *MarketHandler) Index(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	err = h.Tmpl.ExecuteTemplate(w, "index.html", struct {
-		Products   []product.Product
+		Products   []model.Product
 		Session    *session.Session
 		TotalCount int
 	}{
@@ -106,23 +103,23 @@ func (h *MarketHandler) Product(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedProduct, err := h.ProductRepo.GetByID(id)
+	selectedProduct, err := h.Repository.ProductRepo.GetByID(id)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
 
-	input := product.UpdateProductInput{
+	input := model.UpdateProductInput{
 		Views: &selectedProduct.Views,
 	}
 
-	_, err = h.ProductRepo.Update(selectedProduct.ID, input)
+	_, err = h.Repository.ProductRepo.Update(selectedProduct.ID, input)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
 
-	relatedProducts, err := h.ProductRepo.GetByType(selectedProduct.Type, 5)
+	relatedProducts, err := h.Repository.ProductRepo.GetByType(selectedProduct.Type, 5)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -130,8 +127,8 @@ func (h *MarketHandler) Product(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	err = h.Tmpl.ExecuteTemplate(w, "product.html", struct {
-		Product    product.Product
-		Related    []product.Product
+		Product    model.Product
+		Related    []model.Product
 		Session    *session.Session
 		TotalCount int
 	}{
@@ -161,7 +158,7 @@ func (h *MarketHandler) AddProductToBasket(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	basketId, err := h.BasketRepo.AddProduct(sess.UserID, productId)
+	basketId, err := h.Repository.BasketRepo.AddProduct(sess.UserID, productId)
 	if err != nil {
 		fmt.Print(err.Error())
 		http.Error(w, "Database Error", http.StatusInternalServerError)
@@ -189,7 +186,7 @@ func (h *MarketHandler) DeleteProductFromBasket(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	_, err = h.BasketRepo.DeleteProduct(sess.UserID, int(id))
+	_, err = h.Repository.BasketRepo.DeleteProduct(sess.UserID, int(id))
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -210,7 +207,7 @@ func (h *MarketHandler) History(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orders, err := h.OrderRepo.GetAll(sess.UserID)
+	orders, err := h.Repository.OrderRepo.GetAll(sess.UserID)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusBadRequest)
 		return
@@ -218,7 +215,7 @@ func (h *MarketHandler) History(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	err = h.Tmpl.ExecuteTemplate(w, "history.html", struct {
-		Landings   []order.Order
+		Landings   []model.Order
 		Session    *session.Session
 		TotalCount int
 	}{
@@ -234,9 +231,9 @@ func (h *MarketHandler) History(w http.ResponseWriter, r *http.Request) {
 
 func (h *MarketHandler) Basket(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
-	products := []product.Product{}
+	products := []model.Product{}
 	if err == nil {
-		products, err = h.BasketRepo.GetByID(sess.UserID)
+		products, err = h.Repository.BasketRepo.GetByID(sess.UserID)
 		if err != nil {
 			http.Error(w, `Database Error`, http.StatusInternalServerError)
 			return
@@ -245,7 +242,7 @@ func (h *MarketHandler) Basket(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	err = h.Tmpl.ExecuteTemplate(w, "basket.html", struct {
-		Products   []product.Product
+		Products   []model.Product
 		TotalPrice int
 		Session    *session.Session
 		TotalCount int
@@ -279,7 +276,7 @@ func (h *MarketHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.ProductRepo.Delete(id)
+	_, err = h.Repository.ProductRepo.Delete(id)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -324,7 +321,7 @@ func (h *MarketHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseMultipartForm(10 << 20)
-	product := product.Product{}
+	product := model.Product{}
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
 	err = decoder.Decode(&product, r.PostForm)
@@ -350,7 +347,7 @@ func (h *MarketHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	lastID, err := h.ProductRepo.Create(product)
+	lastID, err := h.Repository.ProductRepo.Create(product)
 	if err != nil {
 		http.Error(w, `Database Error`, http.StatusInternalServerError)
 		return
@@ -377,7 +374,7 @@ func (h *MarketHandler) UpdateProductForm(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	prod, err := h.ProductRepo.GetByID(id)
+	prod, err := h.Repository.ProductRepo.GetByID(id)
 	if err != nil {
 		http.Error(w, `Database Error`, http.StatusInternalServerError)
 		return
@@ -385,7 +382,7 @@ func (h *MarketHandler) UpdateProductForm(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "text/html")
 	err = h.Tmpl.ExecuteTemplate(w, "update_product.html", struct {
-		Product    product.Product
+		Product    model.Product
 		Session    *session.Session
 		TotalCount int
 	}{
@@ -421,7 +418,7 @@ func (h *MarketHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(10 << 20)
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
-	var input product.UpdateProductInput
+	var input model.UpdateProductInput
 	err = decoder.Decode(&input, r.PostForm)
 	if err != nil {
 		http.Error(w, `Bad form`, http.StatusBadRequest)
@@ -446,7 +443,7 @@ func (h *MarketHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok, err := h.ProductRepo.Update(id, input)
+	ok, err := h.Repository.ProductRepo.Update(id, input)
 	if err != nil {
 		http.Error(w, `Database error`, http.StatusInternalServerError)
 		return
@@ -464,18 +461,18 @@ func (h *MarketHandler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	products, err := h.BasketRepo.GetByID(sess.UserID)
+	products, err := h.Repository.BasketRepo.GetByID(sess.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	order := order.Order{
+	order := model.Order{
 		CreationDate: time.Now(),
 		DeliveryDate: time.Now().Add(4 * 24 * time.Hour),
 	}
 
-	lastID, err := h.OrderRepo.Create(sess.UserID, order, products)
+	lastID, err := h.Repository.OrderRepo.Create(sess.UserID, order, products)
 	if err != nil {
 		http.Error(w, `Database error`, http.StatusInternalServerError)
 		return
@@ -483,7 +480,7 @@ func (h *MarketHandler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Infof("Insert into Orders with id LastInsertId: %v", lastID)
 
-	_, err = h.BasketRepo.DeleteAll(sess.UserID)
+	_, err = h.Repository.BasketRepo.DeleteAll(sess.UserID)
 	if err != nil {
 		http.Error(w, `Database error`, http.StatusInternalServerError)
 		return
