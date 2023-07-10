@@ -19,31 +19,6 @@ type HashConfig struct {
 	KeyLength   uint32
 }
 
-// func main() {
-// 	p := &params{
-// 		memory:      64 * 1024, // 64 MB
-// 		iterations:  3,
-// 		parallelism: 1,
-// 		saltLength:  16,
-// 		keyLength:   32,
-// 	}
-
-// 	encodedHash, err := generateHashFromPassword("somePassword", p)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	fmt.Println("Hash + salt of the password:")
-// 	fmt.Println(encodedHash)
-
-// 	match, err := verifyPassword("somePassword", encodedHash)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	fmt.Printf("\nPassword verification success: %v\n", match)
-// }
-
 func GenerateHashFromPassword(password string, p *HashConfig) (encodedHash string, err error) {
 	salt, err := generateRandomBytes(p.SaltLength)
 	if err != nil {
