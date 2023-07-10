@@ -28,29 +28,22 @@
       <!-- Section-->
       <section class="py-5">
          <div class="container px-4 px-lg-5 mt-5">
+            {{$Session := .Session}}
+            {{if eq $Session.UserType "admin"}}
             <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-               {{$Session := .Session}}
-               {{if eq $Session.UserType "admin"}}
-               <div class="col mb-5">
-                  <div class="card h-100">
-                     <!-- Product image-->
-                     <div class="badge bg-dark text-white position-absolute" style="top: 0.5rem; right: 0.5rem">New product</div>
-                     <img class="card-img-top w-100 h-100" src="/static/images/background.jpg" alt="..."/>
-                     <!-- Product details-->
-                     <div class="card-body p-4">
-                        <div class="text-center">
-                           <!-- Product name-->
-                           <h5 class="fw-bolder">New product</h5>
-                           <!-- Product price-->
-                           <div class="price">New product</div>
-                        </div>
-                     </div>
-                     <div class="text-center">
-                        <a class="btn btn-outline-dark mt-2 w-100" href="/products/new">Add product</a>
-                     </div>
+            <div class="col mb-5">
+                  <div class="text-end">
+                     <a class="btn btn-outline-dark mt-2" href="/products/new">Add new product</a>
                   </div>
+            </div>
+            <div class="col mb-5">
+               <div class="text-start">
+                  <a class="btn btn-outline-dark mt-2" href="#">Add multiple products</a>
                </div>
-               {{end}}
+            </div>
+            </div>
+            {{end}}
+            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
                {{range .Products}}
                <div class="col mb-5">
                   <div class="card h-100">

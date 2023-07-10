@@ -6,3 +6,8 @@ db:
   port: "5436"
   dbname: "database"
   sslmode: "disable"
+hash:
+  memory: 65536
+  iterations: 3
+  saltlength: 16
+  keylength: 32

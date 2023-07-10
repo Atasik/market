@@ -17,6 +17,7 @@ type Handler struct {
 	Sessions     *session.SessionsManager
 	Repository   *repository.Repository
 	ImageService service.ImageService
+	HashConfig   *service.HashConfig
 }
 
 func (h *Handler) InitRoutes() *mux.Router {

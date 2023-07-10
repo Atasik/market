@@ -14,7 +14,7 @@ CREATE TABLE users
   password  varchar(255) not null
 );
 INSERT INTO users (user_mode, username, password) VALUES
-('admin',	'admin',	'admin');
+('admin',	'admin',	'$argon2id$v=19$m=65536,t=3,p=1$kMwiCJlyCi2xXKy/U1c8hA$FtPqNnpdWNc7cD0hOcbTxMav4s/HyGUhew6bhlWqy5c');
 
 CREATE TABLE products
 (

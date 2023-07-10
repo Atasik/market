@@ -10,8 +10,8 @@ import (
 )
 
 type UserRepo interface {
-	Authorize(login, pass string) (model.User, error)
-	Register(login, pass string) (int, error)
+	GetUser(login string) (model.User, error)
+	CreateUser(login, hash string) (int, error)
 }
 
 var (
@@ -28,30 +28,25 @@ func NewUserPostgresqlRepo(db *sqlx.DB) *UserPostgresqlRepository {
 	return &UserPostgresqlRepository{DB: db}
 }
 
-func (repo *UserPostgresqlRepository) Authorize(login, pass string) (model.User, error) {
+func (repo *UserPostgresqlRepository) GetUser(login string) (model.User, error) {
 	var user model.User
 	query := fmt.Sprintf("SELECT * FROM %s WHERE username = $1", usersTable)
 
 	if err := repo.DB.Get(&user, query, login); err != nil {
-		fmt.Print(user)
 		if err == sql.ErrNoRows {
 			return model.User{}, ErrNoUser
 		}
 		return model.User{}, err
 	}
 
-	if user.Password != pass {
-		return model.User{}, ErrBadPass
-	}
-
 	return user, nil
 }
 
-func (repo *UserPostgresqlRepository) Register(login, pass string) (int, error) {
+func (repo *UserPostgresqlRepository) CreateUser(login, hash string) (int, error) {
 	var id int
 	query := fmt.Sprintf("INSERT INTO %s (username, user_mode, password) VALUES ($1, $2, $3) RETURNING id", usersTable)
 
-	row := repo.DB.QueryRow(query, login, "user", pass)
+	row := repo.DB.QueryRow(query, login, "user", hash)
 	err := row.Scan(&id)
 	if err != nil {
 		return 0, ErrUserExists
