@@ -9,7 +9,7 @@ import (
 
 type BasketRepo interface {
 	AddProduct(userId, productId int) (int, error)
-	GetByID(buserId int) ([]model.Product, error)
+	GetByID(userId int) ([]model.Product, error)
 	DeleteProduct(userId, productId int) (bool, error)
 	DeleteAll(userId int) (bool, error)
 }

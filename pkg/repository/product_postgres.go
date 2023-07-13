@@ -36,7 +36,6 @@ func (repo *ProductPostgresqlRepository) GetAll(orderBy string) ([]model.Product
 	query := fmt.Sprintf("SELECT * FROM %s %s", productsTable, setValue)
 
 	if err := repo.DB.Select(&products, query); err != nil {
-		print(err.Error())
 		return nil, err
 	}
 
@@ -145,7 +144,6 @@ func (repo *ProductPostgresqlRepository) GetByType(productType string, limit int
 	query := fmt.Sprintf("SELECT * FROM %s WHERE type = $1", productsTable)
 
 	if err := repo.DB.Select(&products, query, productType); err != nil {
-		print(err.Error())
 		return nil, err
 	}
 

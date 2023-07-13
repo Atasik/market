@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"market/pkg/model"
 	"market/pkg/session"
 	"net/http"
@@ -14,31 +13,36 @@ import (
 func (h *Handler) AddProductToBasket(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
-		fmt.Print(err.Error())
-		http.Error(w, "Database Error", http.StatusBadRequest)
+		http.Error(w, "Session Error", http.StatusBadRequest)
 		return
 	}
 	vars := mux.Vars(r)
 	productId, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		fmt.Print(err.Error())
 		http.Error(w, "Bad Id", http.StatusBadGateway)
 		return
 	}
 
 	basketId, err := h.Repository.BasketRepo.AddProduct(sess.UserID, productId)
 	if err != nil {
-		fmt.Print(err.Error())
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
 
 	sess.AddPurchase(productId)
 	w.Header().Set("Content-type", "application/json")
-	respJSON, _ := json.Marshal(map[string]int{
+	respJSON, err := json.Marshal(map[string]int{
 		"updated": basketId,
 	})
-	w.Write(respJSON)
+	if err != nil {
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(respJSON)
+	if err != nil {
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) DeleteProductFromBasket(w http.ResponseWriter, r *http.Request) {

@@ -27,11 +27,9 @@ func GenerateHashFromPassword(password string, p *HashConfig) (encodedHash strin
 
 	hash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
 
-	// Base64 encode the salt and hashed password.
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
 
-	// Return a string using the standard encoded hash representation.
 	encodedHash = fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, p.Memory, p.Iterations, p.Parallelism, b64Salt, b64Hash)
 
 	return encodedHash, nil
@@ -48,19 +46,13 @@ func generateRandomBytes(n uint32) ([]byte, error) {
 }
 
 func VerifyPassword(password, encodedHash string) (match bool, err error) {
-	// Extract the parameters, salt and derived key from the encoded password
-	// hash.
 	p, salt, hash, err := decodeHash(encodedHash)
 	if err != nil {
 		return false, err
 	}
 
-	// Derive the key from the other password using the same parameters.
 	otherHash := argon2.IDKey([]byte(password), salt, p.Iterations, p.Memory, p.Parallelism, p.KeyLength)
 
-	// Check that the contents of the hashed passwords are identical. Note
-	// that we are using the subtle.ConstantTimeCompare() function for this
-	// to help prevent timing attacks.
 	if subtle.ConstantTimeCompare(hash, otherHash) == 1 {
 		return true, nil
 	}

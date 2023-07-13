@@ -8,42 +8,40 @@ import (
 )
 
 type Session struct {
-	ID        string
-	UserID    int
-	UserName  string
-	UserType  string
-	Purchases map[int]struct{}
+	ID            string
+	UserID        int
+	UserName      string
+	UserType      string
+	BasketStorage map[int]struct{}
 }
 
 func (s *Session) IsPurchased(id int) bool {
-	_, ok := s.Purchases[id]
+	_, ok := s.BasketStorage[id]
 	return ok
 }
 
-// мб race-condition
 func (s *Session) AddPurchase(id int) {
-	s.Purchases[id] = struct{}{}
+	s.BasketStorage[id] = struct{}{}
 }
 
 func (s *Session) DeletePurchase(id int) {
-	delete(s.Purchases, id)
+	delete(s.BasketStorage, id)
 }
 
 func (s *Session) PurgeBasket() {
-	s.Purchases = make(map[int]struct{})
+	s.BasketStorage = make(map[int]struct{})
 }
 
 func NewSession(userID int, userName, userType string) *Session {
-	// лучше генерировать из заданного алфавита, но так писать меньше и для учебного примера ОК
 	randID := make([]byte, 16)
 	rand.Read(randID)
 
 	return &Session{
-		ID:        fmt.Sprintf("%x", randID),
-		UserID:    userID,
-		UserName:  userName,
-		UserType:  userType,
-		Purchases: map[int]struct{}{},
+		ID:            fmt.Sprintf("%x", randID),
+		UserID:        userID,
+		UserName:      userName,
+		UserType:      userType,
+		BasketStorage: map[int]struct{}{},
 	}
 }
 

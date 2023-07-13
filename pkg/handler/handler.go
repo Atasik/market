@@ -34,6 +34,9 @@ func (h *Handler) InitRoutes() *mux.Router {
 
 	r.HandleFunc("/products/new", h.AddProductForm).Methods("GET")
 	r.HandleFunc("/products/new", h.AddProduct).Methods("POST")
+	r.HandleFunc("/products/{id}/reviews/new", h.AddReview).Methods("POST")
+	r.HandleFunc("/products/{id}/reviews/update", h.UpdateReview).Methods("POST")
+	r.HandleFunc("/products/{id}/reviews/delete", h.DeleteReview).Methods("DELETE")
 	r.HandleFunc("/products/update/{id}", h.UpdateProductForm).Methods("GET")
 	r.HandleFunc("/products/update/{id}", h.UpdateProduct).Methods("POST")
 	r.HandleFunc("/products/{id}", h.Product).Methods("PUT")

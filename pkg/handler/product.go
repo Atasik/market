@@ -75,13 +75,13 @@ func (h *Handler) Product(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	productID, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, "Bad Id", http.StatusBadGateway)
 		return
 	}
 
-	selectedProduct, err := h.Repository.ProductRepo.GetByID(id)
+	selectedProduct, err := h.Repository.ProductRepo.GetByID(productID)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -97,6 +97,12 @@ func (h *Handler) Product(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	reviews, err := h.Repository.ReviewRepo.GetAll(productID, "")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	relatedProducts, err := h.Repository.ProductRepo.GetByType(selectedProduct.Type, 5)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
@@ -107,11 +113,13 @@ func (h *Handler) Product(w http.ResponseWriter, r *http.Request) {
 	err = h.Tmpl.ExecuteTemplate(w, "product.html", struct {
 		Product    model.Product
 		Related    []model.Product
+		Reviews    []model.Review
 		Session    *session.Session
 		TotalCount int
 	}{
 		Product:    selectedProduct,
 		Related:    relatedProducts,
+		Reviews:    reviews,
 		Session:    sess,
 		TotalCount: 0,
 	})
@@ -189,7 +197,6 @@ func (h *Handler) AddProduct(w http.ResponseWriter, r *http.Request) {
 	decoder.IgnoreUnknownKeys(true)
 	err = decoder.Decode(&product, r.PostForm)
 	if err != nil {
-		print(err.Error())
 		http.Error(w, `Bad form`, http.StatusBadRequest)
 		return
 	}
