@@ -37,6 +37,12 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `Session Error`, http.StatusUnauthorized)
 		return
 	}
+
+	_, err = h.Services.Basket.CreateBasket(id)
+	if err != nil {
+		http.Error(w, "Create Basket Error", http.StatusInternalServerError)
+		return
+	}
 	h.Logger.Infof("created session for %v", sess.UserID)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
@@ -51,7 +57,7 @@ func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := h.Sessions.Create(w, u.ID, u.Username, u.UserMode)
+	sess, err := h.Sessions.Create(w, u.ID, u.Username, u.Role)
 	if err != nil {
 		http.Error(w, `Session Error`, http.StatusUnauthorized)
 		return

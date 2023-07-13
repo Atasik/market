@@ -18,6 +18,7 @@ type Product struct {
 	CreationDate   time.Time `schema:"creation_date" db:"creation_date"`
 	Views          int       `db:"views"`
 	ImageURL       string    `db:"image_url"`
+	ImageID        string    `db:"image_id"`
 }
 
 type UpdateProductInput struct {
@@ -29,10 +30,11 @@ type UpdateProductInput struct {
 	Count       *int     `schema:"count"`
 	Views       *int     `schema:"views"`
 	ImageURL    *string  `schema:"image_url"`
+	ImageID     *string
 }
 
 func (i UpdateProductInput) Validate() error {
-	if i.Title == nil && i.Price == nil && i.Tag == nil && i.Type == nil && i.Description == nil && i.Count == nil && i.Views == nil && i.ImageURL == nil {
+	if i.Title == nil && i.Price == nil && i.Tag == nil && i.Type == nil && i.Description == nil && i.Count == nil && i.Views == nil && (i.ImageURL == nil && i.ImageURL != i.ImageID) {
 		return errors.New("update structure has no values")
 	}
 

@@ -7,13 +7,15 @@ import (
 )
 
 const (
-	usersTable          = "users"
-	productsTable       = "products"
-	ordersTable         = "orders"
-	reviewsTable        = "reviews"
-	ProductsUsersTable  = "products_users"
-	ProductsOrdersTable = "products_orders"
-	OrdersUsersTable    = "orders_users"
+	usersTable           = "users"
+	productsTable        = "products"
+	ordersTable          = "orders"
+	reviewsTable         = "reviews"
+	basketsTable         = "baskets"
+	ProductsUsersTable   = "products_users"
+	ProductsOrdersTable  = "products_orders"
+	OrdersUsersTable     = "orders_users"
+	ProductsBasketsTable = "products_baskets"
 )
 
 type Config struct {

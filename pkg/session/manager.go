@@ -1,6 +1,7 @@
 package session
 
 import (
+	"market/pkg/model"
 	"net/http"
 	"sync"
 	"time"
@@ -35,7 +36,7 @@ func (sm *SessionsManager) Check(r *http.Request) (*Session, error) {
 	return sess, nil
 }
 
-func (sm *SessionsManager) Create(w http.ResponseWriter, userID int, userName, userType string) (*Session, error) {
+func (sm *SessionsManager) Create(w http.ResponseWriter, userID int, userName string, userType model.Role) (*Session, error) {
 	sess := NewSession(userID, userName, userType)
 
 	sm.mu.Lock()

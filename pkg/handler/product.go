@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"market/pkg/model"
 	"market/pkg/session"
 	"net/http"
@@ -20,11 +19,18 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 	sess, err := session.SessionFromContext(r.Context())
 	if err == nil {
-		products, err := h.Services.Basket.GetByID(sess.UserID)
+		basket, err := h.Services.Basket.GetByUserID(sess.UserID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		products, err := h.Services.Basket.GetProducts(basket.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		for _, prd := range products {
 			sess.AddPurchase(prd.ID)
 		}
@@ -84,9 +90,11 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	//вероятно тоже в сервисы
 	selectedProduct, err := h.Services.Product.GetByID(productID)
 	if err != nil {
-		http.Error(w, "Database Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	print(selectedProduct.Views)
 
 	input := model.UpdateProductInput{
 		Views: &selectedProduct.Views,
@@ -94,7 +102,7 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 
 	_, err = h.Services.Product.Update(selectedProduct.ID, input)
 	if err != nil {
-		http.Error(w, "Database Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -106,7 +114,7 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 
 	relatedProducts, err := h.Services.Product.GetByType(selectedProduct.Type, 5)
 	if err != nil {
-		http.Error(w, "Database Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -136,7 +144,7 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Session Error", http.StatusBadRequest)
 		return
 	}
-	if sess.UserType != "admin" {
+	if sess.UserType != model.ADMIN {
 		http.Error(w, restrictedMsg, http.StatusForbidden)
 		return
 	}
@@ -148,9 +156,22 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	product, err := h.Services.Product.GetByID(id)
+	if err != nil {
+		http.Error(w, "Database Error", http.StatusInternalServerError)
+		return
+	}
+
+	// расписать сервис
 	_, err = h.Services.Product.Delete(id)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
+		return
+	}
+
+	err = h.Services.Image.Delete(product.ImageID)
+	if err != nil {
+		http.Error(w, "ImageService Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -168,7 +189,7 @@ func (h *Handler) CreateProductForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Session Error", http.StatusBadRequest)
 		return
 	}
-	if sess.UserType != "admin" {
+	if sess.UserType != model.ADMIN {
 		http.Error(w, restrictedMsg, http.StatusForbidden)
 		return
 	}
@@ -187,7 +208,7 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Session Error", http.StatusBadRequest)
 		return
 	}
-	if sess.UserType != "admin" {
+	if sess.UserType != model.ADMIN {
 		http.Error(w, restrictedMsg, http.StatusForbidden)
 		return
 	}
@@ -208,18 +229,24 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := h.Services.Image.Upload(file)
+	data, err := h.Services.Image.Upload(file)
 	if err != nil {
 		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
 		return
 	}
 
-	product.ImageURL = url
+	product.ImageURL = data.ImageURL
+	product.ImageID = data.ImageID
 
 	defer file.Close()
 
 	lastID, err := h.Services.Product.Create(product)
 	if err != nil {
+		err = h.Services.Image.Delete(product.ImageID)
+		if err != nil {
+			http.Error(w, `ImageServer Error`, http.StatusInternalServerError)
+			return
+		}
 		http.Error(w, `Database Error`, http.StatusInternalServerError)
 		return
 	}
@@ -233,7 +260,7 @@ func (h *Handler) UpdateProductForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Session Error", http.StatusBadRequest)
 		return
 	}
-	if sess.UserType != "admin" {
+	if sess.UserType != model.ADMIN {
 		http.Error(w, restrictedMsg, http.StatusForbidden)
 		return
 	}
@@ -274,7 +301,7 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Session Error", http.StatusBadRequest)
 		return
 	}
-	if sess.UserType != "admin" {
+	if sess.UserType != model.ADMIN {
 		http.Error(w, restrictedMsg, http.StatusForbidden)
 		return
 	}
@@ -297,26 +324,40 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	file, _, err := r.FormFile("file")
-	switch err {
-	case nil:
-		url, err := h.Services.Image.Upload(file)
-		if err != nil {
-			http.Error(w, `ImageService Error`, http.StatusInternalServerError)
-			return
-		}
-
-		input.ImageURL = &url
-		defer file.Close()
-	case http.ErrMissingFile:
-		fmt.Println("no file")
-	default:
+	if err != nil {
 		http.Error(w, "Error Retrieving the File", http.StatusBadRequest)
+		return
+	}
+
+	data, err := h.Services.Image.Upload(file)
+	if err != nil {
+		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
+		return
+	}
+
+	input.ImageURL = &data.ImageURL
+	input.ImageID = &data.ImageID
+	defer file.Close()
+
+	oldProduct, err := h.Services.Product.GetByID(id)
+	if err != nil {
+		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
 
 	ok, err := h.Services.Product.Update(id, input)
 	if err != nil {
+		err = h.Services.Image.Delete(*input.ImageID)
+		if err != nil {
+			http.Error(w, `ImageService Error`, http.StatusInternalServerError)
+			return
+		}
 		http.Error(w, `Database error`, http.StatusInternalServerError)
+		return
+	}
+	err = h.Services.Image.Delete(oldProduct.ImageID)
+	if err != nil {
+		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
 		return
 	}
 

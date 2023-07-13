@@ -5,13 +5,14 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"market/pkg/model"
 )
 
 type Session struct {
 	ID            string
 	UserID        int
 	UserName      string
-	UserType      string
+	UserType      model.Role
 	BasketStorage map[int]struct{}
 }
 
@@ -32,7 +33,7 @@ func (s *Session) PurgeBasket() {
 	s.BasketStorage = make(map[int]struct{})
 }
 
-func NewSession(userID int, userName, userType string) *Session {
+func NewSession(userID int, userName string, userType model.Role) *Session {
 	randID := make([]byte, 16)
 	rand.Read(randID)
 

@@ -6,10 +6,12 @@ import (
 )
 
 type Basket interface {
-	AddProduct(userId, productId int) (int, error)
-	GetByID(userId int) ([]model.Product, error)
-	DeleteProduct(userId, productId int) (bool, error)
-	DeleteAll(userId int) (bool, error)
+	CreateBasket(userID int) (int, error)
+	AddProduct(basketID, productID int) (int, error)
+	GetByUserID(userID int) (model.Basket, error)
+	GetProducts(basketID int) ([]model.Product, error)
+	DeleteProduct(basketID, productID int) (bool, error)
+	DeleteAll(basketID int) (bool, error)
 }
 
 type BasketService struct {
@@ -20,18 +22,26 @@ func NewBasketService(basketRepo repository.BasketRepo) *BasketService {
 	return &BasketService{basketRepo: basketRepo}
 }
 
-func (s *BasketService) AddProduct(userId, productId int) (int, error) {
-	return s.basketRepo.AddProduct(userId, productId)
+func (s *BasketService) CreateBasket(userID int) (int, error) {
+	return s.basketRepo.CreateBasket(userID)
 }
 
-func (s *BasketService) GetByID(userId int) ([]model.Product, error) {
-	return s.basketRepo.GetByID(userId)
+func (s *BasketService) AddProduct(basketID, productID int) (int, error) {
+	return s.basketRepo.AddProduct(basketID, productID)
 }
 
-func (s *BasketService) DeleteProduct(userId, productId int) (bool, error) {
-	return s.basketRepo.DeleteProduct(userId, productId)
+func (s *BasketService) GetByUserID(userID int) (model.Basket, error) {
+	return s.basketRepo.GetByUserID(userID)
 }
 
-func (s *BasketService) DeleteAll(userId int) (bool, error) {
-	return s.basketRepo.DeleteAll(userId)
+func (s *BasketService) GetProducts(basketID int) ([]model.Product, error) {
+	return s.basketRepo.GetProducts(basketID)
+}
+
+func (s *BasketService) DeleteProduct(basketID, productID int) (bool, error) {
+	return s.basketRepo.DeleteProduct(basketID, productID)
+}
+
+func (s *BasketService) DeleteAll(basketID int) (bool, error) {
+	return s.basketRepo.DeleteAll(basketID)
 }

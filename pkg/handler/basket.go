@@ -23,7 +23,13 @@ func (h *Handler) AddProductToBasket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	basketId, err := h.Services.Basket.AddProduct(sess.UserID, productId)
+	basket, err := h.Services.Basket.GetByUserID(sess.UserID)
+	if err != nil {
+		http.Error(w, "Database Error", http.StatusInternalServerError)
+		return
+	}
+
+	productId, err = h.Services.Basket.AddProduct(basket.ID, productId)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -32,7 +38,7 @@ func (h *Handler) AddProductToBasket(w http.ResponseWriter, r *http.Request) {
 	sess.AddPurchase(productId)
 	w.Header().Set("Content-type", "application/json")
 	respJSON, err := json.Marshal(map[string]int{
-		"updated": basketId,
+		"updated": productId,
 	})
 	if err != nil {
 		http.Error(w, "Server error", http.StatusInternalServerError)
@@ -58,7 +64,13 @@ func (h *Handler) DeleteProductFromBasket(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, err = h.Services.Basket.DeleteProduct(sess.UserID, int(id))
+	basket, err := h.Services.Basket.GetByUserID(sess.UserID)
+	if err != nil {
+		http.Error(w, "Database Error", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.Services.Basket.DeleteProduct(basket.ID, int(id))
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -76,9 +88,15 @@ func (h *Handler) Basket(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	products := []model.Product{}
 	if err == nil {
-		products, err = h.Services.Basket.GetByID(sess.UserID)
+		basket, err := h.Services.Basket.GetByUserID(sess.UserID)
 		if err != nil {
 			http.Error(w, `Database Error`, http.StatusInternalServerError)
+			return
+		}
+
+		products, err = h.Services.Basket.GetProducts(basket.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}

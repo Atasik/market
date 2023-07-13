@@ -43,7 +43,7 @@ func (repo *UserPostgresqlRepository) GetUser(login string) (model.User, error) 
 
 func (repo *UserPostgresqlRepository) CreateUser(user model.User) (int, error) {
 	var id int
-	query := fmt.Sprintf("INSERT INTO %s (username, user_mode, password) VALUES ($1, $2, $3) RETURNING id", usersTable)
+	query := fmt.Sprintf("INSERT INTO %s (username, role, password) VALUES ($1, $2, $3) RETURNING id", usersTable)
 
 	row := repo.DB.QueryRow(query, user.Username, "user", user.Password)
 	err := row.Scan(&id)

@@ -21,7 +21,12 @@ func NewOrderService(orderRepo repository.OrderRepo, basketRepo repository.Baske
 }
 
 func (s *OrderService) Create(userID int, order model.Order) (int, error) {
-	products, err := s.basketRepo.GetByID(userID)
+	basket, err := s.basketRepo.GetByUserID(userID)
+	if err != nil {
+		return 0, err
+	}
+
+	products, err := s.basketRepo.GetProducts(basket.ID)
 	if err != nil {
 		return 0, err
 	}

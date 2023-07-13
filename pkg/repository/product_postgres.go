@@ -56,9 +56,9 @@ func (repo *ProductPostgresqlRepository) GetByID(productId int) (model.Product, 
 // проверка, что есть права
 func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, error) {
 	var productId int
-	query := fmt.Sprintf("INSERT INTO %s (title, price, tag, type, description, count, creation_date, views, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id", productsTable)
+	query := fmt.Sprintf("INSERT INTO %s (title, price, tag, type, description, count, creation_date, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id", productsTable)
 
-	row := repo.DB.QueryRow(query, product.Title, product.Price, product.Tag, product.Type, product.Description, product.Count, product.CreationDate, product.Views, product.ImageURL)
+	row := repo.DB.QueryRow(query, product.Title, product.Price, product.Tag, product.Type, product.Description, product.Count, product.CreationDate, product.Views, product.ImageURL, product.ImageID)
 	err := row.Scan(&productId)
 	if err != nil {
 		return 0, err
@@ -116,6 +116,12 @@ func (repo *ProductPostgresqlRepository) Update(productId int, input model.Updat
 	if input.ImageURL != nil {
 		setValues = append(setValues, fmt.Sprintf("image_url=$%d", argId))
 		args = append(args, *input.ImageURL)
+		argId++
+	}
+
+	if input.ImageURL != nil {
+		setValues = append(setValues, fmt.Sprintf("image_id=$%d", argId))
+		args = append(args, *input.ImageID)
 		argId++
 	}
 
