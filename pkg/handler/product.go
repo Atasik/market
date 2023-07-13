@@ -20,7 +20,7 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 	sess, err := session.SessionFromContext(r.Context())
 	if err == nil {
-		products, err := h.Repository.BasketRepo.GetByID(sess.UserID)
+		products, err := h.Services.Basket.GetByID(sess.UserID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -30,7 +30,7 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	products, err := h.Repository.ProductRepo.GetAll(orderBy)
+	products, err := h.Services.Product.GetAll(orderBy)
 	if err != nil {
 		http.Error(w, `Database Error`, http.StatusInternalServerError)
 		return
@@ -61,7 +61,7 @@ func (h *Handler) About(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) Product(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		print("no sess")
@@ -81,7 +81,8 @@ func (h *Handler) Product(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedProduct, err := h.Repository.ProductRepo.GetByID(productID)
+	//вероятно тоже в сервисы
+	selectedProduct, err := h.Services.Product.GetByID(productID)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -91,19 +92,19 @@ func (h *Handler) Product(w http.ResponseWriter, r *http.Request) {
 		Views: &selectedProduct.Views,
 	}
 
-	_, err = h.Repository.ProductRepo.Update(selectedProduct.ID, input)
+	_, err = h.Services.Product.Update(selectedProduct.ID, input)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
 
-	reviews, err := h.Repository.ReviewRepo.GetAll(productID, "")
+	reviews, err := h.Services.Review.GetAll(productID, "")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	relatedProducts, err := h.Repository.ProductRepo.GetByType(selectedProduct.Type, 5)
+	relatedProducts, err := h.Services.Product.GetByType(selectedProduct.Type, 5)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -147,7 +148,7 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.Repository.ProductRepo.Delete(id)
+	_, err = h.Services.Product.Delete(id)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -161,7 +162,7 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write(respJSON)
 }
 
-func (h *Handler) AddProductForm(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateProductForm(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Session Error", http.StatusBadRequest)
@@ -180,7 +181,7 @@ func (h *Handler) AddProductForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) AddProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Session Error", http.StatusBadRequest)
@@ -207,7 +208,7 @@ func (h *Handler) AddProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := h.ImageService.Upload(file)
+	url, err := h.Services.Image.Upload(file)
 	if err != nil {
 		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
 		return
@@ -217,7 +218,7 @@ func (h *Handler) AddProduct(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	lastID, err := h.Repository.ProductRepo.Create(product)
+	lastID, err := h.Services.Product.Create(product)
 	if err != nil {
 		http.Error(w, `Database Error`, http.StatusInternalServerError)
 		return
@@ -244,7 +245,7 @@ func (h *Handler) UpdateProductForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prod, err := h.Repository.ProductRepo.GetByID(id)
+	prod, err := h.Services.Product.GetByID(id)
 	if err != nil {
 		http.Error(w, `Database Error`, http.StatusInternalServerError)
 		return
@@ -298,7 +299,7 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	file, _, err := r.FormFile("file")
 	switch err {
 	case nil:
-		url, err := h.ImageService.Upload(file)
+		url, err := h.Services.Image.Upload(file)
 		if err != nil {
 			http.Error(w, `ImageService Error`, http.StatusInternalServerError)
 			return
@@ -313,7 +314,7 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok, err := h.Repository.ProductRepo.Update(id, input)
+	ok, err := h.Services.Product.Update(id, input)
 	if err != nil {
 		http.Error(w, `Database error`, http.StatusInternalServerError)
 		return

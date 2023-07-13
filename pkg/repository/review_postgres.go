@@ -35,6 +35,7 @@ func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error)
 	return reviewId, nil
 }
 
+// проверка, что есть права
 func (repo *ReviewPostgresqlRepository) Delete(reviewID int) (bool, error) {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", reviewsTable)
 
@@ -45,6 +46,7 @@ func (repo *ReviewPostgresqlRepository) Delete(reviewID int) (bool, error) {
 	return true, nil
 }
 
+// проверка, что есть права
 func (repo *ReviewPostgresqlRepository) Update(userID, productID int, text string) (bool, error) {
 	query := fmt.Sprintf("UPDATE %s SET review_text = $1 WHERE (user_id = $2 AND product_id = $3)", reviewsTable)
 

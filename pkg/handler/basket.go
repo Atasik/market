@@ -23,7 +23,7 @@ func (h *Handler) AddProductToBasket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	basketId, err := h.Repository.BasketRepo.AddProduct(sess.UserID, productId)
+	basketId, err := h.Services.Basket.AddProduct(sess.UserID, productId)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -58,7 +58,7 @@ func (h *Handler) DeleteProductFromBasket(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, err = h.Repository.BasketRepo.DeleteProduct(sess.UserID, int(id))
+	_, err = h.Services.Basket.DeleteProduct(sess.UserID, int(id))
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -76,7 +76,7 @@ func (h *Handler) Basket(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	products := []model.Product{}
 	if err == nil {
-		products, err = h.Repository.BasketRepo.GetByID(sess.UserID)
+		products, err = h.Services.Basket.GetByID(sess.UserID)
 		if err != nil {
 			http.Error(w, `Database Error`, http.StatusInternalServerError)
 			return

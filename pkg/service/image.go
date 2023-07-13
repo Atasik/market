@@ -8,6 +8,10 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
+type Image interface {
+	Upload(file multipart.File) (string, error)
+}
+
 type ImageServiceCloudinary struct {
 	Cloudinary *cloudinary.Cloudinary
 }

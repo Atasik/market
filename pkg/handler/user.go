@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"market/pkg/repository"
-	"market/pkg/service"
+	"market/pkg/model"
 	"net/http"
+
+	"github.com/gorilla/schema"
 )
 
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
@@ -16,48 +17,45 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
-	login := r.FormValue("login")
-	password := r.FormValue("password")
-
-	encodedHash, err := service.GenerateHashFromPassword(password, h.HashConfig)
+	r.ParseForm()
+	user := model.User{}
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	err := decoder.Decode(&user, r.PostForm)
 	if err != nil {
-		http.Error(w, `Failed to hash password`, http.StatusInternalServerError)
-		return
+		http.Error(w, `Bad form`, http.StatusBadRequest)
 	}
 
-	id, err := h.Repository.CreateUser(login, encodedHash)
-	if err == repository.ErrUserExists {
-		http.Error(w, `User already exists Error`, http.StatusBadRequest)
-		return
-	}
-
-	sess, _ := h.Sessions.Create(w, id, login, "user")
-	h.Logger.Infof("created session for %v", sess.UserID)
-	http.Redirect(w, r, "/", http.StatusFound)
-}
-
-func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
-	login := r.FormValue("login")
-	password := r.FormValue("password")
-
-	u, err := h.Repository.UserRepo.GetUser(login)
-	if err == repository.ErrNoUser {
-		http.Error(w, `User doesn't exist Error`, http.StatusUnauthorized)
-		return
-	}
-
-	match, err := service.VerifyPassword(password, u.Password)
+	id, err := h.Services.CreateUser(user)
 	if err != nil {
 		http.Error(w, `Failed to verify password`, http.StatusInternalServerError)
 		return
 	}
 
-	if !match {
-		http.Error(w, `Bad password Error`, http.StatusUnauthorized)
+	sess, err := h.Sessions.Create(w, id, user.Username, "user")
+	if err != nil {
+		http.Error(w, `Session Error`, http.StatusUnauthorized)
+		return
+	}
+	h.Logger.Infof("created session for %v", sess.UserID)
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
+	login := r.FormValue("username")
+	password := r.FormValue("password")
+
+	u, err := h.Services.User.VerifyUser(login, password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	sess, _ := h.Sessions.Create(w, u.ID, u.Username, u.UserMode)
+	sess, err := h.Sessions.Create(w, u.ID, u.Username, u.UserMode)
+	if err != nil {
+		http.Error(w, `Session Error`, http.StatusUnauthorized)
+		return
+	}
 	h.Logger.Infof("created session for %v", sess.UserID)
 	http.Redirect(w, r, "/", http.StatusFound)
 }

@@ -53,6 +53,7 @@ func (repo *ProductPostgresqlRepository) GetByID(productId int) (model.Product, 
 	return product, nil
 }
 
+// проверка, что есть права
 func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, error) {
 	var productId int
 	query := fmt.Sprintf("INSERT INTO %s (title, price, tag, type, description, count, creation_date, views, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id", productsTable)
@@ -66,6 +67,7 @@ func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, err
 	return productId, nil
 }
 
+// проверка, что есть права
 func (repo *ProductPostgresqlRepository) Update(productId int, input model.UpdateProductInput) (bool, error) {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
@@ -129,6 +131,7 @@ func (repo *ProductPostgresqlRepository) Update(productId int, input model.Updat
 	return true, nil
 }
 
+// проверка, что есть права
 func (repo *ProductPostgresqlRepository) Delete(productId int) (bool, error) {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", productsTable)
 

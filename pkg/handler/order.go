@@ -14,7 +14,7 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orders, err := h.Repository.OrderRepo.GetAll(sess.UserID)
+	orders, err := h.Services.Order.GetAll(sess.UserID)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusBadRequest)
 		return
@@ -31,21 +31,15 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 		TotalCount: 0,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Template error", http.StatusInternalServerError)
 		return
 	}
 }
 
-func (h *Handler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.SessionFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-
-	products, err := h.Repository.BasketRepo.GetByID(sess.UserID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -54,7 +48,7 @@ func (h *Handler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
 		DeliveryDate: time.Now().Add(4 * 24 * time.Hour),
 	}
 
-	lastID, err := h.Repository.OrderRepo.Create(sess.UserID, order, products)
+	lastID, err := h.Services.Order.Create(sess.UserID, order)
 	if err != nil {
 		http.Error(w, `Database error`, http.StatusInternalServerError)
 		return
@@ -62,11 +56,6 @@ func (h *Handler) RegisterOrder(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Infof("Insert into Orders with id LastInsertId: %v", lastID)
 
-	_, err = h.Repository.BasketRepo.DeleteAll(sess.UserID)
-	if err != nil {
-		http.Error(w, `Database error`, http.StatusInternalServerError)
-		return
-	}
 	sess.PurgeBasket()
 
 	http.Redirect(w, r, "/", http.StatusFound)

@@ -11,13 +11,12 @@ import (
 
 type UserRepo interface {
 	GetUser(login string) (model.User, error)
-	CreateUser(login, hash string) (int, error)
+	CreateUser(model.User) (int, error)
 }
 
 var (
 	ErrNoUser     = errors.New("no user found")
 	ErrUserExists = errors.New("user already exists")
-	ErrBadPass    = errors.New("invalid password")
 )
 
 type UserPostgresqlRepository struct {
@@ -42,11 +41,11 @@ func (repo *UserPostgresqlRepository) GetUser(login string) (model.User, error) 
 	return user, nil
 }
 
-func (repo *UserPostgresqlRepository) CreateUser(login, hash string) (int, error) {
+func (repo *UserPostgresqlRepository) CreateUser(user model.User) (int, error) {
 	var id int
 	query := fmt.Sprintf("INSERT INTO %s (username, user_mode, password) VALUES ($1, $2, $3) RETURNING id", usersTable)
 
-	row := repo.DB.QueryRow(query, login, "user", hash)
+	row := repo.DB.QueryRow(query, user.Username, "user", user.Password)
 	err := row.Scan(&id)
 	if err != nil {
 		return 0, ErrUserExists

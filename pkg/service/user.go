@@ -6,9 +6,23 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"market/pkg/model"
+	"market/pkg/repository"
 	"strings"
 
 	"golang.org/x/crypto/argon2"
+)
+
+var (
+	ErrBadPass = errors.New("invalid password")
+)
+
+const (
+	memory      = 65536
+	iterations  = 3
+	saltLength  = 16
+	keyLength   = 32
+	parallelism = 1
 )
 
 type HashConfig struct {
@@ -19,7 +33,57 @@ type HashConfig struct {
 	KeyLength   uint32
 }
 
-func GenerateHashFromPassword(password string, p *HashConfig) (encodedHash string, err error) {
+type User interface {
+	VerifyUser(login, password string) (model.User, error)
+	CreateUser(model.User) (int, error)
+}
+
+type UserService struct {
+	userRepo repository.UserRepo
+}
+
+func NewUserService(userRepo repository.UserRepo) *UserService {
+	return &UserService{userRepo: userRepo}
+}
+
+func (s *UserService) VerifyUser(login, password string) (model.User, error) {
+	user, err := s.userRepo.GetUser(login)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	match, err := verifyPassword(password, user.Password)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	if !match {
+		return model.User{}, ErrBadPass
+	}
+
+	return user, nil
+}
+
+func (s *UserService) CreateUser(user model.User) (int, error) {
+	hashConfig := &HashConfig{
+		Memory:      memory,
+		Iterations:  iterations,
+		Parallelism: parallelism,
+		SaltLength:  saltLength,
+		KeyLength:   keyLength,
+	}
+
+	password, err := generateHashFromPassword(user.Password, hashConfig)
+	if err != nil {
+		return 0, err
+	}
+
+	user.Password = password
+
+	return s.userRepo.CreateUser(user)
+}
+
+func generateHashFromPassword(password string, p *HashConfig) (encodedHash string, err error) {
 	salt, err := generateRandomBytes(p.SaltLength)
 	if err != nil {
 		return "", err
@@ -45,7 +109,7 @@ func generateRandomBytes(n uint32) ([]byte, error) {
 	return b, nil
 }
 
-func VerifyPassword(password, encodedHash string) (match bool, err error) {
+func verifyPassword(password, encodedHash string) (match bool, err error) {
 	p, salt, hash, err := decodeHash(encodedHash)
 	if err != nil {
 		return false, err

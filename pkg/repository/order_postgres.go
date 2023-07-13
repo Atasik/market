@@ -21,6 +21,7 @@ func NewOrderPostgresqlRepo(db *sqlx.DB) *OrderPostgresqlRepository {
 	return &OrderPostgresqlRepository{DB: db}
 }
 
+// проверка, что есть права
 func (repo *OrderPostgresqlRepository) Create(userID int, order model.Order, products []model.Product) (int, error) {
 	tx, err := repo.DB.Begin()
 	if err != nil {
@@ -51,6 +52,7 @@ func (repo *OrderPostgresqlRepository) Create(userID int, order model.Order, pro
 	return order.ID, tx.Commit()
 }
 
+// проверка, что есть права
 func (repo *OrderPostgresqlRepository) GetAll(userID int) ([]model.Order, error) {
 	var orders []model.Order
 	query := fmt.Sprintf(`SELECT o.id, o.creation_date, o.delivery_date FROM %s o
@@ -65,6 +67,7 @@ func (repo *OrderPostgresqlRepository) GetAll(userID int) ([]model.Order, error)
 	return orders, nil
 }
 
+// проверка, что есть права
 func (repo *OrderPostgresqlRepository) GetByID(orderID int) (model.Order, error) {
 	var order model.Order
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", ordersTable)

@@ -46,8 +46,8 @@ func main() {
 		log.Fatal("Error occured while loading Cloudinary: ", err.Error())
 	}
 
-	newCloud := service.NewImageServiceCloudinary(cld)
 	repos := repository.NewRepository(db)
+	services := service.NewService(repos, cld)
 	sessionManager := session.NewSessionsManager()
 	zapLogger, err := zap.NewProduction()
 	if err != nil {
@@ -56,21 +56,11 @@ func main() {
 	defer zapLogger.Sync() // flushes buffer, if any
 	logger := zapLogger.Sugar()
 
-	hashConfig := &service.HashConfig{
-		Memory:      viper.GetUint32("hash.memory"),
-		Iterations:  viper.GetUint32("hash.iterations"),
-		Parallelism: 1,
-		SaltLength:  viper.GetUint32("hash.saltlength"),
-		KeyLength:   viper.GetUint32("hash.keylength"),
-	}
-
 	handler := &handler.Handler{
-		Tmpl:         templates,
-		Sessions:     sessionManager,
-		Repository:   repos,
-		Logger:       logger,
-		ImageService: newCloud,
-		HashConfig:   hashConfig,
+		Tmpl:     templates,
+		Sessions: sessionManager,
+		Services: services,
+		Logger:   logger,
 	}
 
 	r := handler.InitRoutes()

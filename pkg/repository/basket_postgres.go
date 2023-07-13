@@ -22,6 +22,7 @@ func NewBasketPostgresqlRepo(db *sqlx.DB) *BasketPostgresqlRepository {
 	return &BasketPostgresqlRepository{DB: db}
 }
 
+// проверка, что есть права
 func (repo *BasketPostgresqlRepository) AddProduct(userId, productId int) (int, error) {
 	var id int
 	query := fmt.Sprintf("INSERT INTO %s (product_id, user_id, purchased_count) VALUES ($1, $2, $3) RETURNING id", ProductsUsersTable)
@@ -35,6 +36,7 @@ func (repo *BasketPostgresqlRepository) AddProduct(userId, productId int) (int, 
 	return id, nil
 }
 
+// проверка, что есть права
 func (repo *BasketPostgresqlRepository) GetByID(userId int) ([]model.Product, error) {
 	var products []model.Product
 	query := fmt.Sprintf(`SELECT p.id, p.title, p.price, p.tag, p.type, p.description, p.count, p.creation_date, p.views, p.image_url FROM %s p 
@@ -49,6 +51,7 @@ func (repo *BasketPostgresqlRepository) GetByID(userId int) ([]model.Product, er
 	return products, nil
 }
 
+// проверка, что есть права
 func (repo *BasketPostgresqlRepository) DeleteProduct(userId, productId int) (bool, error) {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE user_id = $1 AND product_id = $2`, ProductsUsersTable)
 	_, err := repo.DB.Exec(query, userId, productId)
@@ -58,6 +61,7 @@ func (repo *BasketPostgresqlRepository) DeleteProduct(userId, productId int) (bo
 	return true, nil
 }
 
+// проверка, что есть права
 func (repo *BasketPostgresqlRepository) DeleteAll(userId int) (bool, error) {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE user_id = $1`, ProductsUsersTable)
 	_, err := repo.DB.Exec(query, userId)

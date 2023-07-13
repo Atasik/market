@@ -2,7 +2,6 @@ package handler
 
 import (
 	"html/template"
-	"market/pkg/repository"
 	"market/pkg/service"
 	"market/pkg/session"
 	"net/http"
@@ -12,12 +11,10 @@ import (
 )
 
 type Handler struct {
-	Tmpl         *template.Template
-	Logger       *zap.SugaredLogger
-	Sessions     *session.SessionsManager
-	Repository   *repository.Repository
-	ImageService service.ImageService
-	HashConfig   *service.HashConfig
+	Tmpl     *template.Template
+	Logger   *zap.SugaredLogger
+	Sessions *session.SessionsManager
+	Services *service.Service
 }
 
 func (h *Handler) InitRoutes() *mux.Router {
@@ -32,21 +29,21 @@ func (h *Handler) InitRoutes() *mux.Router {
 	r.HandleFunc("/about", h.About).Methods("GET")
 	r.HandleFunc("/history", h.History).Methods("GET")
 
-	r.HandleFunc("/products/new", h.AddProductForm).Methods("GET")
-	r.HandleFunc("/products/new", h.AddProduct).Methods("POST")
+	r.HandleFunc("/products/new", h.CreateProductForm).Methods("GET")
+	r.HandleFunc("/products/new", h.CreateProduct).Methods("POST")
 	r.HandleFunc("/products/{id}/reviews/new", h.AddReview).Methods("POST")
 	r.HandleFunc("/products/{id}/reviews/update", h.UpdateReview).Methods("POST")
 	r.HandleFunc("/products/{id}/reviews/delete", h.DeleteReview).Methods("DELETE")
 	r.HandleFunc("/products/update/{id}", h.UpdateProductForm).Methods("GET")
 	r.HandleFunc("/products/update/{id}", h.UpdateProduct).Methods("POST")
-	r.HandleFunc("/products/{id}", h.Product).Methods("PUT")
-	r.HandleFunc("/products/{id}", h.Product).Methods("GET")
+	r.HandleFunc("/products/{id}", h.GetProduct).Methods("PUT")
+	r.HandleFunc("/products/{id}", h.GetProduct).Methods("GET")
 	r.HandleFunc("/products/{id}", h.DeleteProduct).Methods("DELETE")
 
 	r.HandleFunc("/basket/{id}", h.AddProductToBasket).Methods("GET")
 	r.HandleFunc("/basket/{id}", h.DeleteProductFromBasket).Methods("DELETE")
 	r.HandleFunc("/basket", h.Basket).Methods("GET")
-	r.HandleFunc("/register_order", h.RegisterOrder).Methods("GET")
+	r.HandleFunc("/register_order", h.CreateOrder).Methods("GET")
 
 	r.HandleFunc("/register", h.Register).Methods("GET")
 	r.HandleFunc("/login", h.Login).Methods("GET")

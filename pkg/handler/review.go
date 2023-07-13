@@ -38,7 +38,7 @@ func (h *Handler) AddReview(w http.ResponseWriter, r *http.Request) {
 	review.UserID = sess.UserID
 	review.Username = sess.UserName
 
-	review.ID, err = h.Repository.ReviewRepo.Create(review)
+	review.ID, err = h.Services.Review.Create(review)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -70,7 +70,7 @@ func (h *Handler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad id", http.StatusBadGateway)
 	}
 
-	_, err = h.Repository.ReviewRepo.Delete(reviewID)
+	_, err = h.Services.Review.Delete(reviewID)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
@@ -113,7 +113,7 @@ func (h *Handler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `Bad form`, http.StatusBadRequest)
 	}
 
-	_, err = h.Repository.ReviewRepo.Update(sess.UserID, productID, review.Text)
+	_, err = h.Services.Review.Update(sess.UserID, productID, review.Text)
 	if err != nil {
 		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
