@@ -56,11 +56,13 @@ func (repo *ProductPostgresqlRepository) GetByID(productId int) (model.Product, 
 // проверка, что есть права
 func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, error) {
 	var productId int
-	query := fmt.Sprintf("INSERT INTO %s (title, price, tag, type, description, count, creation_date, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id", productsTable)
+	query := fmt.Sprintf("INSERT INTO %s (user_id, title, price, tag, category, description, amount, created_at, updated_at, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id", productsTable)
 
-	row := repo.DB.QueryRow(query, product.Title, product.Price, product.Tag, product.Type, product.Description, product.Count, product.CreationDate, product.Views, product.ImageURL, product.ImageID)
+	row := repo.DB.QueryRow(query, product.UserID, product.Title, product.Price, product.Tag, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
 	err := row.Scan(&productId)
 	if err != nil {
+
+		print(err.Error())
 		return 0, err
 	}
 
@@ -92,7 +94,7 @@ func (repo *ProductPostgresqlRepository) Update(productId int, input model.Updat
 	}
 
 	if input.Type != nil {
-		setValues = append(setValues, fmt.Sprintf("type=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("category=$%d", argId))
 		args = append(args, *input.Type)
 		argId++
 	}
@@ -103,9 +105,9 @@ func (repo *ProductPostgresqlRepository) Update(productId int, input model.Updat
 		argId++
 	}
 
-	if input.Count != nil {
-		setValues = append(setValues, fmt.Sprintf("count=$%d", argId))
-		args = append(args, *input.Count)
+	if input.Amount != nil {
+		setValues = append(setValues, fmt.Sprintf("amount=$%d", argId))
+		args = append(args, *input.Amount)
 		argId++
 	}
 
@@ -122,6 +124,12 @@ func (repo *ProductPostgresqlRepository) Update(productId int, input model.Updat
 	if input.ImageURL != nil {
 		setValues = append(setValues, fmt.Sprintf("image_id=$%d", argId))
 		args = append(args, *input.ImageID)
+		argId++
+	}
+
+	if input.UpdatedAt != nil {
+		setValues = append(setValues, fmt.Sprintf("updated_at=$%d", argId))
+		args = append(args, *input.UpdatedAt)
 		argId++
 	}
 
@@ -150,7 +158,7 @@ func (repo *ProductPostgresqlRepository) Delete(productId int) (bool, error) {
 
 func (repo *ProductPostgresqlRepository) GetByType(productType string, limit int) ([]model.Product, error) {
 	var products []model.Product
-	query := fmt.Sprintf("SELECT * FROM %s WHERE type = $1", productsTable)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1", productsTable)
 
 	if err := repo.DB.Select(&products, query, productType); err != nil {
 		return nil, err

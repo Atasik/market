@@ -2,61 +2,59 @@ package handler
 
 import (
 	"market/pkg/model"
-	"market/pkg/session"
+	"market/pkg/service"
 	"net/http"
 	"time"
 )
 
-func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
+func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
+		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
 	}
 
-	orders, err := h.Services.Order.GetAll(sess.UserID)
+	orders, err := h.Services.Order.GetAll(sess.ID)
 	if err != nil {
-		http.Error(w, "Database Error", http.StatusBadRequest)
+		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "history.html", struct {
-		Landings   []model.Order
-		Session    *session.Session
-		TotalCount int
-	}{
-		Landings:   orders,
-		Session:    sess,
-		TotalCount: 0,
-	})
-	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
-		return
-	}
+	newGetOrdersResponse(w, orders, http.StatusOK)
 }
 
 func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
+	w.Header().Set("Content-type", appJSON)
+	if r.Header.Get("Content-Type") != appJSON {
+		newErrorResponse(w, "unknown payload", http.StatusBadRequest)
+		return
+	}
+
+	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
+		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
 	}
 
 	order := model.Order{
-		CreationDate: time.Now(),
-		DeliveryDate: time.Now().Add(4 * 24 * time.Hour),
+		CreatedAt:   time.Now(),
+		DeliveredAt: time.Now().Add(4 * 24 * time.Hour),
 	}
 
-	lastID, err := h.Services.Order.Create(sess.UserID, order)
+	lastID, err := h.Services.Order.Create(sess.ID, order)
 	if err != nil {
-		http.Error(w, `Database error`, http.StatusInternalServerError)
+		newErrorResponse(w, `Database error`, http.StatusInternalServerError)
 		return
 	}
 
 	h.Logger.Infof("Insert into Orders with id LastInsertId: %v", lastID)
 
-	sess.PurgeBasket()
+	orders, err := h.Services.Order.GetAll(sess.ID)
+	if err != nil {
+		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		return
+	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	newGetOrdersResponse(w, orders, http.StatusCreated)
 }

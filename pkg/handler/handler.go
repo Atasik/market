@@ -1,58 +1,49 @@
 package handler
 
 import (
-	"html/template"
 	"market/pkg/service"
-	"market/pkg/session"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
+const (
+	appJSON       = "application/json"
+	multiFormData = "multipart/form-data"
+)
+
 type Handler struct {
-	Tmpl     *template.Template
 	Logger   *zap.SugaredLogger
-	Sessions *session.SessionsManager
 	Services *service.Service
 }
 
 func (h *Handler) InitRoutes() *mux.Router {
-	staticHandler := http.StripPrefix(
-		"/static/",
-		http.FileServer(http.Dir("./static")),
-	)
-
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", h.Index).Methods("GET")
-	r.HandleFunc("/about", h.About).Methods("GET")
-	r.HandleFunc("/history", h.History).Methods("GET")
+	r.HandleFunc("/", h.GetProducts).Methods("GET")
+	r.HandleFunc("/api/about", h.About).Methods("GET")
 
-	r.HandleFunc("/products/new", h.CreateProductForm).Methods("GET")
-	r.HandleFunc("/products/new", h.CreateProduct).Methods("POST")
-	r.HandleFunc("/products/{id}/reviews/new", h.AddReview).Methods("POST")
-	r.HandleFunc("/products/{id}/reviews/update", h.UpdateReview).Methods("POST")
-	r.HandleFunc("/products/{id}/reviews/delete", h.DeleteReview).Methods("DELETE")
-	r.HandleFunc("/products/update/{id}", h.UpdateProductForm).Methods("GET")
-	r.HandleFunc("/products/update/{id}", h.UpdateProduct).Methods("POST")
-	r.HandleFunc("/products/{id}", h.GetProduct).Methods("PUT")
-	r.HandleFunc("/products/{id}", h.GetProduct).Methods("GET")
-	r.HandleFunc("/products/{id}", h.DeleteProduct).Methods("DELETE")
+	authR := mux.NewRouter()
 
-	r.HandleFunc("/basket/{id}", h.AddProductToBasket).Methods("GET")
-	r.HandleFunc("/basket/{id}", h.DeleteProductFromBasket).Methods("DELETE")
-	r.HandleFunc("/basket", h.Basket).Methods("GET")
-	r.HandleFunc("/register_order", h.CreateOrder).Methods("GET")
+	authR.HandleFunc("/api/orders", h.GetOrders).Methods("GET")
+	authR.HandleFunc("/api/product", h.CreateProduct).Methods("POST")
+	authR.HandleFunc("/api/product/{productId}", h.UpdateProduct).Methods("PUT")
+	r.HandleFunc("/api/product/{productId}", h.GetProduct).Methods("GET")
+	authR.HandleFunc("/api/product/{productId}", h.DeleteProduct).Methods("DELETE")
+	authR.HandleFunc("/api/product/{productId}/addReview", h.CreateReview).Methods("POST")
+	authR.HandleFunc("/api/product/{productId}/updateReview/{reviewId}", h.UpdateReview).Methods("PUT")
+	authR.HandleFunc("/api/product/{productId}/deleteReview/{reviewId}", h.DeleteReview).Methods("DELETE")
 
-	r.HandleFunc("/register", h.Register).Methods("GET")
-	r.HandleFunc("/login", h.Login).Methods("GET")
-	r.HandleFunc("/logout", h.Logout).Methods("GET")
+	authR.HandleFunc("/api/cart", h.GetProductsFromCart).Methods("GET")
+	authR.HandleFunc("/api/cart/{productId}", h.AddProductToCart).Methods("GET")
+	authR.HandleFunc("/api/cart/{productId}", h.DeleteProductFromCart).Methods("DELETE")
 
-	r.HandleFunc("/sign_up", h.SignUp).Methods("POST")
-	r.HandleFunc("/sign_in", h.SignIn).Methods("POST")
+	authR.HandleFunc("/api/createOrder", h.CreateOrder).Methods("GET")
 
-	r.PathPrefix("/static/").Handler(staticHandler)
+	r.HandleFunc("/api/register", h.SignUp).Methods("POST")
+	r.HandleFunc("/api/login", h.SignIn).Methods("POST")
+
+	r.PathPrefix("/api/").Handler(Auth(h.Services.User, authR))
 
 	return r
 }

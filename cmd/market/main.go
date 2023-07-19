@@ -1,16 +1,13 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 	"os"
 
-	"market/middleware"
 	"market/pkg/handler"
 	"market/pkg/repository"
 	"market/pkg/service"
-	"market/pkg/session"
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -22,8 +19,6 @@ func main() {
 	if err := initConfig(); err != nil {
 		log.Fatal("Error occured while loading config: ", err.Error())
 	}
-
-	templates := template.Must(template.ParseGlob("./static/html/*"))
 
 	db, err := repository.NewPostgresqlDB(repository.Config{
 		Host:     viper.GetString("db.host"),
@@ -48,7 +43,6 @@ func main() {
 
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos, cld)
-	sessionManager := session.NewSessionsManager()
 	zapLogger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatal("Error occured while loading zapLogger: ", err.Error())
@@ -56,18 +50,15 @@ func main() {
 	defer zapLogger.Sync() // flushes buffer, if any
 	logger := zapLogger.Sugar()
 
-	handler := &handler.Handler{
-		Tmpl:     templates,
-		Sessions: sessionManager,
+	hand := &handler.Handler{
 		Services: services,
 		Logger:   logger,
 	}
 
-	r := handler.InitRoutes()
+	r := hand.InitRoutes()
 
-	mux := middleware.Auth(sessionManager, r)
-	mux = middleware.AccessLog(logger, mux)
-	mux = middleware.Panic(mux)
+	mux := handler.AccessLog(logger, r)
+	mux = handler.Panic(mux)
 
 	//поменять
 	addr := ":" + viper.GetString("port")

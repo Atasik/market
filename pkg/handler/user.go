@@ -1,81 +1,102 @@
 package handler
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"market/pkg/model"
 	"net/http"
-
-	"github.com/gorilla/schema"
 )
 
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	err := h.Tmpl.ExecuteTemplate(w, "register.html", nil)
-	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
-		return
-	}
-}
-
 func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	user := model.User{}
-	decoder := schema.NewDecoder()
-	decoder.IgnoreUnknownKeys(true)
-	err := decoder.Decode(&user, r.PostForm)
-	if err != nil {
-		http.Error(w, `Bad form`, http.StatusBadRequest)
-	}
-
-	id, err := h.Services.CreateUser(user)
-	if err != nil {
-		http.Error(w, `Failed to verify password`, http.StatusInternalServerError)
+	w.Header().Set("Content-type", appJSON)
+	if r.Header.Get("Content-Type") != appJSON {
+		newErrorResponse(w, "unknown payload", http.StatusBadRequest)
 		return
 	}
 
-	sess, err := h.Sessions.Create(w, id, user.Username, "user")
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, `Session Error`, http.StatusUnauthorized)
+		newErrorResponse(w, "server error", http.StatusBadRequest)
+		return
+	}
+	r.Body.Close()
+
+	var user model.User
+
+	err = json.Unmarshal(body, &user)
+	if err != nil {
+		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	_, err = h.Services.Basket.CreateBasket(id)
+	id, err := h.Services.User.CreateUser(user)
 	if err != nil {
-		http.Error(w, "Create Basket Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	h.Logger.Infof("created session for %v", sess.UserID)
-	http.Redirect(w, r, "/", http.StatusFound)
+
+	_, err = h.Services.Cart.CreateCart(id)
+	if err != nil {
+		newErrorResponse(w, "Create Basket Error", http.StatusInternalServerError)
+		return
+	}
+
+	token, err := h.Services.User.GenerateToken(user.Username, user.Password)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := json.Marshal(map[string]interface{}{
+		"token": token,
+	})
+	if err != nil {
+		newErrorResponse(w, `can't create payload`, http.StatusInternalServerError)
+	}
+
+	_, err = w.Write(resp)
+	if err != nil {
+		newErrorResponse(w, `can't write resp`, http.StatusInternalServerError)
+	}
 }
 
 func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
-	login := r.FormValue("username")
-	password := r.FormValue("password")
-
-	u, err := h.Services.User.VerifyUser(login, password)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+	w.Header().Set("Content-type", appJSON)
+	if r.Header.Get("Content-Type") != appJSON {
+		newErrorResponse(w, "unknown payload", http.StatusBadRequest)
 		return
 	}
 
-	sess, err := h.Sessions.Create(w, u.ID, u.Username, u.Role)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, `Session Error`, http.StatusUnauthorized)
+		newErrorResponse(w, "server error", http.StatusBadRequest)
 		return
 	}
-	h.Logger.Infof("created session for %v", sess.UserID)
-	http.Redirect(w, r, "/", http.StatusFound)
-}
+	r.Body.Close()
 
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	err := h.Tmpl.ExecuteTemplate(w, "login.html", nil)
+	var user model.User
+
+	err = json.Unmarshal(body, &user)
 	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
+		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
-}
 
-func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	h.Sessions.DestroyCurrent(w, r)
-	http.Redirect(w, r, "/", http.StatusFound)
+	token, err := h.Services.User.GenerateToken(user.Username, user.Password)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := json.Marshal(map[string]interface{}{
+		"token": token,
+	})
+	if err != nil {
+		newErrorResponse(w, `can't create payload`, http.StatusInternalServerError)
+	}
+
+	_, err = w.Write(resp)
+	if err != nil {
+		newErrorResponse(w, `can't write resp`, http.StatusInternalServerError)
+	}
 }

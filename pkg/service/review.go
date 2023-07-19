@@ -14,18 +14,19 @@ var (
 
 type Review interface {
 	Create(review model.Review) (int, error)
-	Delete(reviewID int) (bool, error)
-	Update(userID, productID int, text string) (bool, error)
+	Delete(userID, reviewID int) (bool, error)
+	Update(userID, productID int, input model.UpdateReviewInput) (bool, error)
 	GetAll(productID int, orderBy string) ([]model.Review, error)
 	GetReviewIDByProductIDUserID(productID, userID int) (int, error)
 }
 
 type ReviewService struct {
 	reviewRepo repository.ReviewRepo
+	userRepo   repository.UserRepo
 }
 
-func NewReviewService(reviewRepo repository.ReviewRepo) *ReviewService {
-	return &ReviewService{reviewRepo: reviewRepo}
+func NewReviewService(reviewRepo repository.ReviewRepo, userRepo repository.UserRepo) *ReviewService {
+	return &ReviewService{reviewRepo: reviewRepo, userRepo: userRepo}
 }
 
 func (s *ReviewService) Create(review model.Review) (int, error) {
@@ -44,12 +45,31 @@ func (s *ReviewService) Create(review model.Review) (int, error) {
 	return s.reviewRepo.Create(review)
 }
 
-func (s *ReviewService) Delete(reviewID int) (bool, error) {
+func (s *ReviewService) Delete(userID, reviewID int) (bool, error) {
+	user, err := s.userRepo.GetUserById(userID)
+	if err != nil {
+		return false, err
+	}
+	if user.Role == model.ADMIN || user.ID == userID {
+		return s.reviewRepo.Delete(reviewID)
+	}
+
 	return s.reviewRepo.Delete(reviewID)
 }
 
-func (s *ReviewService) Update(userID, productID int, text string) (bool, error) {
-	return s.reviewRepo.Update(userID, productID, text)
+func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewInput) (bool, error) {
+	user, err := s.userRepo.GetUserById(userID)
+	if err != nil {
+		return false, err
+	}
+	if user.Role == model.ADMIN || user.ID == userID {
+		if err := input.Validate(); err != nil {
+			return false, err
+		}
+		return s.reviewRepo.Update(userID, productID, input)
+	}
+
+	return false, ErrPermissionDenied
 }
 
 func (s *ReviewService) GetAll(productID int, orderBy string) ([]model.Review, error) {

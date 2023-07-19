@@ -28,15 +28,9 @@ func (repo *OrderPostgresqlRepository) Create(userID int, order model.Order, pro
 		return 0, err
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s (creation_date, delivery_date) VALUES ($1, $2) RETURNING id", ordersTable)
-	row := tx.QueryRow(query, order.CreationDate, order.DeliveryDate)
+	query := fmt.Sprintf("INSERT INTO %s (created_at, delivered_at, user_id) VALUES ($1, $2, $3) RETURNING id", ordersTable)
+	row := tx.QueryRow(query, order.CreatedAt, order.DeliveredAt, userID)
 	if err := row.Scan(&order.ID); err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-
-	query = fmt.Sprintf("INSERT INTO %s (order_id, user_id) VALUES ($1, $2)", OrdersUsersTable)
-	if _, err := tx.Exec(query, order.ID, userID); err != nil {
 		tx.Rollback()
 		return 0, err
 	}
@@ -55,10 +49,9 @@ func (repo *OrderPostgresqlRepository) Create(userID int, order model.Order, pro
 // проверка, что есть права
 func (repo *OrderPostgresqlRepository) GetAll(userID int) ([]model.Order, error) {
 	var orders []model.Order
-	query := fmt.Sprintf(`SELECT o.id, o.creation_date, o.delivery_date FROM %s o
-			  INNER JOIN %s ou on ou.order_id = o.id
-			  INNER JOIN %s u on ou.user_id = u.id
-			  WHERE u.id = $1`, ordersTable, OrdersUsersTable, usersTable)
+	query := fmt.Sprintf(`SELECT o.id, o.created_at, o.delivered_at FROM %s o
+			  INNER JOIN %s u on o.user_id = u.id
+			  WHERE u.id = $1`, ordersTable, usersTable)
 
 	if err := repo.DB.Select(&orders, query, userID); err != nil {
 		return []model.Order{}, err

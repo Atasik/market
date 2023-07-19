@@ -3,213 +3,98 @@ package handler
 import (
 	"encoding/json"
 	"market/pkg/model"
-	"market/pkg/session"
+	"market/pkg/service"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 )
 
-const (
-	restrictedMsg = "Access denied, you are not admin"
-)
-
-func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
-	orderBy := r.URL.Query().Get("order_by")
-	sess, err := session.SessionFromContext(r.Context())
-	if err == nil {
-		basket, err := h.Services.Basket.GetByUserID(sess.UserID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		products, err := h.Services.Basket.GetProducts(basket.ID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		for _, prd := range products {
-			sess.AddPurchase(prd.ID)
-		}
+func (h *Handler) About(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+	resp, err := json.Marshal(map[string]interface{}{
+		"message": "a simple market-api",
+	})
+	if err != nil {
+		newErrorResponse(w, `can't create payload`, http.StatusInternalServerError)
 	}
+
+	_, err = w.Write(resp)
+	if err != nil {
+		newErrorResponse(w, `can't write resp`, http.StatusInternalServerError)
+	}
+}
+
+func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+	orderBy := r.URL.Query().Get("order_by")
 
 	products, err := h.Services.Product.GetAll(orderBy)
 	if err != nil {
-		http.Error(w, `Database Error`, http.StatusInternalServerError)
+		newErrorResponse(w, `Database Error`, http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "index.html", struct {
-		Products   []model.Product
-		Session    *session.Session
-		TotalCount int
-	}{
-		Products:   products,
-		Session:    sess,
-		TotalCount: 0,
-	})
-	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) About(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	err := h.Tmpl.ExecuteTemplate(w, "about.html", nil)
-	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
-		return
-	}
+	newGetProductsResponse(w, products, http.StatusOK)
 }
 
 func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	if err != nil {
-		print("no sess")
-	}
-	//bsk := basket.Basket{}
-	//if err == nil {
-	//bsk, err = h.BasketRepo.GetByID(sess.UserID)
-	// if err != nil {
-	// 	http.Error(w, `Database Error`, http.StatusInternalServerError)
-	// 	return
-	// }
+	w.Header().Set("Content-type", appJSON)
 
 	vars := mux.Vars(r)
-	productID, err := strconv.Atoi(vars["id"])
+	productID, err := strconv.Atoi(vars["productId"])
 	if err != nil {
-		http.Error(w, "Bad Id", http.StatusBadGateway)
+		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
 		return
 	}
 
 	//вероятно тоже в сервисы
 	selectedProduct, err := h.Services.Product.GetByID(productID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		newErrorResponse(w, `Service error`, http.StatusInternalServerError)
 		return
 	}
 
-	print(selectedProduct.Views)
+	// input := model.UpdateProductInput{
+	// 	Views: &selectedProduct.Views,
+	// }
 
-	input := model.UpdateProductInput{
-		Views: &selectedProduct.Views,
-	}
-
-	_, err = h.Services.Product.Update(selectedProduct.ID, input)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// _, err = h.Services.Product.Update(selectedProduct.ID, input)
+	// if err != nil {
+	// 	newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
 
 	reviews, err := h.Services.Review.GetAll(productID, "")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	relatedProducts, err := h.Services.Product.GetByType(selectedProduct.Type, 5)
+	relatedProducts, err := h.Services.Product.GetByType(selectedProduct.Category, 5)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "product.html", struct {
-		Product    model.Product
-		Related    []model.Product
-		Reviews    []model.Review
-		Session    *session.Session
-		TotalCount int
-	}{
-		Product:    selectedProduct,
-		Related:    relatedProducts,
-		Reviews:    reviews,
-		Session:    sess,
-		TotalCount: 0,
-	})
+	selectedProduct.Reviews = reviews
+	selectedProduct.RelatedProducts = relatedProducts
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(selectedProduct)
 	if err != nil {
-		http.Error(w, "Template error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-	if sess.UserType != model.ADMIN {
-		http.Error(w, restrictedMsg, http.StatusForbidden)
-		return
-	}
-
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, "Bad Id", http.StatusBadGateway)
-		return
-	}
-
-	product, err := h.Services.Product.GetByID(id)
-	if err != nil {
-		http.Error(w, "Database Error", http.StatusInternalServerError)
-		return
-	}
-
-	// расписать сервис
-	_, err = h.Services.Product.Delete(id)
-	if err != nil {
-		http.Error(w, "Database Error", http.StatusInternalServerError)
-		return
-	}
-
-	err = h.Services.Image.Delete(product.ImageID)
-	if err != nil {
-		http.Error(w, "ImageService Error", http.StatusInternalServerError)
-		return
-	}
-
-	sess.DeletePurchase(id)
-	w.Header().Set("Content-type", "application/json")
-	respJSON, _ := json.Marshal(map[string]uint32{
-		"updated": uint32(id),
-	})
-	w.Write(respJSON)
-}
-
-func (h *Handler) CreateProductForm(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
-	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-	if sess.UserType != model.ADMIN {
-		http.Error(w, restrictedMsg, http.StatusForbidden)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "create_product.html", nil)
-	if err != nil {
-		http.Error(w, `Template errror`, http.StatusInternalServerError)
+		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
+	w.Header().Set("Content-type", appJSON)
+	session, err := service.SessionFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-	if sess.UserType != model.ADMIN {
-		http.Error(w, restrictedMsg, http.StatusForbidden)
+		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -219,24 +104,27 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	decoder.IgnoreUnknownKeys(true)
 	err = decoder.Decode(&product, r.PostForm)
 	if err != nil {
-		http.Error(w, `Bad form`, http.StatusBadRequest)
+		newErrorResponse(w, `Bad form`, http.StatusBadRequest)
 		return
 	}
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "Error Retrieving the File", http.StatusBadRequest)
+		newErrorResponse(w, "Error Retrieving the File", http.StatusBadRequest)
 		return
 	}
 
 	data, err := h.Services.Image.Upload(file)
 	if err != nil {
-		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
+		newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 		return
 	}
 
+	product.UserID = session.ID
 	product.ImageURL = data.ImageURL
 	product.ImageID = data.ImageID
+	product.CreatedAt = time.Now()
+	product.UpdatedAt = time.Now()
 
 	defer file.Close()
 
@@ -244,72 +132,38 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = h.Services.Image.Delete(product.ImageID)
 		if err != nil {
-			http.Error(w, `ImageServer Error`, http.StatusInternalServerError)
+			newErrorResponse(w, `ImageServer Error`, http.StatusInternalServerError)
 			return
 		}
-		http.Error(w, `Database Error`, http.StatusInternalServerError)
+		newErrorResponse(w, `Database Error`, http.StatusInternalServerError)
 		return
 	}
+
+	product.ID = lastID
+
 	h.Logger.Infof("Insert into Products with id LastInsertId: %v", lastID)
-	http.Redirect(w, r, "/", http.StatusFound)
-}
 
-func (h *Handler) UpdateProductForm(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(product)
 	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-	if sess.UserType != model.ADMIN {
-		http.Error(w, restrictedMsg, http.StatusForbidden)
-		return
-	}
-
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, `Bad id`, http.StatusBadRequest)
-		return
-	}
-
-	prod, err := h.Services.Product.GetByID(id)
-	if err != nil {
-		http.Error(w, `Database Error`, http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	err = h.Tmpl.ExecuteTemplate(w, "update_product.html", struct {
-		Product    model.Product
-		Session    *session.Session
-		TotalCount int
-	}{
-		Product:    prod,
-		Session:    sess,
-		TotalCount: 0,
-	})
-	if err != nil {
-		print(err.Error())
-		http.Error(w, `Template errror`, http.StatusInternalServerError)
+		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.SessionFromContext(r.Context())
+	w.Header().Set("Content-type", appJSON)
+
+	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "Session Error", http.StatusBadRequest)
-		return
-	}
-	if sess.UserType != model.ADMIN {
-		http.Error(w, restrictedMsg, http.StatusForbidden)
+		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
 	}
 
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	productID, err := strconv.Atoi(vars["productId"])
 	if err != nil {
-		http.Error(w, `Bad id`, http.StatusBadRequest)
+		newErrorResponse(w, `Bad id`, http.StatusBadRequest)
 		return
 	}
 
@@ -319,49 +173,109 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	var input model.UpdateProductInput
 	err = decoder.Decode(&input, r.PostForm)
 	if err != nil {
-		http.Error(w, `Bad form`, http.StatusBadRequest)
+		newErrorResponse(w, `Bad form`, http.StatusBadRequest)
 		return
 	}
 
 	file, _, err := r.FormFile("file")
-	if err != nil {
-		http.Error(w, "Error Retrieving the File", http.StatusBadRequest)
+	noFile := err == http.ErrMissingFile
+	print(noFile)
+	if err != nil && !noFile {
+		newErrorResponse(w, "Error Retrieving the File", http.StatusBadRequest)
 		return
 	}
 
-	data, err := h.Services.Image.Upload(file)
-	if err != nil {
-		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
-		return
-	}
-
-	input.ImageURL = &data.ImageURL
-	input.ImageID = &data.ImageID
-	defer file.Close()
-
-	oldProduct, err := h.Services.Product.GetByID(id)
-	if err != nil {
-		http.Error(w, "Database Error", http.StatusInternalServerError)
-		return
-	}
-
-	ok, err := h.Services.Product.Update(id, input)
-	if err != nil {
-		err = h.Services.Image.Delete(*input.ImageID)
+	if !noFile {
+		data, err := h.Services.Image.Upload(file)
 		if err != nil {
-			http.Error(w, `ImageService Error`, http.StatusInternalServerError)
+			newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 			return
 		}
-		http.Error(w, `Database error`, http.StatusInternalServerError)
+		input.ImageURL = &data.ImageURL
+		input.ImageID = &data.ImageID
+		defer file.Close()
+	}
+
+	currentTime := time.Now()
+	input.UpdatedAt = &currentTime
+
+	oldProduct, err := h.Services.Product.GetByID(productID)
+	if err != nil {
+		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
-	err = h.Services.Image.Delete(oldProduct.ImageID)
+
+	ok, err := h.Services.Product.Update(sess.ID, productID, input)
 	if err != nil {
-		http.Error(w, `ImageService Error`, http.StatusInternalServerError)
+		if !noFile {
+			err = h.Services.Image.Delete(*input.ImageID)
+			if err != nil {
+				newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
+				return
+			}
+		}
+		newErrorResponse(w, `Database error`, http.StatusInternalServerError)
+		return
+	}
+
+	if !noFile {
+		err = h.Services.Image.Delete(oldProduct.ImageID)
+		if err != nil {
+			newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
+			return
+		}
+	}
+
+	product, err := h.Services.Product.GetByID(productID)
+	if err != nil {
+		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
 
 	h.Logger.Infof("update: %v %v", "heh", ok)
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(product)
+	if err != nil {
+		newErrorResponse(w, "server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+
+	session, err := service.SessionFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		return
+	}
+
+	vars := mux.Vars(r)
+	productId, err := strconv.Atoi(vars["productId"])
+	if err != nil {
+		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
+		return
+	}
+
+	product, err := h.Services.Product.GetByID(productId)
+	if err != nil {
+		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		return
+	}
+
+	// расписать сервис
+	_, err = h.Services.Product.Delete(session.ID, productId)
+	if err != nil {
+		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		return
+	}
+
+	err = h.Services.Image.Delete(product.ImageID)
+	if err != nil {
+		newErrorResponse(w, "ImageService Error", http.StatusInternalServerError)
+		return
+	}
+
+	newStatusReponse(w, "done", http.StatusOK)
 }

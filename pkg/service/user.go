@@ -9,12 +9,19 @@ import (
 	"market/pkg/model"
 	"market/pkg/repository"
 	"strings"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/argon2"
 )
 
 var (
 	ErrBadPass = errors.New("invalid password")
+)
+
+const (
+	signingKey = "qrkjk#4#%35FSFJlja#4353KSFjH"
+	tokenTTL   = 12 * time.Hour
 )
 
 const (
@@ -34,7 +41,8 @@ type HashConfig struct {
 }
 
 type User interface {
-	VerifyUser(login, password string) (model.User, error)
+	GenerateToken(username, password string) (string, error)
+	CheckToken(accessToken string) (*Session, error)
 	CreateUser(model.User) (int, error)
 }
 
@@ -42,26 +50,66 @@ type UserService struct {
 	userRepo repository.UserRepo
 }
 
+type tokenClaims struct {
+	jwt.StandardClaims
+	UserID   int    `json:"user_id"`
+	Username string `json:"username"`
+}
+
 func NewUserService(userRepo repository.UserRepo) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
-func (s *UserService) VerifyUser(login, password string) (model.User, error) {
-	user, err := s.userRepo.GetUser(login)
+func (s *UserService) GenerateToken(username, password string) (string, error) {
+	user, err := s.userRepo.GetUser(username)
 	if err != nil {
-		return model.User{}, err
+		return "", err
 	}
 
 	match, err := verifyPassword(password, user.Password)
 	if err != nil {
-		return model.User{}, err
+		return "", err
 	}
 
 	if !match {
-		return model.User{}, ErrBadPass
+		return "", ErrBadPass
 	}
 
-	return user, nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
+			IssuedAt:  time.Now().Unix(),
+		},
+		user.ID,
+		user.Username,
+	})
+
+	return token.SignedString([]byte(signingKey))
+}
+
+func (s *UserService) CheckToken(accessToken string) (*Session, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+
+		return []byte(signingKey), nil
+	})
+	if err != nil {
+		return &Session{}, err
+	}
+
+	claims, ok := token.Claims.(*tokenClaims)
+	if !ok {
+		return &Session{}, errors.New("token claims are not of type *tokenClaims")
+	}
+
+	session := Session{
+		Username: claims.Username,
+		ID:       claims.UserID,
+	}
+
+	return &session, nil
 }
 
 func (s *UserService) CreateUser(user model.User) (int, error) {

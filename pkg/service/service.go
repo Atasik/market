@@ -8,7 +8,7 @@ import (
 
 type Service struct {
 	Product
-	Basket
+	Cart
 	Order
 	Review
 	User
@@ -17,10 +17,10 @@ type Service struct {
 
 func NewService(repos *repository.Repository, cloudinary *cloudinary.Cloudinary) *Service {
 	return &Service{
-		Product: NewProductService(repos.ProductRepo),
-		Basket:  NewBasketService(repos.BasketRepo),
-		Order:   NewOrderService(repos.OrderRepo, repos.BasketRepo),
-		Review:  NewReviewService(repos.ReviewRepo),
+		Product: NewProductService(repos.ProductRepo, repos.UserRepo),
+		Cart:    NewCartService(repos.CartRepo, repos.UserRepo),
+		Order:   NewOrderService(repos.OrderRepo, repos.CartRepo, repos.UserRepo),
+		Review:  NewReviewService(repos.ReviewRepo, repos.UserRepo),
 		User:    NewUserService(repos.UserRepo),
 		Image:   NewImageServiceCloudinary(cloudinary),
 	}

@@ -6,35 +6,40 @@ import (
 )
 
 type Product struct {
-	ID             int       `db:"id"`
-	Title          string    `schema:"title" db:"title"`
-	Price          float32   `schema:"price" db:"price"`
-	Tag            string    `schema:"tag" db:"tag"`
-	Type           string    `schema:"type" db:"type"`
-	Description    string    `schema:"description" db:"description"`
-	Count          int       `db:"count"`
-	PurchasedCount int       `db:"purchased_count"`
-	OrderID        int       `db:"order_id"`
-	CreationDate   time.Time `schema:"creation_date" db:"creation_date"`
-	Views          int       `db:"views"`
-	ImageURL       string    `db:"image_url"`
-	ImageID        string    `db:"image_id"`
+	ID              int       `db:"id" json:"id"`
+	UserID          int       `db:"user_id" json:"user_id"`
+	Title           string    `db:"title" json:"title" schema:"title"`
+	Price           float32   `db:"price" json:"price" schema:"price"`
+	Tag             string    `db:"tag" json:"tag" schema:"tag"`
+	Category        string    `db:"category" json:"category" schema:"category"`
+	Description     string    `db:"description" json:"description" schema:"description"`
+	Amount          int       `db:"amount" json:"amount" schema:"amount"`
+	PurchasedAmount int       `db:"purchased_amount" json:"purchased_amount"`
+	OrderID         int       `db:"order_id" json:"order_id"`
+	CreatedAt       time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt       time.Time `db:"updated_at" json:"updated_at"`
+	Views           int       `db:"views" json:"views"`
+	ImageURL        string    `db:"image_url" json:"image_url"`
+	ImageID         string    `db:"image_id"`
+	Reviews         []Review  `json:"reviews"`
+	RelatedProducts []Product `json:"related_products"`
 }
 
 type UpdateProductInput struct {
-	Title       *string  `schema:"title"`
-	Price       *float32 `schema:"price"`
-	Tag         *string  `schema:"tag"`
-	Type        *string  `schema:"type"`
-	Description *string  `schema:"description"`
-	Count       *int     `schema:"count"`
-	Views       *int     `schema:"views"`
-	ImageURL    *string  `schema:"image_url"`
+	Title       *string    `json:"title"`
+	Price       *float32   `json:"price"`
+	Tag         *string    `json:"tag"`
+	Type        *string    `json:"type"`
+	Description *string    `json:"description"`
+	UpdatedAt   *time.Time `json:"updated_at"`
+	Amount      *int       `json:"amount"`
+	Views       *int       `json:"views"`
+	ImageURL    *string    `json:"image_url"`
 	ImageID     *string
 }
 
 func (i UpdateProductInput) Validate() error {
-	if i.Title == nil && i.Price == nil && i.Tag == nil && i.Type == nil && i.Description == nil && i.Count == nil && i.Views == nil && (i.ImageURL == nil && i.ImageURL != i.ImageID) {
+	if i.Title == nil && i.Price == nil && i.Tag == nil && i.Type == nil && i.Description == nil && i.Amount == nil && i.Views == nil && i.UpdatedAt == nil && (i.ImageURL == nil && i.ImageURL != i.ImageID) {
 		return errors.New("update structure has no values")
 	}
 

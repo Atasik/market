@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"market/pkg/model"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -10,7 +11,7 @@ import (
 type ReviewRepo interface {
 	Create(review model.Review) (int, error)
 	Delete(reviewID int) (bool, error)
-	Update(userID, productID int, text string) (bool, error)
+	Update(userID, productID int, input model.UpdateReviewInput) (bool, error)
 	GetAll(productID int, orderBy string) ([]model.Review, error)
 	GetReviewIDByProductIDUserID(productID, userID int) (int, error)
 }
@@ -25,9 +26,9 @@ func NewReviewPostgresqlRepo(db *sqlx.DB) *ReviewPostgresqlRepository {
 
 func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error) {
 	var reviewId int
-	query := fmt.Sprintf("INSERT INTO %s (creation_date, product_id, user_id, username, review_text, rating) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id", reviewsTable)
+	query := fmt.Sprintf("INSERT INTO %s (created_at, updated_at, product_id, user_id, text, category) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id", reviewsTable)
 
-	row := repo.DB.QueryRow(query, review.CreationDate, review.ProductID, review.UserID, review.Username, review.Text, review.Rating)
+	row := repo.DB.QueryRow(query, review.CreatedAt, review.UpdatedAt, review.ProductID, review.UserID, review.Text, review.Category)
 	err := row.Scan(&reviewId)
 	if err != nil {
 		return 0, err
@@ -48,10 +49,34 @@ func (repo *ReviewPostgresqlRepository) Delete(reviewID int) (bool, error) {
 }
 
 // проверка, что есть права
-func (repo *ReviewPostgresqlRepository) Update(userID, productID int, text string) (bool, error) {
-	query := fmt.Sprintf("UPDATE %s SET review_text = $1 WHERE (user_id = $2 AND product_id = $3)", reviewsTable)
+func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input model.UpdateReviewInput) (bool, error) {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+	if input.Text != nil {
+		setValues = append(setValues, fmt.Sprintf("text=$%d", argId))
+		args = append(args, *input.Text)
+		argId++
+	}
 
-	_, err := repo.DB.Exec(query, text, userID, productID)
+	if input.Category != "" {
+		setValues = append(setValues, fmt.Sprintf("category=$%d", argId))
+		args = append(args, input.Category)
+		argId++
+	}
+
+	if input.UpdatedAt != nil {
+		setValues = append(setValues, fmt.Sprintf("updated_at=$%d", argId))
+		args = append(args, input.UpdatedAt)
+		argId++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE (user_id = $%d AND product_id = $%d)", reviewsTable, setQuery, argId, argId+1)
+	args = append(args, userID, productID)
+
+	_, err := repo.DB.Exec(query, args...)
 	if err != nil {
 		return false, err
 	}
