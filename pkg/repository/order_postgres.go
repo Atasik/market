@@ -8,9 +8,10 @@ import (
 )
 
 type OrderRepo interface {
-	Create(userID int, order model.Order, products []model.Product) (int, error)
+	Create(cartID, userID int, order model.Order, products []model.Product) (int, error)
 	GetAll(userID int) ([]model.Order, error)
 	GetByID(orderID int) (model.Order, error)
+	GetProductsByOrderID(orderID int) ([]model.Product, error)
 }
 
 type OrderPostgresqlRepository struct {
@@ -21,8 +22,7 @@ func NewOrderPostgresqlRepo(db *sqlx.DB) *OrderPostgresqlRepository {
 	return &OrderPostgresqlRepository{DB: db}
 }
 
-// проверка, что есть права
-func (repo *OrderPostgresqlRepository) Create(userID int, order model.Order, products []model.Product) (int, error) {
+func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Order, products []model.Product) (int, error) {
 	tx, err := repo.DB.Begin()
 	if err != nil {
 		return 0, ParsePostgresError(err)
@@ -35,7 +35,7 @@ func (repo *OrderPostgresqlRepository) Create(userID int, order model.Order, pro
 		return 0, ParsePostgresError(err)
 	}
 
-	query = fmt.Sprintf("INSERT INTO %s (order_id, product_id) VALUES ($1, $2)", ProductsOrdersTable)
+	query = fmt.Sprintf("INSERT INTO %s (order_id, product_id) VALUES ($1, $2)", productsOrdersTable)
 	for _, product := range products {
 		if _, err := tx.Exec(query, order.ID, product.ID); err != nil {
 			tx.Rollback()
@@ -43,10 +43,15 @@ func (repo *OrderPostgresqlRepository) Create(userID int, order model.Order, pro
 		}
 	}
 
+	query = fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1`, productsCartsTable)
+	if _, err = tx.Exec(query, cartID); err != nil {
+		tx.Rollback()
+		return 0, ParsePostgresError(err)
+	}
+
 	return order.ID, ParsePostgresError(tx.Commit())
 }
 
-// проверка, что есть права
 func (repo *OrderPostgresqlRepository) GetAll(userID int) ([]model.Order, error) {
 	var orders []model.Order
 	query := fmt.Sprintf(`SELECT o.id, o.created_at, o.delivered_at FROM %s o
@@ -60,7 +65,6 @@ func (repo *OrderPostgresqlRepository) GetAll(userID int) ([]model.Order, error)
 	return orders, nil
 }
 
-// проверка, что есть права
 func (repo *OrderPostgresqlRepository) GetByID(orderID int) (model.Order, error) {
 	var order model.Order
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", ordersTable)
@@ -70,4 +74,18 @@ func (repo *OrderPostgresqlRepository) GetByID(orderID int) (model.Order, error)
 	}
 
 	return order, nil
+}
+
+func (repo *OrderPostgresqlRepository) GetProductsByOrderID(orderID int) ([]model.Product, error) {
+	var products []model.Product
+	query := fmt.Sprintf(`SELECT p.id, p.user_id, p.title, p.price, p.tag, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url FROM %s p 
+			  INNER JOIN %s po on po.product_id = p.id
+			  INNER JOIN %s o on po.order_id = o.id
+			  WHERE o.id = $1`, productsTable, productsOrdersTable, ordersTable)
+
+	if err := repo.DB.Select(&products, query, orderID); err != nil {
+		return []model.Product{}, ParsePostgresError(err)
+	}
+
+	return products, nil
 }

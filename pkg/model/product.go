@@ -14,8 +14,8 @@ type Product struct {
 	Category        string    `db:"category" json:"category" schema:"category" validate:"required"`
 	Description     string    `db:"description" json:"description" schema:"description"`
 	Amount          int       `db:"amount" json:"amount" schema:"amount" validate:"required"`
-	PurchasedAmount int       `db:"purchased_amount" json:"purchased_amount"`
-	OrderID         int       `db:"order_id" json:"order_id"`
+	PurchasedAmount int       `db:"purchased_amount" json:"purchased_amount,omitempty"`
+	OrderID         int       `db:"order_id" json:"order_id,omitempty"`
 	CreatedAt       time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt       time.Time `db:"updated_at" json:"updated_at"`
 	Views           int       `db:"views" json:"views"`

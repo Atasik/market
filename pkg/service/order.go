@@ -15,6 +15,7 @@ type Order interface {
 	Create(userID int, order model.Order) (int, error)
 	GetAll(userID int) ([]model.Order, error)
 	GetByID(userID, orderID int) (model.Order, error)
+	GetProductsByOrderID(userID, orderID int) ([]model.Product, error)
 }
 
 type OrderService struct {
@@ -33,27 +34,21 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 		return 0, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		Cart, err := s.cartRepo.GetByUserID(userID)
+		cart, err := s.cartRepo.GetByUserID(userID)
 		if err != nil {
 			return 0, err
 		}
 
-		products, err := s.cartRepo.GetProducts(Cart.ID)
-		if err != nil {
-			switch err {
-			case repository.ErrNotFound:
-				return 0, ErrNoProducts
-			default:
-				return 0, err
-			}
-		}
-
-		lastID, err := s.orderRepo.Create(userID, order, products)
+		products, err := s.cartRepo.GetProducts(cart.ID)
 		if err != nil {
 			return 0, err
 		}
 
-		_, err = s.cartRepo.DeleteAll(userID)
+		if products == nil {
+			return 0, ErrNoProducts
+		}
+
+		lastID, err := s.orderRepo.Create(cart.ID, userID, order, products)
 		if err != nil {
 			return 0, err
 		}
@@ -94,4 +89,16 @@ func (s *OrderService) GetByID(userID, orderID int) (model.Order, error) {
 	}
 
 	return model.Order{}, ErrPermissionDenied
+}
+
+func (s *OrderService) GetProductsByOrderID(userID, orderID int) ([]model.Product, error) {
+	user, err := s.userRepo.GetUserById(userID)
+	if err != nil {
+		return []model.Product{}, err
+	}
+	if user.Role == model.ADMIN || user.ID == userID {
+		return s.orderRepo.GetProductsByOrderID(orderID)
+	}
+
+	return []model.Product{}, ErrPermissionDenied
 }

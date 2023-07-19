@@ -15,7 +15,7 @@ type Review interface {
 	Create(review model.Review) (int, error)
 	Delete(userID, reviewID int) (bool, error)
 	Update(userID, productID int, input model.UpdateReviewInput) (bool, error)
-	GetAll(productID int, orderBy string) ([]model.Review, error)
+	GetAll(productID int) ([]model.Review, error)
 	GetReviewIDByProductIDUserID(productID, userID int) (int, error)
 }
 
@@ -78,8 +78,8 @@ func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewIn
 	return false, ErrPermissionDenied
 }
 
-func (s *ReviewService) GetAll(productID int, orderBy string) ([]model.Review, error) {
-	return s.reviewRepo.GetAll(productID, orderBy)
+func (s *ReviewService) GetAll(productID int) ([]model.Review, error) {
+	return s.reviewRepo.GetAll(productID)
 }
 
 func (s *ReviewService) GetReviewIDByProductIDUserID(productID, userID int) (int, error) {

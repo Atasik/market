@@ -20,9 +20,9 @@ const (
 	ordersTable         = "orders"
 	reviewsTable        = "reviews"
 	cartsTable          = "carts"
-	ProductsUsersTable  = "products_users"
-	ProductsOrdersTable = "products_orders"
-	ProductsCartsTable  = "products_carts"
+	productsUsersTable  = "products_users"
+	productsOrdersTable = "products_orders"
+	productsCartsTable  = "products_carts"
 )
 
 type Config struct {

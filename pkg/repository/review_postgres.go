@@ -12,7 +12,7 @@ type ReviewRepo interface {
 	Create(review model.Review) (int, error)
 	Delete(reviewID int) (bool, error)
 	Update(userID, productID int, input model.UpdateReviewInput) (bool, error)
-	GetAll(productID int, orderBy string) ([]model.Review, error)
+	GetAll(productID int) ([]model.Review, error)
 	GetReviewIDByProductIDUserID(productID, userID int) (int, error)
 }
 
@@ -83,7 +83,7 @@ func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input mode
 	return true, nil
 }
 
-func (repo *ReviewPostgresqlRepository) GetAll(productID int, orderBy string) ([]model.Review, error) {
+func (repo *ReviewPostgresqlRepository) GetAll(productID int) ([]model.Review, error) {
 	var rewiews []model.Review
 	query := fmt.Sprintf("SELECT * FROM %s WHERE product_id = $1", reviewsTable)
 

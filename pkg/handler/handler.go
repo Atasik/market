@@ -28,6 +28,7 @@ func (h *Handler) InitRoutes() *mux.Router {
 	authR := mux.NewRouter()
 
 	authR.HandleFunc("/api/orders", h.GetOrders).Methods("GET")
+	authR.HandleFunc("/api/order/{orderId}", h.GetOrder).Methods("GET")
 	authR.HandleFunc("/api/product", h.CreateProduct).Methods("POST")
 	authR.HandleFunc("/api/product/{productId}", h.UpdateProduct).Methods("PUT")
 	r.HandleFunc("/api/product/{productId}", h.GetProduct).Methods("GET")

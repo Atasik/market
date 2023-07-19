@@ -57,30 +57,23 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// input := model.UpdateProductInput{
-	// 	Views: &selectedProduct.Views,
-	// }
-
-	// _, err = h.Services.Product.Update(selectedProduct.ID, input)
-	// if err != nil {
-	// 	newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
-	reviews, err := h.Services.Review.GetAll(productID, "")
+	_, err = h.Services.Product.IncreaseViewsCounter(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	relatedProducts, err := h.Services.Product.GetByType(selectedProduct.Category, 5)
+	selectedProduct.Reviews, err = h.Services.Review.GetAll(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	selectedProduct.Reviews = reviews
-	selectedProduct.RelatedProducts = relatedProducts
+	selectedProduct.RelatedProducts, err = h.Services.Product.GetByType(selectedProduct.Category, productID, 5)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(selectedProduct)
@@ -270,7 +263,6 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// расписать сервис
 	_, err = h.Services.Product.Delete(session.ID, productId)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)

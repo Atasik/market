@@ -14,11 +14,12 @@ var (
 
 type Product interface {
 	GetAll(orderBy string) ([]model.Product, error)
-	GetByID(productId int) (model.Product, error)
+	GetByID(productID int) (model.Product, error)
 	Create(product model.Product) (int, error)
-	Update(userID, productId int, input model.UpdateProductInput) (bool, error)
-	Delete(userID, productId int) (bool, error)
-	GetByType(productType string, limit int) ([]model.Product, error)
+	Update(userID, productID int, input model.UpdateProductInput) (bool, error)
+	Delete(userID, productID int) (bool, error)
+	GetByType(productType string, productID, limit int) ([]model.Product, error)
+	IncreaseViewsCounter(productID int) (bool, error)
 }
 
 type ProductService struct {
@@ -34,8 +35,8 @@ func (s *ProductService) GetAll(orderBy string) ([]model.Product, error) {
 	return s.productRepo.GetAll(orderBy)
 }
 
-func (s *ProductService) GetByID(productId int) (model.Product, error) {
-	product, err := s.productRepo.GetByID(productId)
+func (s *ProductService) GetByID(productID int) (model.Product, error) {
+	product, err := s.productRepo.GetByID(productID)
 	if err != nil {
 		switch err {
 		case repository.ErrNotFound:
@@ -60,7 +61,7 @@ func (s *ProductService) Create(product model.Product) (int, error) {
 	return id, nil
 }
 
-func (s *ProductService) Update(userID, productId int, input model.UpdateProductInput) (bool, error) {
+func (s *ProductService) Update(userID, productID int, input model.UpdateProductInput) (bool, error) {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return false, err
@@ -69,7 +70,7 @@ func (s *ProductService) Update(userID, productId int, input model.UpdateProduct
 		if err := input.Validate(); err != nil {
 			return false, err
 		}
-		return s.productRepo.Update(productId, input)
+		return s.productRepo.Update(productID, input)
 	}
 
 	return false, ErrPermissionDenied
@@ -87,6 +88,17 @@ func (s *ProductService) Delete(userID, productID int) (bool, error) {
 	return false, ErrPermissionDenied
 }
 
-func (s *ProductService) GetByType(productType string, limit int) ([]model.Product, error) {
-	return s.productRepo.GetByType(productType, limit)
+func (s *ProductService) GetByType(productType string, productID, limit int) ([]model.Product, error) {
+	return s.productRepo.GetByType(productType, productID, limit)
+}
+
+func (s *ProductService) IncreaseViewsCounter(productID int) (bool, error) {
+	views := 1
+	input := model.UpdateProductInput{
+		Views: &views,
+	}
+	if err := input.Validate(); err != nil {
+		return false, err
+	}
+	return s.productRepo.Update(productID, input)
 }

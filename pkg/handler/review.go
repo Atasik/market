@@ -69,20 +69,17 @@ func (h *Handler) CreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reviews, err := h.Services.Review.GetAll(productID, "")
+	product.Reviews, err = h.Services.Review.GetAll(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	relatedProducts, err := h.Services.Product.GetByType(product.Category, 5)
+	product.RelatedProducts, err = h.Services.Product.GetByType(product.Category, productID, 5)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	product.Reviews = reviews
-	product.RelatedProducts = relatedProducts
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(product)
@@ -122,20 +119,17 @@ func (h *Handler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reviews, err := h.Services.Review.GetAll(productID, "")
+	product.Reviews, err = h.Services.Review.GetAll(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	relatedProducts, err := h.Services.Product.GetByType(product.Category, 5)
+	product.RelatedProducts, err = h.Services.Product.GetByType(product.Category, productID, 5)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	product.Reviews = reviews
-	product.RelatedProducts = relatedProducts
 
 	json.NewEncoder(w).Encode(product)
 	if err != nil {
@@ -198,20 +192,17 @@ func (h *Handler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reviews, err := h.Services.Review.GetAll(productID, "")
+	product.Reviews, err = h.Services.Review.GetAll(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	relatedProducts, err := h.Services.Product.GetByType(product.Category, 5)
+	product.RelatedProducts, err = h.Services.Product.GetByType(product.Category, productID, 5)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	product.Reviews = reviews
-	product.RelatedProducts = relatedProducts
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(product)
