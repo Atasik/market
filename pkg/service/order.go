@@ -1,8 +1,14 @@
 package service
 
 import (
+	"errors"
 	"market/pkg/model"
 	"market/pkg/repository"
+)
+
+var (
+	ErrNoOrder    = errors.New("order doesn't exists")
+	ErrNoProducts = errors.New("no products in cart")
 )
 
 type Order interface {
@@ -13,12 +19,12 @@ type Order interface {
 
 type OrderService struct {
 	orderRepo repository.OrderRepo
-	CartRepo  repository.CartRepo
+	cartRepo  repository.CartRepo
 	userRepo  repository.UserRepo
 }
 
-func NewOrderService(orderRepo repository.OrderRepo, CartRepo repository.CartRepo, userRepo repository.UserRepo) *OrderService {
-	return &OrderService{orderRepo: orderRepo, CartRepo: CartRepo, userRepo: userRepo}
+func NewOrderService(orderRepo repository.OrderRepo, cartRepo repository.CartRepo, userRepo repository.UserRepo) *OrderService {
+	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo}
 }
 
 func (s *OrderService) Create(userID int, order model.Order) (int, error) {
@@ -27,14 +33,19 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 		return 0, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		Cart, err := s.CartRepo.GetByUserID(userID)
+		Cart, err := s.cartRepo.GetByUserID(userID)
 		if err != nil {
 			return 0, err
 		}
 
-		products, err := s.CartRepo.GetProducts(Cart.ID)
+		products, err := s.cartRepo.GetProducts(Cart.ID)
 		if err != nil {
-			return 0, err
+			switch err {
+			case repository.ErrNotFound:
+				return 0, ErrNoProducts
+			default:
+				return 0, err
+			}
 		}
 
 		lastID, err := s.orderRepo.Create(userID, order, products)
@@ -42,7 +53,7 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 			return 0, err
 		}
 
-		_, err = s.CartRepo.DeleteAll(userID)
+		_, err = s.cartRepo.DeleteAll(userID)
 		if err != nil {
 			return 0, err
 		}
@@ -70,7 +81,16 @@ func (s *OrderService) GetByID(userID, orderID int) (model.Order, error) {
 		return model.Order{}, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.orderRepo.GetByID(orderID)
+		order, err := s.orderRepo.GetByID(orderID)
+		if err != nil {
+			switch err {
+			case repository.ErrNotFound:
+				return model.Order{}, ErrNoOrder
+			default:
+				return model.Order{}, err
+			}
+		}
+		return order, nil
 	}
 
 	return model.Order{}, ErrPermissionDenied

@@ -33,7 +33,7 @@ func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
 
 	products, err := h.Services.Product.GetAll(orderBy)
 	if err != nil {
-		newErrorResponse(w, `Database Error`, http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	//вероятно тоже в сервисы
 	selectedProduct, err := h.Services.Product.GetByID(productID)
 	if err != nil {
-		newErrorResponse(w, `Service error`, http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -108,6 +108,12 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = h.Validator.Struct(product)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	file, _, err := r.FormFile("file")
 	if err != nil {
 		newErrorResponse(w, "Error Retrieving the File", http.StatusBadRequest)
@@ -135,7 +141,7 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 			newErrorResponse(w, `ImageServer Error`, http.StatusInternalServerError)
 			return
 		}
-		newErrorResponse(w, `Database Error`, http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -201,7 +207,7 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	oldProduct, err := h.Services.Product.GetByID(productID)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -214,7 +220,7 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		newErrorResponse(w, `Database error`, http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -228,7 +234,7 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -260,14 +266,14 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 
 	product, err := h.Services.Product.GetByID(productId)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// расписать сервис
 	_, err = h.Services.Product.Delete(session.ID, productId)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -29,6 +29,14 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.Role = model.USER
+
+	err = h.Validator.Struct(user)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	id, err := h.Services.User.CreateUser(user)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
@@ -60,6 +68,11 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type inputSignIn struct {
+	Username string `db:"username" json:"username" validate:"required"`
+	Password string `db:"password" json:"password" validate:"required"`
+}
+
 func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -74,15 +87,21 @@ func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var user model.User
+	var input inputSignIn
 
-	err = json.Unmarshal(body, &user)
+	err = json.Unmarshal(body, &input)
 	if err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	token, err := h.Services.User.GenerateToken(user.Username, user.Password)
+	err = h.Validator.Struct(input)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	token, err := h.Services.User.GenerateToken(input.Username, input.Password)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

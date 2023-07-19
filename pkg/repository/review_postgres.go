@@ -31,7 +31,7 @@ func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error)
 	row := repo.DB.QueryRow(query, review.CreatedAt, review.UpdatedAt, review.ProductID, review.UserID, review.Text, review.Category)
 	err := row.Scan(&reviewId)
 	if err != nil {
-		return 0, err
+		return 0, ParsePostgresError(err)
 	}
 
 	return reviewId, nil
@@ -43,7 +43,7 @@ func (repo *ReviewPostgresqlRepository) Delete(reviewID int) (bool, error) {
 
 	_, err := repo.DB.Exec(query, reviewID)
 	if err != nil {
-		return false, err
+		return false, ParsePostgresError(err)
 	}
 	return true, nil
 }
@@ -59,7 +59,7 @@ func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input mode
 		argId++
 	}
 
-	if input.Category != "" {
+	if input.Category != nil {
 		setValues = append(setValues, fmt.Sprintf("category=$%d", argId))
 		args = append(args, input.Category)
 		argId++
@@ -78,7 +78,7 @@ func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input mode
 
 	_, err := repo.DB.Exec(query, args...)
 	if err != nil {
-		return false, err
+		return false, ParsePostgresError(err)
 	}
 	return true, nil
 }
@@ -88,7 +88,7 @@ func (repo *ReviewPostgresqlRepository) GetAll(productID int, orderBy string) ([
 	query := fmt.Sprintf("SELECT * FROM %s WHERE product_id = $1", reviewsTable)
 
 	if err := repo.DB.Select(&rewiews, query, productID); err != nil {
-		return nil, err
+		return nil, ParsePostgresError(err)
 	}
 
 	return rewiews, nil
@@ -99,7 +99,7 @@ func (repo *ReviewPostgresqlRepository) GetReviewIDByProductIDUserID(productID, 
 	query := fmt.Sprintf("SELECT id FROM %s WHERE product_id = $1 AND user_id = $2", reviewsTable)
 
 	if err := repo.DB.Get(&id, query, productID, userID); err != nil {
-		return 0, err
+		return 0, ParsePostgresError(err)
 	}
 
 	return id, nil

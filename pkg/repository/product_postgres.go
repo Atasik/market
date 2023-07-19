@@ -36,7 +36,7 @@ func (repo *ProductPostgresqlRepository) GetAll(orderBy string) ([]model.Product
 	query := fmt.Sprintf("SELECT * FROM %s %s", productsTable, setValue)
 
 	if err := repo.DB.Select(&products, query); err != nil {
-		return nil, err
+		return nil, ParsePostgresError(err)
 	}
 
 	return products, nil
@@ -47,7 +47,7 @@ func (repo *ProductPostgresqlRepository) GetByID(productId int) (model.Product, 
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", productsTable)
 
 	if err := repo.DB.Get(&product, query, productId); err != nil {
-		return model.Product{}, err
+		return model.Product{}, ParsePostgresError(err)
 	}
 
 	return product, nil
@@ -61,9 +61,7 @@ func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, err
 	row := repo.DB.QueryRow(query, product.UserID, product.Title, product.Price, product.Tag, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
 	err := row.Scan(&productId)
 	if err != nil {
-
-		print(err.Error())
-		return 0, err
+		return 0, ParsePostgresError(err)
 	}
 
 	return productId, nil
@@ -140,7 +138,7 @@ func (repo *ProductPostgresqlRepository) Update(productId int, input model.Updat
 
 	_, err := repo.DB.Exec(query, args...)
 	if err != nil {
-		return false, err
+		return false, ParsePostgresError(err)
 	}
 	return true, nil
 }
@@ -151,7 +149,7 @@ func (repo *ProductPostgresqlRepository) Delete(productId int) (bool, error) {
 
 	_, err := repo.DB.Exec(query, productId)
 	if err != nil {
-		return false, err
+		return false, ParsePostgresError(err)
 	}
 	return true, nil
 }
@@ -161,7 +159,7 @@ func (repo *ProductPostgresqlRepository) GetByType(productType string, limit int
 	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1", productsTable)
 
 	if err := repo.DB.Select(&products, query, productType); err != nil {
-		return nil, err
+		return nil, ParsePostgresError(err)
 	}
 
 	return products, nil

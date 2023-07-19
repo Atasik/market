@@ -8,6 +8,8 @@ import (
 
 var (
 	ErrPermissionDenied = errors.New("you have no access")
+	ErrNoProduct        = errors.New("product doesn't exists")
+	ErrProductExists    = errors.New("product already exists")
 )
 
 type Product interface {
@@ -33,11 +35,29 @@ func (s *ProductService) GetAll(orderBy string) ([]model.Product, error) {
 }
 
 func (s *ProductService) GetByID(productId int) (model.Product, error) {
-	return s.productRepo.GetByID(productId)
+	product, err := s.productRepo.GetByID(productId)
+	if err != nil {
+		switch err {
+		case repository.ErrNotFound:
+			return model.Product{}, ErrNoProduct
+		default:
+			return model.Product{}, err
+		}
+	}
+	return product, nil
 }
 
 func (s *ProductService) Create(product model.Product) (int, error) {
-	return s.productRepo.Create(product)
+	id, err := s.productRepo.Create(product)
+	if err != nil {
+		switch err {
+		case repository.ErrAlreadyExists:
+			return 0, ErrProductExists
+		default:
+			return 0, err
+		}
+	}
+	return id, nil
 }
 
 func (s *ProductService) Update(userID, productId int, input model.UpdateProductInput) (bool, error) {

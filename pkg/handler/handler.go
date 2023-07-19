@@ -3,6 +3,7 @@ package handler
 import (
 	"market/pkg/service"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -13,8 +14,9 @@ const (
 )
 
 type Handler struct {
-	Logger   *zap.SugaredLogger
-	Services *service.Service
+	Logger    *zap.SugaredLogger
+	Services  *service.Service
+	Validator *validator.Validate
 }
 
 func (h *Handler) InitRoutes() *mux.Router {

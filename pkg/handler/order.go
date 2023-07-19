@@ -17,7 +17,7 @@ func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.Services.Order.GetAll(sess.ID)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	lastID, err := h.Services.Order.Create(sess.ID, order)
 	if err != nil {
-		newErrorResponse(w, `Database error`, http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.Services.Order.GetAll(sess.ID)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

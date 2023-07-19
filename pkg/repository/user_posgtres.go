@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"market/pkg/model"
 
@@ -14,11 +12,6 @@ type UserRepo interface {
 	GetUserById(UserID int) (model.User, error)
 	CreateUser(model.User) (int, error)
 }
-
-var (
-	ErrNoUser     = errors.New("no user found")
-	ErrUserExists = errors.New("user already exists")
-)
 
 type UserPostgresqlRepository struct {
 	DB *sqlx.DB
@@ -33,10 +26,7 @@ func (repo *UserPostgresqlRepository) GetUser(login string) (model.User, error) 
 	query := fmt.Sprintf("SELECT * FROM %s WHERE username = $1", usersTable)
 
 	if err := repo.DB.Get(&user, query, login); err != nil {
-		if err == sql.ErrNoRows {
-			return model.User{}, ErrNoUser
-		}
-		return model.User{}, err
+		return model.User{}, ParsePostgresError(err)
 	}
 
 	return user, nil
@@ -47,10 +37,7 @@ func (repo *UserPostgresqlRepository) GetUserById(UserID int) (model.User, error
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", usersTable)
 
 	if err := repo.DB.Get(&user, query, UserID); err != nil {
-		if err == sql.ErrNoRows {
-			return model.User{}, ErrNoUser
-		}
-		return model.User{}, err
+		return model.User{}, ParsePostgresError(err)
 	}
 
 	return user, nil
@@ -63,7 +50,7 @@ func (repo *UserPostgresqlRepository) CreateUser(user model.User) (int, error) {
 	row := repo.DB.QueryRow(query, user.Username, user.Role, user.Password)
 	err := row.Scan(&id)
 	if err != nil {
-		return 0, ErrUserExists
+		return 0, ParsePostgresError(err)
 	}
 
 	return id, nil

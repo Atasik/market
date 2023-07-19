@@ -61,13 +61,13 @@ func (h *Handler) DeleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 
 	Cart, err := h.Services.Cart.GetByUserID(sess.ID)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	_, err = h.Services.Cart.DeleteProduct(Cart.ID, sess.ID, productId)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (h *Handler) GetProductsFromCart(w http.ResponseWriter, r *http.Request) {
 
 	Cart, err := h.Services.Cart.GetByUserID(sess.ID)
 	if err != nil {
-		http.Error(w, `Database Error`, http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

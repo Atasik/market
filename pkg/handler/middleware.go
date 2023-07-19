@@ -64,7 +64,7 @@ func Panic(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Println("recovered", err)
-				http.Error(w, "Internal server error", 500)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
 			}
 		}()
 		next.ServeHTTP(w, r)

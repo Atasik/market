@@ -6,9 +6,11 @@ import (
 	"os"
 
 	"market/pkg/handler"
+	"market/pkg/model"
 	"market/pkg/repository"
 	"market/pkg/service"
 
+	"github.com/go-playground/validator/v10"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 
@@ -50,9 +52,13 @@ func main() {
 	defer zapLogger.Sync() // flushes buffer, if any
 	logger := zapLogger.Sugar()
 
+	validate := validator.New()
+	model.RegisterCustomValidations(validate)
+
 	hand := &handler.Handler{
-		Services: services,
-		Logger:   logger,
+		Services:  services,
+		Logger:    logger,
+		Validator: validate,
 	}
 
 	r := hand.InitRoutes()

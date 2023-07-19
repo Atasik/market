@@ -1,9 +1,17 @@
 package repository
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
+)
+
+var (
+	ErrAlreadyExists = errors.New("already exists")
+	ErrNotFound      = errors.New("not found")
 )
 
 const (
@@ -39,4 +47,23 @@ func NewPostgresqlDB(cfg Config) (*sqlx.DB, error) {
 	}
 
 	return db, nil
+}
+
+func ParsePostgresError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	pgErr, ok := err.(*pq.Error)
+	if ok {
+		if pgErr.Code == "23505" {
+			return ErrAlreadyExists
+		}
+	}
+
+	if err == sql.ErrNoRows {
+		return ErrNotFound
+	}
+
+	return err
 }

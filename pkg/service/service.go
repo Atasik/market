@@ -18,9 +18,9 @@ type Service struct {
 func NewService(repos *repository.Repository, cloudinary *cloudinary.Cloudinary) *Service {
 	return &Service{
 		Product: NewProductService(repos.ProductRepo, repos.UserRepo),
-		Cart:    NewCartService(repos.CartRepo, repos.UserRepo),
+		Cart:    NewCartService(repos.CartRepo, repos.UserRepo, repos.ProductRepo),
 		Order:   NewOrderService(repos.OrderRepo, repos.CartRepo, repos.UserRepo),
-		Review:  NewReviewService(repos.ReviewRepo, repos.UserRepo),
+		Review:  NewReviewService(repos.ReviewRepo, repos.UserRepo, repos.ProductRepo),
 		User:    NewUserService(repos.UserRepo),
 		Image:   NewImageServiceCloudinary(cloudinary),
 	}

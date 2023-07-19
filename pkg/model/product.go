@@ -8,12 +8,12 @@ import (
 type Product struct {
 	ID              int       `db:"id" json:"id"`
 	UserID          int       `db:"user_id" json:"user_id"`
-	Title           string    `db:"title" json:"title" schema:"title"`
-	Price           float32   `db:"price" json:"price" schema:"price"`
+	Title           string    `db:"title" json:"title" schema:"title" validate:"required"`
+	Price           float32   `db:"price" json:"price" schema:"price" validate:"required"`
 	Tag             string    `db:"tag" json:"tag" schema:"tag"`
-	Category        string    `db:"category" json:"category" schema:"category"`
+	Category        string    `db:"category" json:"category" schema:"category" validate:"required"`
 	Description     string    `db:"description" json:"description" schema:"description"`
-	Amount          int       `db:"amount" json:"amount" schema:"amount"`
+	Amount          int       `db:"amount" json:"amount" schema:"amount" validate:"required"`
 	PurchasedAmount int       `db:"purchased_amount" json:"purchased_amount"`
 	OrderID         int       `db:"order_id" json:"order_id"`
 	CreatedAt       time.Time `db:"created_at" json:"created_at"`

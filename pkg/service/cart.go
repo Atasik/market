@@ -1,7 +1,6 @@
 package service
 
 import (
-	"database/sql"
 	"errors"
 	"market/pkg/model"
 	"market/pkg/repository"
@@ -21,16 +20,17 @@ type Cart interface {
 }
 
 type CartService struct {
-	CartRepo repository.CartRepo
-	userRepo repository.UserRepo
+	cartRepo    repository.CartRepo
+	productRepo repository.ProductRepo
+	userRepo    repository.UserRepo
 }
 
-func NewCartService(CartRepo repository.CartRepo, userRepo repository.UserRepo) *CartService {
-	return &CartService{CartRepo: CartRepo, userRepo: userRepo}
+func NewCartService(cartRepo repository.CartRepo, userRepo repository.UserRepo, productRepo repository.ProductRepo) *CartService {
+	return &CartService{cartRepo: cartRepo, userRepo: userRepo, productRepo: productRepo}
 }
 
 func (s *CartService) CreateCart(userID int) (int, error) {
-	return s.CartRepo.CreateCart(userID)
+	return s.cartRepo.CreateCart(userID)
 }
 
 func (s *CartService) AddProduct(userID, CartID, productID int) (int, error) {
@@ -39,12 +39,23 @@ func (s *CartService) AddProduct(userID, CartID, productID int) (int, error) {
 		return 0, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		_, err := s.CartRepo.GetProductByID(CartID, productID)
+		_, err := s.productRepo.GetByID(productID)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				return s.CartRepo.AddProduct(CartID, productID)
+			switch err {
+			case repository.ErrNotFound:
+				return 0, ErrNoProduct
+			default:
+				return 0, err
 			}
-			return 0, err
+		}
+		_, err = s.cartRepo.GetProductByID(CartID, productID)
+		if err != nil {
+			switch err {
+			case repository.ErrNotFound:
+				return s.cartRepo.AddProduct(CartID, productID)
+			default:
+				return 0, err
+			}
 		}
 		return 0, ErrAddDuplicate
 	}
@@ -58,7 +69,7 @@ func (s *CartService) GetByUserID(userID int) (model.Cart, error) {
 		return model.Cart{}, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.CartRepo.GetByUserID(userID)
+		return s.cartRepo.GetByUserID(userID)
 	}
 	return model.Cart{}, ErrPermissionDenied
 }
@@ -69,7 +80,7 @@ func (s *CartService) GetProducts(userID, CartID int) ([]model.Product, error) {
 		return []model.Product{}, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.CartRepo.GetProducts(CartID)
+		return s.cartRepo.GetProducts(CartID)
 	}
 
 	return []model.Product{}, ErrPermissionDenied
@@ -81,7 +92,7 @@ func (s *CartService) DeleteProduct(userID, CartID, productID int) (bool, error)
 		return false, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.CartRepo.DeleteProduct(CartID, productID)
+		return s.cartRepo.DeleteProduct(CartID, productID)
 	}
 
 	return false, ErrPermissionDenied
@@ -93,7 +104,7 @@ func (s *CartService) DeleteAll(userID, CartID int) (bool, error) {
 		return false, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.CartRepo.DeleteAll(CartID)
+		return s.cartRepo.DeleteAll(CartID)
 	}
 
 	return false, ErrPermissionDenied

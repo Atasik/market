@@ -16,7 +16,9 @@ import (
 )
 
 var (
-	ErrBadPass = errors.New("invalid password")
+	ErrBadPass    = errors.New("wrong password")
+	ErrNoUser     = errors.New("no user found")
+	ErrUserExists = errors.New("user already exists")
 )
 
 const (
@@ -63,7 +65,12 @@ func NewUserService(userRepo repository.UserRepo) *UserService {
 func (s *UserService) GenerateToken(username, password string) (string, error) {
 	user, err := s.userRepo.GetUser(username)
 	if err != nil {
-		return "", err
+		switch err {
+		case repository.ErrNotFound:
+			return "", ErrNoUser
+		default:
+			return "", err
+		}
 	}
 
 	match, err := verifyPassword(password, user.Password)
@@ -128,7 +135,16 @@ func (s *UserService) CreateUser(user model.User) (int, error) {
 
 	user.Password = password
 
-	return s.userRepo.CreateUser(user)
+	id, err := s.userRepo.CreateUser(user)
+	if err != nil {
+		switch err {
+		case repository.ErrAlreadyExists:
+			return 0, ErrUserExists
+		default:
+			return 0, err
+		}
+	}
+	return id, nil
 }
 
 func generateHashFromPassword(password string, p *HashConfig) (encodedHash string, err error) {

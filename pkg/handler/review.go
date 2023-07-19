@@ -46,6 +46,12 @@ func (h *Handler) CreateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = h.Validator.Struct(review)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	review.CreatedAt = time.Now()
 	review.ProductID = productID
 	review.UserID = sess.ID
@@ -101,7 +107,7 @@ func (h *Handler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 
 	_, err = h.Services.Review.Delete(session.ID, reviewID)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -112,7 +118,7 @@ func (h *Handler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -171,18 +177,24 @@ func (h *Handler) UpdateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = h.Validator.Struct(input)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	currentTime := time.Now()
 	input.UpdatedAt = &currentTime
 
 	_, err = h.Services.Review.Update(sess.ID, productID, input)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {
-		newErrorResponse(w, "Database Error", http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

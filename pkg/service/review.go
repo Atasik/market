@@ -1,15 +1,14 @@
 package service
 
 import (
-	"database/sql"
 	"errors"
-	"log"
 	"market/pkg/model"
 	"market/pkg/repository"
 )
 
 var (
 	ErrReviewExists = errors.New("review exists")
+	ErrNoReview     = errors.New("review doesn't exists")
 )
 
 type Review interface {
@@ -21,28 +20,35 @@ type Review interface {
 }
 
 type ReviewService struct {
-	reviewRepo repository.ReviewRepo
-	userRepo   repository.UserRepo
+	reviewRepo  repository.ReviewRepo
+	userRepo    repository.UserRepo
+	productRepo repository.ProductRepo
 }
 
-func NewReviewService(reviewRepo repository.ReviewRepo, userRepo repository.UserRepo) *ReviewService {
-	return &ReviewService{reviewRepo: reviewRepo, userRepo: userRepo}
+func NewReviewService(reviewRepo repository.ReviewRepo, userRepo repository.UserRepo, productRepo repository.ProductRepo) *ReviewService {
+	return &ReviewService{reviewRepo: reviewRepo, userRepo: userRepo, productRepo: productRepo}
 }
 
 func (s *ReviewService) Create(review model.Review) (int, error) {
-	id, err := s.reviewRepo.GetReviewIDByProductIDUserID(review.ProductID, review.UserID)
+	_, err := s.productRepo.GetByID(review.ProductID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Print("review doesnt't exist")
-		} else {
+		switch err {
+		case repository.ErrNotFound:
+			return 0, ErrNoProduct
+		default:
 			return 0, err
 		}
 	}
-	if id != 0 {
-		return 0, ErrReviewExists
+	_, err = s.reviewRepo.GetReviewIDByProductIDUserID(review.ProductID, review.UserID)
+	if err != nil {
+		switch err {
+		case repository.ErrNotFound:
+			return s.reviewRepo.Create(review)
+		default:
+			return 0, err
+		}
 	}
-
-	return s.reviewRepo.Create(review)
+	return 0, ErrReviewExists
 }
 
 func (s *ReviewService) Delete(userID, reviewID int) (bool, error) {
@@ -54,7 +60,7 @@ func (s *ReviewService) Delete(userID, reviewID int) (bool, error) {
 		return s.reviewRepo.Delete(reviewID)
 	}
 
-	return s.reviewRepo.Delete(reviewID)
+	return false, ErrPermissionDenied
 }
 
 func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewInput) (bool, error) {

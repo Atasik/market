@@ -32,7 +32,7 @@ func (repo *CartPostgresqlRepository) CreateCart(userID int) (int, error) {
 	row := repo.DB.QueryRow(query, userID)
 	err := row.Scan(&id)
 	if err != nil {
-		return 0, err
+		return 0, ParsePostgresError(err)
 	}
 
 	return id, nil
@@ -46,7 +46,7 @@ func (repo *CartPostgresqlRepository) AddProduct(CartID, productID int) (int, er
 	row := repo.DB.QueryRow(query, productID, CartID, 0)
 	err := row.Scan(&id)
 	if err != nil {
-		return 0, err
+		return 0, ParsePostgresError(err)
 	}
 
 	return id, nil
@@ -57,7 +57,7 @@ func (repo *CartPostgresqlRepository) GetByUserID(userID int) (model.Cart, error
 	query := fmt.Sprintf(`SELECT * FROM %s WHERE user_id = $1`, cartsTable)
 
 	if err := repo.DB.Get(&Cart, query, userID); err != nil {
-		return model.Cart{}, err
+		return model.Cart{}, ParsePostgresError(err)
 	}
 
 	return Cart, nil
@@ -72,7 +72,7 @@ func (repo *CartPostgresqlRepository) GetProducts(CartID int) ([]model.Product, 
 			  WHERE b.id = $1`, productsTable, ProductsCartsTable, cartsTable)
 
 	if err := repo.DB.Select(&products, query, CartID); err != nil {
-		return []model.Product{}, err
+		return []model.Product{}, ParsePostgresError(err)
 	}
 
 	return products, nil
@@ -86,7 +86,7 @@ func (repo *CartPostgresqlRepository) GetProductByID(CartID, productID int) (mod
 			  WHERE b.id = $1 AND p.id = $2`, productsTable, ProductsCartsTable, cartsTable)
 
 	if err := repo.DB.Get(&product, query, CartID, productID); err != nil {
-		return model.Product{}, err
+		return model.Product{}, ParsePostgresError(err)
 	}
 
 	return product, nil
@@ -97,7 +97,7 @@ func (repo *CartPostgresqlRepository) DeleteProduct(CartID, productID int) (bool
 	query := fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1 AND product_id = $2`, ProductsCartsTable)
 	_, err := repo.DB.Exec(query, CartID, productID)
 	if err != nil {
-		return false, err
+		return false, ParsePostgresError(err)
 	}
 	return true, nil
 }
@@ -107,7 +107,7 @@ func (repo *CartPostgresqlRepository) DeleteAll(CartID int) (bool, error) {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1`, ProductsCartsTable)
 	_, err := repo.DB.Exec(query, CartID)
 	if err != nil {
-		return false, err
+		return false, ParsePostgresError(err)
 	}
 	return true, nil
 }
