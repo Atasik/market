@@ -28,7 +28,6 @@ func NewImageServiceCloudinary(cloudinary *cloudinary.Cloudinary) *ImageServiceC
 }
 
 func (s *ImageServiceCloudinary) Upload(ctx context.Context, file multipart.File) (ImageData, error) {
-	// добавить таймауты
 	resp, err := s.Cloudinary.Upload.Upload(ctx, file, uploader.UploadParams{})
 	if err != nil {
 		return ImageData{}, err
@@ -38,7 +37,6 @@ func (s *ImageServiceCloudinary) Upload(ctx context.Context, file multipart.File
 }
 
 func (s *ImageServiceCloudinary) Delete(ctx context.Context, imageID string) error {
-	// добавить таймауты
 	_, err := s.Cloudinary.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: imageID})
 	if err != nil {
 		return err

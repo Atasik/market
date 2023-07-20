@@ -63,6 +63,8 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.Logger.Infof("Review was created with id LastInsertId: %v", review.ID)
+
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
@@ -103,7 +105,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.Services.Review.Delete(session.ID, reviewID)
+	ok, err := h.Services.Review.Delete(session.ID, reviewID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -114,6 +116,8 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		newErrorResponse(w, "Bad id", http.StatusBadRequest)
 		return
 	}
+
+	h.Logger.Infof("Review by userID [%v] to productID [%v] was deleted: %v", session.ID, productID, ok)
 
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {
@@ -147,7 +151,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := service.SessionFromContext(r.Context())
+	session, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
@@ -183,11 +187,13 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	input.UpdatedAt = &currentTime
 
-	_, err = h.Services.Review.Update(sess.ID, productID, input)
+	ok, err := h.Services.Review.Update(session.ID, productID, input)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	h.Logger.Infof("Review by userID [%v] to productID [%v] was updated: %v", session.ID, productID, ok)
 
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {

@@ -148,7 +148,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 
 	product.ID = lastID
 
-	h.Logger.Infof("Insert into Products with id LastInsertId: %v", lastID)
+	h.Logger.Infof("Product was created with id LastInsertId: %v", lastID)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(product)
@@ -245,7 +245,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("update: %v %v", "heh", ok)
+	h.Logger.Infof("Product was updated: %v %v", product, ok)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(product)
@@ -277,11 +277,12 @@ func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.Services.Product.Delete(session.ID, productId)
+	ok, err := h.Services.Product.Delete(session.ID, productId)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	h.Logger.Infof("Product was deleted: %v %v", product, ok)
 
 	ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 	defer cancel()

@@ -48,7 +48,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Insert into Orders with id LastInsertId: %v", lastID)
+	h.Logger.Infof("Order was created with id LastInsertId: %v", lastID)
 
 	orders, err := h.Services.Order.GetAll(session.ID)
 	if err != nil {

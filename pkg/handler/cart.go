@@ -67,6 +67,8 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.Logger.Infof("Product was added to cart with id LastInsertId: %v", productID)
+
 	products, err := h.Services.Cart.GetProducts(sess.ID, Cart.ID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
@@ -85,25 +87,27 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 	}
 
 	vars := mux.Vars(r)
-	productId, err := strconv.Atoi(vars["productId"])
+	productID, err := strconv.Atoi(vars["productId"])
 	if err != nil {
 		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
 		return
 	}
 
-	Cart, err := h.Services.Cart.GetByUserID(sess.ID)
+	cart, err := h.Services.Cart.GetByUserID(sess.ID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	_, err = h.Services.Cart.DeleteProduct(Cart.ID, sess.ID, productId)
+	ok, err := h.Services.Cart.DeleteProduct(cart.ID, sess.ID, productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	products, err := h.Services.Cart.GetProducts(sess.ID, Cart.ID)
+	h.Logger.Infof("Product was deleted from Cart: %v %v", productID, ok)
+
+	products, err := h.Services.Cart.GetProducts(sess.ID, cart.ID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

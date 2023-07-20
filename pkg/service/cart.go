@@ -13,7 +13,7 @@ var (
 
 type Cart interface {
 	CreateCart(userID int) (int, error)
-	AddProduct(userID, CartID, productID, amountToPurcahse int) (int, error)
+	AddProduct(userID, CartID, productID, amountToPurchase int) (int, error)
 	GetByUserID(userID int) (model.Cart, error)
 	GetProducts(userID, CartID int) ([]model.Product, error)
 	DeleteProduct(userID, CartID, productID int) (bool, error)
@@ -34,7 +34,7 @@ func (s *CartService) CreateCart(userID int) (int, error) {
 	return s.cartRepo.CreateCart(userID)
 }
 
-func (s *CartService) AddProduct(userID, CartID, productID, amountToPurcahse int) (int, error) {
+func (s *CartService) AddProduct(userID, CartID, productID, amountToPurchase int) (int, error) {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return 0, err
@@ -53,11 +53,10 @@ func (s *CartService) AddProduct(userID, CartID, productID, amountToPurcahse int
 		if err != nil {
 			switch err {
 			case repository.ErrNotFound:
-				if product.Amount < amountToPurcahse {
-					print("kek", product.Amount)
+				if product.Amount < amountToPurchase {
 					return 0, ErrInvalidAmount
 				}
-				return s.cartRepo.AddProduct(CartID, productID, amountToPurcahse)
+				return s.cartRepo.AddProduct(CartID, productID, amountToPurchase)
 			default:
 				return 0, err
 			}
@@ -76,6 +75,7 @@ func (s *CartService) GetByUserID(userID int) (model.Cart, error) {
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.cartRepo.GetByUserID(userID)
 	}
+
 	return model.Cart{}, ErrPermissionDenied
 }
 
