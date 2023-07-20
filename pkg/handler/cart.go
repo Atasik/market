@@ -69,7 +69,7 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 
 	products, err := h.Services.Cart.GetProducts(sess.ID, Cart.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -105,7 +105,7 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 
 	products, err := h.Services.Cart.GetProducts(sess.ID, Cart.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -100,6 +100,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 	reviewID, err := strconv.Atoi(vars["reviewId"])
 	if err != nil {
 		newErrorResponse(w, "Bad id", http.StatusBadRequest)
+		return
 	}
 
 	_, err = h.Services.Review.Delete(session.ID, reviewID)
@@ -111,6 +112,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 	productID, err := strconv.Atoi(vars["productId"])
 	if err != nil {
 		newErrorResponse(w, "Bad id", http.StatusBadRequest)
+		return
 	}
 
 	product, err := h.Services.Product.GetByID(productID)
@@ -154,6 +156,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	productID, err := strconv.Atoi(vars["productId"])
 	if err != nil {
 		newErrorResponse(w, "Bad id", http.StatusBadRequest)
+		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)

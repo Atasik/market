@@ -22,11 +22,13 @@ func (h *Handler) about(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		newErrorResponse(w, `can't create payload`, http.StatusInternalServerError)
+		return
 	}
 
 	_, err = w.Write(resp)
 	if err != nil {
 		newErrorResponse(w, `can't write resp`, http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -53,7 +55,6 @@ func (h *Handler) getProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//вероятно тоже в сервисы
 	selectedProduct, err := h.Services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
