@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"market/pkg/model"
 	"market/pkg/service"
@@ -11,6 +12,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 )
+
+const imageUploadTimeout = 5 * time.Second
 
 func (h *Handler) about(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
@@ -113,7 +116,9 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.Services.Image.Upload(file)
+	ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
+	defer cancel()
+	data, err := h.Services.Image.Upload(ctx, file)
 	if err != nil {
 		newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 		return
@@ -129,7 +134,9 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 
 	lastID, err := h.Services.Product.Create(product)
 	if err != nil {
-		err = h.Services.Image.Delete(product.ImageID)
+		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
+		defer cancel()
+		err = h.Services.Image.Delete(ctx, product.ImageID)
 		if err != nil {
 			newErrorResponse(w, `ImageServer Error`, http.StatusInternalServerError)
 			return
@@ -185,7 +192,9 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !noFile {
-		data, err := h.Services.Image.Upload(file)
+		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
+		defer cancel()
+		data, err := h.Services.Image.Upload(ctx, file)
 		if err != nil {
 			newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 			return
@@ -207,7 +216,9 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	ok, err := h.Services.Product.Update(sess.ID, productID, input)
 	if err != nil {
 		if !noFile {
-			err = h.Services.Image.Delete(*input.ImageID)
+			ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
+			defer cancel()
+			err = h.Services.Image.Delete(ctx, *input.ImageID)
 			if err != nil {
 				newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 				return
@@ -218,7 +229,9 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !noFile {
-		err = h.Services.Image.Delete(oldProduct.ImageID)
+		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
+		defer cancel()
+		err = h.Services.Image.Delete(ctx, oldProduct.ImageID)
 		if err != nil {
 			newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 			return
@@ -269,7 +282,9 @@ func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Services.Image.Delete(product.ImageID)
+	ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
+	defer cancel()
+	err = h.Services.Image.Delete(ctx, product.ImageID)
 	if err != nil {
 		newErrorResponse(w, "ImageService Error", http.StatusInternalServerError)
 		return

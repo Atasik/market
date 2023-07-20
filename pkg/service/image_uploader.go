@@ -3,14 +3,15 @@ package service
 import (
 	"context"
 	"mime/multipart"
+	"time"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
 type Image interface {
-	Upload(file multipart.File) (ImageData, error)
-	Delete(imageID string) error
+	Upload(ctx context.Context, file multipart.File) (ImageData, error)
+	Delete(ctx context.Context, imageID string) error
 }
 
 type ImageServiceCloudinary struct {
@@ -26,9 +27,9 @@ func NewImageServiceCloudinary(cloudinary *cloudinary.Cloudinary) *ImageServiceC
 	return &ImageServiceCloudinary{Cloudinary: cloudinary}
 }
 
-func (s *ImageServiceCloudinary) Upload(file multipart.File) (ImageData, error) {
+func (s *ImageServiceCloudinary) Upload(ctx context.Context, file multipart.File) (ImageData, error) {
 	// добавить таймауты
-	resp, err := s.Cloudinary.Upload.Upload(context.TODO(), file, uploader.UploadParams{})
+	resp, err := s.Cloudinary.Upload.Upload(ctx, file, uploader.UploadParams{})
 	if err != nil {
 		return ImageData{}, err
 	}
@@ -36,9 +37,9 @@ func (s *ImageServiceCloudinary) Upload(file multipart.File) (ImageData, error) 
 	return ImageData{ImageURL: resp.URL, ImageID: resp.PublicID}, nil
 }
 
-func (s *ImageServiceCloudinary) Delete(imageID string) error {
+func (s *ImageServiceCloudinary) Delete(ctx context.Context, imageID string) error {
 	// добавить таймауты
-	_, err := s.Cloudinary.Upload.Destroy(context.TODO(), uploader.DestroyParams{PublicID: imageID})
+	_, err := s.Cloudinary.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: imageID})
 	if err != nil {
 		return err
 	}
@@ -57,7 +58,9 @@ func NewCloudinary(cfg Config) (*cloudinary.Cloudinary, error) {
 		return nil, err
 	}
 
-	_, err = cld.Admin.Ping(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err = cld.Admin.Ping(ctx)
 	if err != nil {
 		return nil, err
 	}
