@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (h *Handler) CreateReview(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
 		newErrorResponse(w, "unknown payload", http.StatusBadRequest)
@@ -89,7 +89,7 @@ func (h *Handler) CreateReview(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) DeleteReview(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	session, err := service.SessionFromContext(r.Context())
 	if err != nil {
@@ -138,7 +138,7 @@ func (h *Handler) DeleteReview(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) UpdateReview(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
 		newErrorResponse(w, "unknown payload", http.StatusBadRequest)

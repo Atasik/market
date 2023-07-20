@@ -27,19 +27,19 @@ INSERT INTO carts (user_id) VALUES
 
 CREATE TABLE products
 (
-  id            serial                                     not null unique,
-  user_id       int references users(id) on delete cascade not null,
-  title         varchar(255)                               not null,
-  price         numeric                                    not null,
-  tag           varchar(255)                               ,
-  category      varchar(255)                               not null,
-  description   varchar(255)                               ,
-  amount        int                                        not null,
-  created_at    timestamp                                  not null,
-  updated_at    timestamp                                  not null,
-  views         int                                        not null,
-  image_url     varchar(255)                               not null,
-  image_id      varchar(255)                               not null unique
+  id            serial                                                        not null unique,
+  user_id       int references users(id) on delete cascade                    not null,
+  title         varchar(255)                                                  not null,
+  price         numeric                                    check (price > 0)  not null, 
+  tag           varchar(255), 
+  category      varchar(255)                                                  not null,
+  description   varchar(255), 
+  amount        int                                        check (amount > 0) not null,
+  created_at    timestamp                                                     not null,
+  updated_at    timestamp                                                     not null,
+  views         int                                                           not null,
+  image_url     varchar(255)                                                  not null,
+  image_id      varchar(255)                                                  not null unique
 );
 
 CREATE TABLE orders
@@ -63,10 +63,10 @@ CREATE TABLE reviews
 
 CREATE TABLE products_carts
 (
-  id               serial                                         not null unique,
-  product_id       int references products (id) on delete cascade not null,
-  cart_id          int references carts (id) on delete cascade    not null,
-  purchased_amount int                                            not null
+  id               serial                                                                      not null unique,
+  product_id       int references products (id) on delete cascade                              not null,
+  cart_id          int references carts (id) on delete cascade                                 not null,
+  purchased_amount int                                            check (purchased_amount > 0) not null
 );
 
 CREATE TABLE products_users 
@@ -78,8 +78,9 @@ CREATE TABLE products_users
 
 CREATE TABLE products_orders
 (
-  id         serial                                         not null unique,
-  product_id int references products (id) on delete cascade not null,
-  order_id   int references orders (id) on delete cascade   not null
+  id               serial                                                                      not null unique,
+  product_id       int references products (id) on delete cascade                              not null,
+  order_id         int references orders (id) on delete cascade                                not null,
+  purchased_amount int                                            check (purchased_amount > 0) not null
 );
 

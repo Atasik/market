@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"market/pkg/service"
 	"net/http"
 	"strconv"
@@ -8,8 +10,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (h *Handler) AddProductToCart(w http.ResponseWriter, r *http.Request) {
+type cartInput struct {
+	Amount int `json:"amount" validate:"required"`
+}
+
+func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
+	if r.Header.Get("Content-Type") != appJSON {
+		newErrorResponse(w, "unknown payload", http.StatusBadRequest)
+		return
+	}
+
 	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
@@ -17,9 +28,30 @@ func (h *Handler) AddProductToCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	productId, err := strconv.Atoi(vars["productId"])
+	productID, err := strconv.Atoi(vars["productId"])
 	if err != nil {
 		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		newErrorResponse(w, "server error", http.StatusBadRequest)
+		return
+	}
+	r.Body.Close()
+
+	var input cartInput
+
+	err = json.Unmarshal(body, &input)
+	if err != nil {
+		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
+		return
+	}
+
+	err = h.Validator.Struct(input)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -29,7 +61,7 @@ func (h *Handler) AddProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.Services.Cart.AddProduct(Cart.ID, sess.ID, productId)
+	_, err = h.Services.Cart.AddProduct(Cart.ID, sess.ID, productID, input.Amount)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -44,7 +76,7 @@ func (h *Handler) AddProductToCart(w http.ResponseWriter, r *http.Request) {
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
-func (h *Handler) DeleteProductFromCart(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
@@ -80,7 +112,7 @@ func (h *Handler) DeleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
-func (h *Handler) GetProductsFromCart(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {

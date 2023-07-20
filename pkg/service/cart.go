@@ -7,12 +7,13 @@ import (
 )
 
 var (
-	ErrAddDuplicate = errors.New("product already added to cart")
+	ErrAddDuplicate  = errors.New("product already added to cart")
+	ErrInvalidAmount = errors.New("invalid amount")
 )
 
 type Cart interface {
 	CreateCart(userID int) (int, error)
-	AddProduct(userID, CartID, productID int) (int, error)
+	AddProduct(userID, CartID, productID, amountToPurcahse int) (int, error)
 	GetByUserID(userID int) (model.Cart, error)
 	GetProducts(userID, CartID int) ([]model.Product, error)
 	DeleteProduct(userID, CartID, productID int) (bool, error)
@@ -33,13 +34,13 @@ func (s *CartService) CreateCart(userID int) (int, error) {
 	return s.cartRepo.CreateCart(userID)
 }
 
-func (s *CartService) AddProduct(userID, CartID, productID int) (int, error) {
+func (s *CartService) AddProduct(userID, CartID, productID, amountToPurcahse int) (int, error) {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return 0, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		_, err := s.productRepo.GetByID(productID)
+		product, err := s.productRepo.GetByID(productID)
 		if err != nil {
 			switch err {
 			case repository.ErrNotFound:
@@ -52,7 +53,11 @@ func (s *CartService) AddProduct(userID, CartID, productID int) (int, error) {
 		if err != nil {
 			switch err {
 			case repository.ErrNotFound:
-				return s.cartRepo.AddProduct(CartID, productID)
+				if product.Amount < amountToPurcahse {
+					print("kek", product.Amount)
+					return 0, ErrInvalidAmount
+				}
+				return s.cartRepo.AddProduct(CartID, productID, amountToPurcahse)
 			default:
 				return 0, err
 			}

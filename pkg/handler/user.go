@@ -7,7 +7,19 @@ import (
 	"net/http"
 )
 
-func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
+// @Summary SignUp
+// @Tags auth
+// @Description Sign Up
+// @ID register
+// @Accept json
+// @Produce json
+// @Param input body model.User true "account info"
+// @Success 200 {string} string "token"
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /api/register [post]
+func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
 		newErrorResponse(w, "unknown payload", http.StatusBadRequest)
@@ -68,12 +80,24 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type inputSignIn struct {
+type signInInput struct {
 	Username string `db:"username" json:"username" validate:"required"`
 	Password string `db:"password" json:"password" validate:"required"`
 }
 
-func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
+// @Summary SignIn
+// @Tags auth
+// @Description Log in
+// @ID login
+// @Accept json
+// @Produce json
+// @Param input body signInInput true "credentials"
+// @Success 200 {string} string "token"
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /api/login [post]
+func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
 		newErrorResponse(w, "unknown payload", http.StatusBadRequest)
@@ -87,7 +111,7 @@ func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var input inputSignIn
+	var input signInInput
 
 	err = json.Unmarshal(body, &input)
 	if err != nil {

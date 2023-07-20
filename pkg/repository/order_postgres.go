@@ -8,7 +8,7 @@ import (
 )
 
 type OrderRepo interface {
-	Create(cartID, userID int, order model.Order, products []model.Product) (int, error)
+	Create(cartID, userID int, order model.Order) (int, error)
 	GetAll(userID int) ([]model.Order, error)
 	GetByID(orderID int) (model.Order, error)
 	GetProductsByOrderID(orderID int) ([]model.Product, error)
@@ -22,7 +22,7 @@ func NewOrderPostgresqlRepo(db *sqlx.DB) *OrderPostgresqlRepository {
 	return &OrderPostgresqlRepository{DB: db}
 }
 
-func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Order, products []model.Product) (int, error) {
+func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Order) (int, error) {
 	tx, err := repo.DB.Begin()
 	if err != nil {
 		return 0, ParsePostgresError(err)
@@ -34,13 +34,21 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 		tx.Rollback()
 		return 0, ParsePostgresError(err)
 	}
-
-	query = fmt.Sprintf("INSERT INTO %s (order_id, product_id) VALUES ($1, $2)", productsOrdersTable)
-	for _, product := range products {
-		if _, err := tx.Exec(query, order.ID, product.ID); err != nil {
+	query = fmt.Sprintf("INSERT INTO %s (order_id, product_id, purchased_amount) VALUES ($1, $2, $3)", productsOrdersTable)
+	for _, product := range order.Products {
+		if _, err := tx.Exec(query, order.ID, product.ID, product.PurchasedAmount); err != nil {
 			tx.Rollback()
 			return 0, ParsePostgresError(err)
 		}
+	}
+
+	query = fmt.Sprintf(`UPDATE %s AS p
+						 SET amount = p.amount - pc.purchased_amount
+					     FROM %s AS pc 
+						 WHERE pc.product_id = p.id AND pc.cart_id = $1`, productsTable, productsCartsTable)
+	if _, err := tx.Exec(query, cartID); err != nil {
+		tx.Rollback()
+		return 0, ParsePostgresError(err)
 	}
 
 	query = fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1`, productsCartsTable)

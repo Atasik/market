@@ -2,6 +2,7 @@ package handler
 
 import (
 	"market/pkg/service"
+	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -19,34 +20,37 @@ type Handler struct {
 	Validator *validator.Validate
 }
 
-func (h *Handler) InitRoutes() *mux.Router {
+func (h *Handler) InitRoutes() http.Handler {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", h.GetProducts).Methods("GET")
-	r.HandleFunc("/api/about", h.About).Methods("GET")
+	r.HandleFunc("/", h.getProducts).Methods("GET")
+	r.HandleFunc("/api/about", h.about).Methods("GET")
 
 	authR := mux.NewRouter()
 
-	authR.HandleFunc("/api/orders", h.GetOrders).Methods("GET")
-	authR.HandleFunc("/api/order/{orderId}", h.GetOrder).Methods("GET")
-	authR.HandleFunc("/api/product", h.CreateProduct).Methods("POST")
-	authR.HandleFunc("/api/product/{productId}", h.UpdateProduct).Methods("PUT")
-	r.HandleFunc("/api/product/{productId}", h.GetProduct).Methods("GET")
-	authR.HandleFunc("/api/product/{productId}", h.DeleteProduct).Methods("DELETE")
-	authR.HandleFunc("/api/product/{productId}/addReview", h.CreateReview).Methods("POST")
-	authR.HandleFunc("/api/product/{productId}/updateReview/{reviewId}", h.UpdateReview).Methods("PUT")
-	authR.HandleFunc("/api/product/{productId}/deleteReview/{reviewId}", h.DeleteReview).Methods("DELETE")
+	authR.HandleFunc("/api/orders", h.getOrders).Methods("GET")
+	authR.HandleFunc("/api/order/{orderId}", h.getOrder).Methods("GET")
+	authR.HandleFunc("/api/product", h.createProduct).Methods("POST")
+	authR.HandleFunc("/api/product/{productId}", h.updateProduct).Methods("PUT")
+	r.HandleFunc("/api/product/{productId}", h.getProduct).Methods("GET")
+	authR.HandleFunc("/api/product/{productId}", h.deleteProduct).Methods("DELETE")
+	authR.HandleFunc("/api/product/{productId}/addReview", h.createReview).Methods("POST")
+	authR.HandleFunc("/api/product/{productId}/updateReview/{reviewId}", h.updateReview).Methods("PUT")
+	authR.HandleFunc("/api/product/{productId}/deleteReview/{reviewId}", h.deleteReview).Methods("DELETE")
 
-	authR.HandleFunc("/api/cart", h.GetProductsFromCart).Methods("GET")
-	authR.HandleFunc("/api/cart/{productId}", h.AddProductToCart).Methods("GET")
-	authR.HandleFunc("/api/cart/{productId}", h.DeleteProductFromCart).Methods("DELETE")
+	authR.HandleFunc("/api/cart", h.getProductsFromCart).Methods("GET")
+	authR.HandleFunc("/api/cart/{productId}", h.addProductToCart).Methods("GET")
+	authR.HandleFunc("/api/cart/{productId}", h.deleteProductFromCart).Methods("DELETE")
 
-	authR.HandleFunc("/api/createOrder", h.CreateOrder).Methods("GET")
+	authR.HandleFunc("/api/createOrder", h.createOrder).Methods("GET")
 
-	r.HandleFunc("/api/register", h.SignUp).Methods("POST")
-	r.HandleFunc("/api/login", h.SignIn).Methods("POST")
+	r.HandleFunc("/api/register", h.signUp).Methods("POST")
+	r.HandleFunc("/api/login", h.signIn).Methods("POST")
 
-	r.PathPrefix("/api/").Handler(Auth(h.Services.User, authR))
+	r.PathPrefix("/api/").Handler(auth(h.Services.User, authR))
 
-	return r
+	mux := accessLog(h.Logger, r)
+	mux = panic(mux)
+
+	return mux
 }

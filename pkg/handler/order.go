@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
@@ -28,7 +28,7 @@ func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
 	newGetOrdersResponse(w, orders, http.StatusOK)
 }
 
-func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
 	session, err := service.SessionFromContext(r.Context())
@@ -59,7 +59,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	newGetOrdersResponse(w, orders, http.StatusCreated)
 }
 
-func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
 	session, err := service.SessionFromContext(r.Context())

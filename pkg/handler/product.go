@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/schema"
 )
 
-func (h *Handler) About(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) about(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	resp, err := json.Marshal(map[string]interface{}{
 		"message": "a simple market-api",
@@ -27,7 +27,7 @@ func (h *Handler) About(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	orderBy := r.URL.Query().Get("order_by")
 
@@ -40,7 +40,7 @@ func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
-func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
 	vars := mux.Vars(r)
@@ -83,7 +83,7 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	session, err := service.SessionFromContext(r.Context())
 	if err != nil {
@@ -150,7 +150,7 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
 	sess, err := service.SessionFromContext(r.Context())
@@ -241,7 +241,7 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
 	session, err := service.SessionFromContext(r.Context())

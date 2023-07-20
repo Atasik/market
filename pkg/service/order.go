@@ -39,16 +39,16 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 			return 0, err
 		}
 
-		products, err := s.cartRepo.GetProducts(cart.ID)
+		order.Products, err = s.cartRepo.GetProducts(cart.ID)
 		if err != nil {
 			return 0, err
 		}
 
-		if products == nil {
+		if order.Products == nil {
 			return 0, ErrNoProducts
 		}
 
-		lastID, err := s.orderRepo.Create(cart.ID, userID, order, products)
+		lastID, err := s.orderRepo.Create(cart.ID, userID, order)
 		if err != nil {
 			return 0, err
 		}

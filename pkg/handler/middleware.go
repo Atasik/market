@@ -14,7 +14,7 @@ const (
 	authorizationHeader = "Authorization"
 )
 
-func AccessLog(logger *zap.SugaredLogger, next http.Handler) http.Handler {
+func accessLog(logger *zap.SugaredLogger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("access log middleware")
 		start := time.Now()
@@ -28,7 +28,7 @@ func AccessLog(logger *zap.SugaredLogger, next http.Handler) http.Handler {
 	})
 }
 
-func Auth(s service.User, next http.Handler) http.Handler {
+func auth(s service.User, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("auth middleware")
 
@@ -58,7 +58,7 @@ func Auth(s service.User, next http.Handler) http.Handler {
 	})
 }
 
-func Panic(next http.Handler) http.Handler {
+func panic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("panicMiddleware", r.URL.Path)
 		defer func() {
