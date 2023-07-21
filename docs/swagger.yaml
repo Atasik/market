@@ -1,0 +1,860 @@
+basePath: /
+definitions:
+  handler.cartInput:
+    properties:
+      amount:
+        type: integer
+    required:
+    - amount
+    type: object
+  handler.errorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  handler.getOrdersResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Order'
+        type: array
+    type: object
+  handler.getProductsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Product'
+        type: array
+    type: object
+  handler.reviewInput:
+    properties:
+      category:
+        type: string
+      text:
+        type: string
+    required:
+    - category
+    - text
+    type: object
+  handler.signInInput:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  handler.statusResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  model.Order:
+    properties:
+      created_at:
+        type: string
+      delivered_at:
+        type: string
+      id:
+        type: integer
+      products:
+        items:
+          $ref: '#/definitions/model.Product'
+        type: array
+      user_id:
+        type: integer
+    type: object
+  model.Product:
+    properties:
+      amount:
+        type: integer
+      category:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      imageID:
+        type: string
+      order_id:
+        type: integer
+      price:
+        type: number
+      purchased_amount:
+        type: integer
+      related_products:
+        items:
+          $ref: '#/definitions/model.Product'
+        type: array
+      reviews:
+        items:
+          $ref: '#/definitions/model.Review'
+        type: array
+      tag:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+      views:
+        type: integer
+    required:
+    - amount
+    - category
+    - price
+    - title
+    type: object
+  model.Review:
+    properties:
+      category:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      product_id:
+        type: integer
+      text:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+      username:
+        type: string
+    required:
+    - category
+    - text
+    type: object
+  model.User:
+    properties:
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - role
+    - username
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Simple market API
+  title: Market API
+  version: "1.0"
+paths:
+  /api/cart:
+    delete:
+      operationId: delete-products-from-cart
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.statusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete products from cart
+      tags:
+      - cart
+    get:
+      operationId: get-products-from-cart
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getProductsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get products from cart
+      tags:
+      - cart
+  /api/cart/{productId}:
+    delete:
+      operationId: delete-product-from-cart
+      parameters:
+      - description: ID of product to delete
+        in: path
+        name: productId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getProductsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete product from cart
+      tags:
+      - cart
+    post:
+      consumes:
+      - application/json
+      operationId: add-product-to-cart
+      parameters:
+      - description: ID of product to add to cart
+        in: path
+        name: productId
+        required: true
+        type: integer
+      - description: Amount of products
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.cartInput'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getProductsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add product to cart
+      tags:
+      - cart
+    put:
+      consumes:
+      - application/json
+      operationId: update-product-amount-from-cart
+      parameters:
+      - description: ID of product to update
+        in: path
+        name: productId
+        required: true
+        type: integer
+      - description: Amount of products
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.cartInput'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getProductsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update product amount from cart
+      tags:
+      - cart
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      operationId: login
+      parameters:
+      - description: Username and password
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.signInInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Login into market
+      tags:
+      - user
+  /api/order:
+    get:
+      operationId: create-order
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getOrdersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create order
+      tags:
+      - order
+  /api/order/{productId}:
+    get:
+      operationId: get-order
+      parameters:
+      - description: ID of order to get
+        in: path
+        name: productId
+        required: true
+        type: integer
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get order
+      tags:
+      - order
+  /api/orders:
+    get:
+      operationId: get-orders
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getOrdersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get orders
+      tags:
+      - order
+  /api/product:
+    post:
+      consumes:
+      - multipart/form-data
+      operationId: create-product
+      parameters:
+      - description: Image to Upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Title of product
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Price of product
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Tag of product
+        in: formData
+        name: tag
+        type: string
+      - description: Category of product
+        in: formData
+        name: category
+        required: true
+        type: string
+      - description: Description of product
+        in: formData
+        name: description
+        type: string
+      - description: Amount of products
+        in: formData
+        name: amount
+        required: true
+        type: integer
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add a new product to the market
+      tags:
+      - products
+  /api/product/{productId}:
+    delete:
+      operationId: delete-product
+      parameters:
+      - description: ID of product to delete
+        in: path
+        name: productId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.statusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete product from the market
+      tags:
+      - products
+    get:
+      operationId: get-product-by-id
+      parameters:
+      - description: ID of product to get
+        in: path
+        name: productId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Get product by id from the market
+      tags:
+      - products
+    put:
+      consumes:
+      - multipart/form-data
+      operationId: update-product
+      parameters:
+      - description: ID of product to update
+        in: path
+        name: productId
+        type: integer
+      - description: Image to Upload
+        in: formData
+        name: file
+        type: file
+      - description: Title of product
+        in: formData
+        name: title
+        type: string
+      - description: Price of product
+        in: formData
+        name: price
+        type: number
+      - description: Tag of product
+        in: formData
+        name: tag
+        type: string
+      - description: Category of product
+        in: formData
+        name: category
+        type: string
+      - description: Description of product
+        in: formData
+        name: description
+        type: string
+      - description: Amount of products
+        in: formData
+        name: amount
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an existing product from the market
+      tags:
+      - products
+  /api/product/{productId}/addReview:
+    post:
+      consumes:
+      - application/json
+      operationId: create-review
+      parameters:
+      - description: ID of product for review
+        in: path
+        name: productId
+        required: true
+        type: integer
+      - description: Review content
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.reviewInput'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create review
+      tags:
+      - review
+  /api/product/{productId}/deleteReview/{reviewId}:
+    delete:
+      operationId: delete-review
+      parameters:
+      - description: ID of product
+        in: path
+        name: productId
+        required: true
+        type: integer
+      - description: ID of review
+        in: path
+        name: reviewId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete review
+      tags:
+      - review
+  /api/product/{productId}/updateReview/{reviewId}:
+    put:
+      consumes:
+      - application/json
+      operationId: update-review
+      parameters:
+      - description: ID of product
+        in: path
+        name: productId
+        required: true
+        type: integer
+      - description: ID of review
+        in: path
+        name: reviewId
+        required: true
+        type: integer
+      - description: Review content
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.reviewInput'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update review
+      tags:
+      - review
+  /api/products:
+    get:
+      operationId: get-all-products
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getProductsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Get all products from the market
+      tags:
+      - products
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      operationId: register
+      parameters:
+      - description: Account info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Register in the market
+      tags:
+      - user
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

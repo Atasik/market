@@ -12,6 +12,24 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type reviewInput struct {
+	Text     string `db:"text" json:"text" validate:"required"`
+	Category string `db:"category" json:"category" validate:"review_category,required"`
+}
+
+// @Summary	Create review
+// @Security	ApiKeyAuth
+// @Tags		review
+// @ID			create-review
+// @Accept		json
+// @Product	json
+// @Param		productId	path		integer			true	"ID of product for review"
+// @Param		input		body		reviewInput	true	"Review content"
+// @Success	201			{object}	model.Product
+// @Failure	400,404		{object}	errorResponse
+// @Failure	500			{object}	errorResponse
+// @Failure	default		{object}	errorResponse
+// @Router		/api/product/{productId}/addReview [post]
 func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -38,21 +56,25 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var review model.Review
+	var input reviewInput
 
-	err = json.Unmarshal(body, &review)
+	err = json.Unmarshal(body, &input)
 	if err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	err = h.Validator.Struct(review)
+	err = h.Validator.Struct(input)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	var review model.Review
+	review.Category = input.Category
+	review.Text = input.Text
 	review.CreatedAt = time.Now()
+	review.UpdatedAt = time.Now()
 	review.ProductID = productID
 	review.UserID = sess.UserID
 	review.Username = sess.Username
@@ -91,6 +113,20 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary	Update review
+// @Security	ApiKeyAuth
+// @Tags		review
+// @ID			update-review
+// @Accept		json
+// @Product	json
+// @Param		productId	path		integer			true	"ID of product"
+// @Param		reviewId	path		integer			true	"ID of review"
+// @Param		input		body		reviewInput	true	"Review content"
+// @Success	201			{object}	model.Product
+// @Failure	400,404		{object}	errorResponse
+// @Failure	500			{object}	errorResponse
+// @Failure	default		{object}	errorResponse
+// @Router		/api/product/{productId}/updateReview/{reviewId} [put]
 func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -168,6 +204,18 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary	Delete review
+// @Security	ApiKeyAuth
+// @Tags		review
+// @ID			delete-review
+// @Product	json
+// @Param		productId	path		integer	true	"ID of product"
+// @Param		reviewId	path		integer	true	"ID of review"
+// @Success	200			{object}	model.Product
+// @Failure	400,404		{object}	errorResponse
+// @Failure	500			{object}	errorResponse
+// @Failure	default		{object}	errorResponse
+// @Router		/api/product/{productId}/deleteReview/{reviewId} [delete]
 func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())

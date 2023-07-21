@@ -15,6 +15,24 @@ import (
 
 const imageUploadTimeout = 5 * time.Second
 
+//	@Summary	Add a new product to the market
+//	@Security	ApiKeyAuth
+//	@Tags		products
+//	@ID			create-product
+//	@Accept		mpfd
+//	@Product	json
+//	@Param		file		formData	file	true	"Image to Upload"
+//	@Param		title		formData	string	true	"Title of product"
+//	@Param		price		formData	number	true	"Price of product"
+//	@Param		tag			formData	string	false	"Tag of product"
+//	@Param		category	formData	string	true	"Category of product"
+//	@Param		description	formData	string	false	"Description of product"
+//	@Param		amount		formData	integer	true	"Amount of products"
+//	@Success	201			{object}	model.Product
+//	@Failure	400,404		{object}	errorResponse
+//	@Failure	500			{object}	errorResponse
+//	@Failure	default		{object}	errorResponse
+//	@Router		/api/product [post]
 func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
@@ -86,6 +104,15 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//	@Summary	Get all products from the market
+//	@Tags		products
+//	@ID			get-all-products
+//	@Product	json
+//	@Success	200		{object}	getProductsResponse
+//	@Failure	400,404	{object}	errorResponse
+//	@Failure	500		{object}	errorResponse
+//	@Failure	default	{object}	errorResponse
+//	@Router		/api/products [get]
 func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	orderBy := r.URL.Query().Get("order_by")
@@ -99,6 +126,16 @@ func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
+//	@Summary	Get product by id from the market
+//	@Tags		products
+//	@ID			get-product-by-id
+//	@Product	json
+//	@Param		productId	path		integer	true	"ID of product to get"
+//	@Success	200			{object}	model.Product
+//	@Failure	400,404		{object}	errorResponse
+//	@Failure	500			{object}	errorResponse
+//	@Failure	default		{object}	errorResponse
+//	@Router		/api/product/{productId} [get]
 func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -141,6 +178,25 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//	@Summary	Update an existing product from the market
+//	@Security	ApiKeyAuth
+//	@Tags		products
+//	@ID			update-product
+//	@Accept		mpfd
+//	@Product	json
+//	@Param		productId	path		integer	false	"ID of product to update"
+//	@Param		file		formData	file	false	"Image to Upload"
+//	@Param		title		formData	string	false	"Title of product"
+//	@Param		price		formData	number	false	"Price of product"
+//	@Param		tag			formData	string	false	"Tag of product"
+//	@Param		category	formData	string	false	"Category of product"
+//	@Param		description	formData	string	false	"Description of product"
+//	@Param		amount		formData	integer	false	"Amount of products"
+//	@Success	200			{object}	model.Product
+//	@Failure	400,404		{object}	errorResponse
+//	@Failure	500			{object}	errorResponse
+//	@Failure	default		{object}	errorResponse
+//	@Router		/api/product/{productId} [put]
 func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -230,7 +286,6 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Infof("Product was updated: %v", product)
 
-	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(product)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
@@ -238,6 +293,17 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//	@Summary	Delete product from the market
+//	@Security	ApiKeyAuth
+//	@Tags		products
+//	@ID			delete-product
+//	@Product	json
+//	@Param		productId	path		integer	true	"ID of product to delete"
+//	@Success	200			{object}	statusResponse
+//	@Failure	400,404		{object}	errorResponse
+//	@Failure	500			{object}	errorResponse
+//	@Failure	default		{object}	errorResponse
+//	@Router		/api/product/{productId} [delete]
 func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 

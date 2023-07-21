@@ -17,6 +17,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// @title Market API
+// @version 1.0
+// @description Simple market API
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	if err := initConfig(); err != nil {
 		log.Fatal("Error occured while loading config: ", err.Error())

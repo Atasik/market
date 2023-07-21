@@ -10,10 +10,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type cartInput struct {
-	Amount int `json:"amount" validate:"required"`
-}
-
+// @Summary Add product to cart
+// @Security ApiKeyAuth
+// @Tags cart
+// @ID add-product-to-cart
+// @Accept json
+// @Product json
+// @Param   productId path integer true "ID of product to add to cart"
+// @Param input body cartInput true "Amount of products"
+// @Success 200 {object} getProductsResponse
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /api/cart/{productId} [post]
 func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -78,6 +87,16 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
+// @Summary Get products from cart
+// @Security ApiKeyAuth
+// @Tags cart
+// @ID get-products-from-cart
+// @Product json
+// @Success 200 {object} getProductsResponse
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /api/cart [get]
 func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
@@ -101,6 +120,23 @@ func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
+type cartInput struct {
+	Amount int `json:"amount" validate:"required"`
+}
+
+// @Summary Update product amount from cart
+// @Security ApiKeyAuth
+// @Tags cart
+// @ID update-product-amount-from-cart
+// @Accept json
+// @Product json
+// @Param   productId path integer true "ID of product to update"
+// @Param input body cartInput true "Amount of products"
+// @Success 200 {object} getProductsResponse
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /api/cart/{productId} [put]
 func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -165,6 +201,17 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
+// @Summary Delete product from cart
+// @Security ApiKeyAuth
+// @Tags cart
+// @ID delete-product-from-cart
+// @Product json
+// @Param   productId path integer true "ID of product to delete"
+// @Success 200 {object} getProductsResponse
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /api/cart/{productId} [delete]
 func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
@@ -203,6 +250,16 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
+// @Summary Delete products from cart
+// @Security ApiKeyAuth
+// @Tags cart
+// @ID delete-products-from-cart
+// @Product json
+// @Success 200 {object} statusResponse
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /api/cart [delete]
 func (h *Handler) deleteProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())

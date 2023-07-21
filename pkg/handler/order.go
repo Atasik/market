@@ -11,6 +11,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//	@Summary	Create order
+//	@Security	ApiKeyAuth
+//	@Tags		order
+//	@ID			create-order
+//	@Product	json
+//	@Success	200		{object}	getOrdersResponse
+//	@Failure	400,404	{object}	errorResponse
+//	@Failure	500		{object}	errorResponse
+//	@Failure	default	{object}	errorResponse
+//	@Router		/api/order [get]
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -42,6 +52,17 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	newGetOrdersResponse(w, orders, http.StatusCreated)
 }
 
+//	@Summary	Get order
+//	@Security	ApiKeyAuth
+//	@Tags		order
+//	@ID			get-order
+//	@Product	json
+//	@Param		productId	path		integer	true	"ID of order to get"
+//	@Success	201			{object}	model.Order
+//	@Failure	400,404		{object}	errorResponse
+//	@Failure	500			{object}	errorResponse
+//	@Failure	default		{object}	errorResponse
+//	@Router		/api/order/{productId} [get]
 func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -78,6 +99,16 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//	@Summary	Get orders
+//	@Security	ApiKeyAuth
+//	@Tags		order
+//	@ID			get-orders
+//	@Product	json
+//	@Success	200		{object}	getOrdersResponse
+//	@Failure	400,404	{object}	errorResponse
+//	@Failure	500		{object}	errorResponse
+//	@Failure	default	{object}	errorResponse
+//	@Router		/api/orders [get]
 func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
