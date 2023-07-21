@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"market/pkg/service"
 	"net/http"
 	"strconv"
@@ -34,7 +34,7 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusBadRequest)
 		return
@@ -121,7 +121,7 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusBadRequest)
 		return

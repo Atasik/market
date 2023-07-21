@@ -15,23 +15,6 @@ import (
 
 const imageUploadTimeout = 5 * time.Second
 
-func (h *Handler) about(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", appJSON)
-	resp, err := json.Marshal(map[string]interface{}{
-		"message": "a simple market-api",
-	})
-	if err != nil {
-		newErrorResponse(w, `can't create payload`, http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(resp)
-	if err != nil {
-		newErrorResponse(w, `can't write resp`, http.StatusInternalServerError)
-		return
-	}
-}
-
 func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
@@ -103,7 +86,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) getProducts(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	orderBy := r.URL.Query().Get("order_by")
 
@@ -116,7 +99,7 @@ func (h *Handler) getProducts(w http.ResponseWriter, r *http.Request) {
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
-func (h *Handler) getProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
 	vars := mux.Vars(r)

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"market/pkg/model"
 	"market/pkg/service"
 	"net/http"
@@ -31,7 +31,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusBadRequest)
 		return
@@ -110,7 +110,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusBadRequest)
 		return

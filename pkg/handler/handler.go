@@ -23,8 +23,7 @@ type Handler struct {
 func (h *Handler) InitRoutes() http.Handler {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", h.getProducts).Methods("GET")
-	r.HandleFunc("/api/about", h.about).Methods("GET")
+	r.HandleFunc("/api/products", h.getAllProducts).Methods("GET")
 
 	authR := mux.NewRouter()
 
@@ -32,7 +31,7 @@ func (h *Handler) InitRoutes() http.Handler {
 	authR.HandleFunc("/api/order/{orderId}", h.getOrder).Methods("GET")
 	authR.HandleFunc("/api/product", h.createProduct).Methods("POST")
 	authR.HandleFunc("/api/product/{productId}", h.updateProduct).Methods("PUT")
-	r.HandleFunc("/api/product/{productId}", h.getProduct).Methods("GET")
+	r.HandleFunc("/api/product/{productId}", h.getProductByID).Methods("GET")
 	authR.HandleFunc("/api/product/{productId}", h.deleteProduct).Methods("DELETE")
 	authR.HandleFunc("/api/product/{productId}/addReview", h.createReview).Methods("POST")
 	authR.HandleFunc("/api/product/{productId}/updateReview/{reviewId}", h.updateReview).Methods("PUT")
