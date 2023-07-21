@@ -11,27 +11,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", appJSON)
-	sess, err := service.SessionFromContext(r.Context())
-	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
-		return
-	}
-
-	orders, err := h.Services.Order.GetAll(sess.ID)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	newGetOrdersResponse(w, orders, http.StatusOK)
-}
-
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
-	session, err := service.SessionFromContext(r.Context())
+	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
@@ -42,7 +25,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		DeliveredAt: time.Now().Add(4 * 24 * time.Hour),
 	}
 
-	lastID, err := h.Services.Order.Create(session.ID, order)
+	lastID, err := h.Services.Order.Create(sess.UserID, order)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -50,7 +33,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Infof("Order was created with id LastInsertId: %v", lastID)
 
-	orders, err := h.Services.Order.GetAll(session.ID)
+	orders, err := h.Services.Order.GetAll(sess.UserID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -62,7 +45,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
-	session, err := service.SessionFromContext(r.Context())
+	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
@@ -75,13 +58,13 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedOrder, err := h.Services.Order.GetByID(session.ID, orderID)
+	selectedOrder, err := h.Services.Order.GetByID(sess.UserID, orderID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	selectedOrder.Products, err = h.Services.Order.GetProductsByOrderID(session.ID, orderID)
+	selectedOrder.Products, err = h.Services.Order.GetProductsByOrderID(sess.UserID, orderID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -93,4 +76,21 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+	sess, err := service.SessionFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		return
+	}
+
+	orders, err := h.Services.Order.GetAll(sess.UserID)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	newGetOrdersResponse(w, orders, http.StatusOK)
 }

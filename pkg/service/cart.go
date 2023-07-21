@@ -12,12 +12,13 @@ var (
 )
 
 type Cart interface {
-	CreateCart(userID int) (int, error)
-	AddProduct(userID, CartID, productID, amountToPurchase int) (int, error)
+	Create(userID int) (int, error)
+	AddProduct(userID, cartID, productID, amountToPurchase int) (int, error)
 	GetByUserID(userID int) (model.Cart, error)
-	GetProducts(userID, CartID int) ([]model.Product, error)
-	DeleteProduct(userID, CartID, productID int) (bool, error)
-	DeleteAll(userID, CartID int) (bool, error)
+	GetAllProducts(userID, CartID int) ([]model.Product, error)
+	UpdateProductAmount(userID, CartID, productID, amountToPurchase int) error
+	DeleteProduct(userID, cartID, productID int) error
+	DeleteAllProducts(userID, cartID int) error
 }
 
 type CartService struct {
@@ -30,11 +31,11 @@ func NewCartService(cartRepo repository.CartRepo, userRepo repository.UserRepo, 
 	return &CartService{cartRepo: cartRepo, userRepo: userRepo, productRepo: productRepo}
 }
 
-func (s *CartService) CreateCart(userID int) (int, error) {
-	return s.cartRepo.CreateCart(userID)
+func (s *CartService) Create(userID int) (int, error) {
+	return s.cartRepo.Create(userID)
 }
 
-func (s *CartService) AddProduct(userID, CartID, productID, amountToPurchase int) (int, error) {
+func (s *CartService) AddProduct(userID, cartID, productID, amountToPurchase int) (int, error) {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return 0, err
@@ -49,14 +50,14 @@ func (s *CartService) AddProduct(userID, CartID, productID, amountToPurchase int
 				return 0, err
 			}
 		}
-		_, err = s.cartRepo.GetProductByID(CartID, productID)
+		_, err = s.cartRepo.GetProductByID(cartID, productID)
 		if err != nil {
 			switch err {
 			case repository.ErrNotFound:
 				if product.Amount < amountToPurchase {
 					return 0, ErrInvalidAmount
 				}
-				return s.cartRepo.AddProduct(CartID, productID, amountToPurchase)
+				return s.cartRepo.AddProduct(cartID, productID, amountToPurchase)
 			default:
 				return 0, err
 			}
@@ -79,38 +80,62 @@ func (s *CartService) GetByUserID(userID int) (model.Cart, error) {
 	return model.Cart{}, ErrPermissionDenied
 }
 
-func (s *CartService) GetProducts(userID, CartID int) ([]model.Product, error) {
+func (s *CartService) GetAllProducts(userID, cartID int) ([]model.Product, error) {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return []model.Product{}, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.cartRepo.GetProducts(CartID)
+		return s.cartRepo.GetAllProducts(cartID)
 	}
 
 	return []model.Product{}, ErrPermissionDenied
 }
 
-func (s *CartService) DeleteProduct(userID, CartID, productID int) (bool, error) {
+func (s *CartService) UpdateProductAmount(userID, cartID, productID, amountToPurchase int) error {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.cartRepo.DeleteProduct(CartID, productID)
+		product, err := s.cartRepo.GetProductByID(cartID, productID)
+		if err != nil {
+			switch err {
+			case repository.ErrNotFound:
+				return ErrNoProduct
+			default:
+				return err
+			}
+		}
+		if product.Amount < amountToPurchase {
+			return ErrInvalidAmount
+		}
+		return s.cartRepo.UpdateProductAmount(cartID, productID, amountToPurchase)
 	}
 
-	return false, ErrPermissionDenied
+	return ErrPermissionDenied
 }
 
-func (s *CartService) DeleteAll(userID, CartID int) (bool, error) {
+func (s *CartService) DeleteProduct(userID, cartID, productID int) error {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.cartRepo.DeleteAll(CartID)
+		return s.cartRepo.DeleteProduct(cartID, productID)
 	}
 
-	return false, ErrPermissionDenied
+	return ErrPermissionDenied
+}
+
+func (s *CartService) DeleteAllProducts(userID, cartID int) error {
+	user, err := s.userRepo.GetUserById(userID)
+	if err != nil {
+		return err
+	}
+	if user.Role == model.ADMIN || user.ID == userID {
+		return s.cartRepo.DeleteAllProducts(cartID)
+	}
+
+	return ErrPermissionDenied
 }

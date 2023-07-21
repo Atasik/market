@@ -12,8 +12,8 @@ type ProductRepo interface {
 	GetAll(orderBy string) ([]model.Product, error)
 	GetByID(productID int) (model.Product, error)
 	Create(product model.Product) (int, error)
-	Update(productID int, input model.UpdateProductInput) (bool, error)
-	Delete(productID int) (bool, error)
+	Update(productID int, input model.UpdateProductInput) error
+	Delete(productID int) error
 	GetByType(productType string, productID, limit int) ([]model.Product, error)
 }
 
@@ -68,7 +68,7 @@ func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, err
 }
 
 // проверка, что есть права
-func (repo *ProductPostgresqlRepository) Update(productID int, input model.UpdateProductInput) (bool, error) {
+func (repo *ProductPostgresqlRepository) Update(productID int, input model.UpdateProductInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -138,20 +138,20 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 
 	_, err := repo.DB.Exec(query, args...)
 	if err != nil {
-		return false, ParsePostgresError(err)
+		return ParsePostgresError(err)
 	}
-	return true, nil
+	return nil
 }
 
 // проверка, что есть права
-func (repo *ProductPostgresqlRepository) Delete(productId int) (bool, error) {
+func (repo *ProductPostgresqlRepository) Delete(productId int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", productsTable)
 
 	_, err := repo.DB.Exec(query, productId)
 	if err != nil {
-		return false, ParsePostgresError(err)
+		return ParsePostgresError(err)
 	}
-	return true, nil
+	return nil
 }
 
 func (repo *ProductPostgresqlRepository) GetByType(productType string, productID, limit int) ([]model.Product, error) {

@@ -54,7 +54,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 
 	review.CreatedAt = time.Now()
 	review.ProductID = productID
-	review.UserID = sess.ID
+	review.UserID = sess.UserID
 	review.Username = sess.Username
 
 	review.ID, err = h.Services.Review.Create(review)
@@ -91,59 +91,6 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", appJSON)
-	session, err := service.SessionFromContext(r.Context())
-	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
-		return
-	}
-	vars := mux.Vars(r)
-	reviewID, err := strconv.Atoi(vars["reviewId"])
-	if err != nil {
-		newErrorResponse(w, "Bad id", http.StatusBadRequest)
-		return
-	}
-
-	ok, err := h.Services.Review.Delete(session.ID, reviewID)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	productID, err := strconv.Atoi(vars["productId"])
-	if err != nil {
-		newErrorResponse(w, "Bad id", http.StatusBadRequest)
-		return
-	}
-
-	h.Logger.Infof("Review by userID [%v] to productID [%v] was deleted: %v", session.ID, productID, ok)
-
-	product, err := h.Services.Product.GetByID(productID)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	product.Reviews, err = h.Services.Review.GetAll(productID)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	product.RelatedProducts, err = h.Services.Product.GetByType(product.Category, productID, 5)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(product)
-	if err != nil {
-		newErrorResponse(w, "server error", http.StatusInternalServerError)
-		return
-	}
-}
-
 func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -151,7 +98,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := service.SessionFromContext(r.Context())
+	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
@@ -187,13 +134,13 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	input.UpdatedAt = &currentTime
 
-	ok, err := h.Services.Review.Update(session.ID, productID, input)
+	err = h.Services.Review.Update(sess.UserID, productID, input)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.Logger.Infof("Review by userID [%v] to productID [%v] was updated: %v", session.ID, productID, ok)
+	h.Logger.Infof("Review by userID [%v] to productID [%v] was updated: %v", sess.UserID, productID)
 
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {
@@ -214,6 +161,59 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(product)
+	if err != nil {
+		newErrorResponse(w, "server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+	sess, err := service.SessionFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		return
+	}
+	vars := mux.Vars(r)
+	reviewID, err := strconv.Atoi(vars["reviewId"])
+	if err != nil {
+		newErrorResponse(w, "Bad id", http.StatusBadRequest)
+		return
+	}
+
+	err = h.Services.Review.Delete(sess.UserID, reviewID)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	productID, err := strconv.Atoi(vars["productId"])
+	if err != nil {
+		newErrorResponse(w, "Bad id", http.StatusBadRequest)
+		return
+	}
+
+	h.Logger.Infof("Review by userID [%v] to productID [%v] was deleted", sess.UserID, productID)
+
+	product, err := h.Services.Product.GetByID(productID)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	product.Reviews, err = h.Services.Review.GetAll(productID)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	product.RelatedProducts, err = h.Services.Product.GetByType(product.Category, productID, 5)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	json.NewEncoder(w).Encode(product)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)

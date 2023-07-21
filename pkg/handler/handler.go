@@ -39,10 +39,12 @@ func (h *Handler) InitRoutes() http.Handler {
 	authR.HandleFunc("/api/product/{productId}/deleteReview/{reviewId}", h.deleteReview).Methods("DELETE")
 
 	authR.HandleFunc("/api/cart", h.getProductsFromCart).Methods("GET")
+	authR.HandleFunc("/api/cart/{productId}", h.updateProductAmountFromCart).Methods("PUT")
 	authR.HandleFunc("/api/cart/{productId}", h.addProductToCart).Methods("GET")
 	authR.HandleFunc("/api/cart/{productId}", h.deleteProductFromCart).Methods("DELETE")
+	authR.HandleFunc("/api/cart", h.deleteProductsFromCart).Methods("DELETE")
 
-	authR.HandleFunc("/api/createOrder", h.createOrder).Methods("GET")
+	authR.HandleFunc("/api/order", h.createOrder).Methods("GET")
 
 	r.HandleFunc("/api/register", h.signUp).Methods("POST")
 	r.HandleFunc("/api/login", h.signIn).Methods("POST")

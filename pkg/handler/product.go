@@ -32,64 +32,9 @@ func (h *Handler) about(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) getProducts(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", appJSON)
-	orderBy := r.URL.Query().Get("order_by")
-
-	products, err := h.Services.Product.GetAll(orderBy)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	newGetProductsResponse(w, products, http.StatusOK)
-}
-
-func (h *Handler) getProduct(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", appJSON)
-
-	vars := mux.Vars(r)
-	productID, err := strconv.Atoi(vars["productId"])
-	if err != nil {
-		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
-		return
-	}
-
-	selectedProduct, err := h.Services.Product.GetByID(productID)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	_, err = h.Services.Product.IncreaseViewsCounter(productID)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	selectedProduct.Reviews, err = h.Services.Review.GetAll(productID)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	selectedProduct.RelatedProducts, err = h.Services.Product.GetByType(selectedProduct.Category, productID, 5)
-	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(selectedProduct)
-	if err != nil {
-		newErrorResponse(w, "server error", http.StatusInternalServerError)
-		return
-	}
-}
-
 func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
-	session, err := service.SessionFromContext(r.Context())
+	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
@@ -125,7 +70,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.UserID = session.ID
+	product.UserID = sess.UserID
 	product.ImageURL = data.ImageURL
 	product.ImageID = data.ImageID
 	product.CreatedAt = time.Now()
@@ -133,7 +78,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	lastID, err := h.Services.Product.Create(product)
+	productID, err := h.Services.Product.Create(product)
 	if err != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 		defer cancel()
@@ -146,12 +91,67 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.ID = lastID
+	product.ID = productID
 
-	h.Logger.Infof("Product was created with id LastInsertId: %v", lastID)
+	h.Logger.Infof("Product was created with id LastInsertId: %v", productID)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(product)
+	if err != nil {
+		newErrorResponse(w, "server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) getProducts(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+	orderBy := r.URL.Query().Get("order_by")
+
+	products, err := h.Services.Product.GetAll(orderBy)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	newGetProductsResponse(w, products, http.StatusOK)
+}
+
+func (h *Handler) getProduct(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+
+	vars := mux.Vars(r)
+	productID, err := strconv.Atoi(vars["productId"])
+	if err != nil {
+		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
+		return
+	}
+
+	selectedProduct, err := h.Services.Product.GetByID(productID)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = h.Services.Product.IncreaseViewsCounter(productID)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	selectedProduct.Reviews, err = h.Services.Review.GetAll(productID)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	selectedProduct.RelatedProducts, err = h.Services.Product.GetByType(selectedProduct.Category, productID, 5)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(selectedProduct)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
@@ -214,7 +214,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok, err := h.Services.Product.Update(sess.ID, productID, input)
+	err = h.Services.Product.Update(sess.UserID, productID, input)
 	if err != nil {
 		if !noFile {
 			ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
@@ -245,7 +245,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Product was updated: %v %v", product, ok)
+	h.Logger.Infof("Product was updated: %v", product)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(product)
@@ -258,7 +258,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
-	session, err := service.SessionFromContext(r.Context())
+	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
@@ -277,12 +277,12 @@ func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok, err := h.Services.Product.Delete(session.ID, productId)
+	err = h.Services.Product.Delete(sess.UserID, productId)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	h.Logger.Infof("Product was deleted: %v %v", product, ok)
+	h.Logger.Infof("Product was deleted: %v", product)
 
 	ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 	defer cancel()

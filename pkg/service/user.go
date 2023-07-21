@@ -113,7 +113,7 @@ func (s *UserService) CheckToken(accessToken string) (*Session, error) {
 
 	session := Session{
 		Username: claims.Username,
-		ID:       claims.UserID,
+		UserID:   claims.UserID,
 	}
 
 	return &session, nil

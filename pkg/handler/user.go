@@ -49,13 +49,13 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.Services.User.CreateUser(user)
+	userID, err := h.Services.User.CreateUser(user)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	_, err = h.Services.Cart.CreateCart(id)
+	_, err = h.Services.Cart.Create(userID)
 	if err != nil {
 		newErrorResponse(w, "Create Basket Error", http.StatusInternalServerError)
 		return

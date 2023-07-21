@@ -11,7 +11,7 @@ var (
 
 type Session struct {
 	Username string
-	ID       int
+	UserID   int
 }
 
 type sessKey string

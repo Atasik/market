@@ -10,8 +10,8 @@ import (
 
 type ReviewRepo interface {
 	Create(review model.Review) (int, error)
-	Delete(reviewID int) (bool, error)
-	Update(userID, productID int, input model.UpdateReviewInput) (bool, error)
+	Delete(reviewID int) error
+	Update(userID, productID int, input model.UpdateReviewInput) error
 	GetAll(productID int) ([]model.Review, error)
 	GetReviewIDByProductIDUserID(productID, userID int) (int, error)
 }
@@ -38,18 +38,18 @@ func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error)
 }
 
 // проверка, что есть права
-func (repo *ReviewPostgresqlRepository) Delete(reviewID int) (bool, error) {
+func (repo *ReviewPostgresqlRepository) Delete(reviewID int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", reviewsTable)
 
 	_, err := repo.DB.Exec(query, reviewID)
 	if err != nil {
-		return false, ParsePostgresError(err)
+		return ParsePostgresError(err)
 	}
-	return true, nil
+	return nil
 }
 
 // проверка, что есть права
-func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input model.UpdateReviewInput) (bool, error) {
+func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input model.UpdateReviewInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -78,9 +78,9 @@ func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input mode
 
 	_, err := repo.DB.Exec(query, args...)
 	if err != nil {
-		return false, ParsePostgresError(err)
+		return ParsePostgresError(err)
 	}
-	return true, nil
+	return nil
 }
 
 func (repo *ReviewPostgresqlRepository) GetAll(productID int) ([]model.Review, error) {

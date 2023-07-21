@@ -39,7 +39,7 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 			return 0, err
 		}
 
-		order.Products, err = s.cartRepo.GetProducts(cart.ID)
+		order.Products, err = s.cartRepo.GetAllProducts(cart.ID)
 		if err != nil {
 			return 0, err
 		}

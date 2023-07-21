@@ -16,10 +16,10 @@ type Product interface {
 	GetAll(orderBy string) ([]model.Product, error)
 	GetByID(productID int) (model.Product, error)
 	Create(product model.Product) (int, error)
-	Update(userID, productID int, input model.UpdateProductInput) (bool, error)
-	Delete(userID, productID int) (bool, error)
+	Update(userID, productID int, input model.UpdateProductInput) error
+	Delete(userID, productID int) error
 	GetByType(productType string, productID, limit int) ([]model.Product, error)
-	IncreaseViewsCounter(productID int) (bool, error)
+	IncreaseViewsCounter(productID int) error
 }
 
 type ProductService struct {
@@ -61,44 +61,44 @@ func (s *ProductService) Create(product model.Product) (int, error) {
 	return id, nil
 }
 
-func (s *ProductService) Update(userID, productID int, input model.UpdateProductInput) (bool, error) {
+func (s *ProductService) Update(userID, productID int, input model.UpdateProductInput) error {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
 		if err := input.Validate(); err != nil {
-			return false, err
+			return err
 		}
 		return s.productRepo.Update(productID, input)
 	}
 
-	return false, ErrPermissionDenied
+	return ErrPermissionDenied
 }
 
-func (s *ProductService) Delete(userID, productID int) (bool, error) {
+func (s *ProductService) Delete(userID, productID int) error {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.productRepo.Delete(productID)
 	}
 
-	return false, ErrPermissionDenied
+	return ErrPermissionDenied
 }
 
 func (s *ProductService) GetByType(productType string, productID, limit int) ([]model.Product, error) {
 	return s.productRepo.GetByType(productType, productID, limit)
 }
 
-func (s *ProductService) IncreaseViewsCounter(productID int) (bool, error) {
+func (s *ProductService) IncreaseViewsCounter(productID int) error {
 	views := 1
 	input := model.UpdateProductInput{
 		Views: &views,
 	}
 	if err := input.Validate(); err != nil {
-		return false, err
+		return err
 	}
 	return s.productRepo.Update(productID, input)
 }

@@ -9,7 +9,7 @@ import (
 
 type UserRepo interface {
 	GetUser(login string) (model.User, error)
-	GetUserById(UserID int) (model.User, error)
+	GetUserById(userID int) (model.User, error)
 	CreateUser(model.User) (int, error)
 }
 
@@ -32,11 +32,11 @@ func (repo *UserPostgresqlRepository) GetUser(login string) (model.User, error) 
 	return user, nil
 }
 
-func (repo *UserPostgresqlRepository) GetUserById(UserID int) (model.User, error) {
+func (repo *UserPostgresqlRepository) GetUserById(userID int) (model.User, error) {
 	var user model.User
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", usersTable)
 
-	if err := repo.DB.Get(&user, query, UserID); err != nil {
+	if err := repo.DB.Get(&user, query, userID); err != nil {
 		return model.User{}, ParsePostgresError(err)
 	}
 
