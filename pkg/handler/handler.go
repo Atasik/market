@@ -23,7 +23,9 @@ type Handler struct {
 func (h *Handler) InitRoutes() http.Handler {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/products", h.getAllProducts).Methods("GET")
+	r.HandleFunc("/api/products", query(h.getAllProducts)).Methods("GET")
+	r.HandleFunc("/api/category/{categoryName}", query(h.getProductsByCategory)).Methods("GET")
+	r.HandleFunc("/api/products/{userId}", query(h.getProductsByUserID)).Methods("GET")
 
 	authR := mux.NewRouter()
 

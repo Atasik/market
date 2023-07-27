@@ -21,7 +21,6 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	order := model.Order{
-		CreatedAt:   time.Now(),
 		DeliveredAt: time.Now().Add(4 * 24 * time.Hour),
 	}
 

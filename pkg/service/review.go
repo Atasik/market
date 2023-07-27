@@ -13,9 +13,9 @@ var (
 
 type Review interface {
 	Create(review model.Review) (int, error)
-	Delete(userID, reviewID int) error
-	Update(userID, productID int, input model.UpdateReviewInput) error
 	GetAll(productID int) ([]model.Review, error)
+	Update(userID, productID int, input model.UpdateReviewInput) error
+	Delete(userID, reviewID int) error
 }
 
 type ReviewService struct {
@@ -41,16 +41,8 @@ func (s *ReviewService) Create(review model.Review) (int, error) {
 	return 0, ErrReviewExists
 }
 
-func (s *ReviewService) Delete(userID, reviewID int) error {
-	user, err := s.userRepo.GetUserById(userID)
-	if err != nil {
-		return err
-	}
-	if user.Role == model.ADMIN || user.ID == userID {
-		return s.reviewRepo.Delete(reviewID)
-	}
-
-	return ErrPermissionDenied
+func (s *ReviewService) GetAll(productID int) ([]model.Review, error) {
+	return s.reviewRepo.GetAll(productID)
 }
 
 func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewInput) error {
@@ -68,6 +60,14 @@ func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewIn
 	return ErrPermissionDenied
 }
 
-func (s *ReviewService) GetAll(productID int) ([]model.Review, error) {
-	return s.reviewRepo.GetAll(productID)
+func (s *ReviewService) Delete(userID, reviewID int) error {
+	user, err := s.userRepo.GetUserById(userID)
+	if err != nil {
+		return err
+	}
+	if user.Role == model.ADMIN || user.ID == userID {
+		return s.reviewRepo.Delete(reviewID)
+	}
+
+	return ErrPermissionDenied
 }

@@ -13,13 +13,14 @@ var (
 )
 
 type Product interface {
-	GetAll(orderBy string) ([]model.Product, error)
-	GetByID(productID int) (model.Product, error)
 	Create(product model.Product) (int, error)
+	GetAll(q model.ProductQueryInput) ([]model.Product, error)
+	GetProductsByUserID(userID int, q model.ProductQueryInput) ([]model.Product, error)
+	GetProductsByCategory(productCategory string, q model.ProductQueryInput) ([]model.Product, error)
+	GetByID(productID int) (model.Product, error)
 	Update(userID, productID int, input model.UpdateProductInput) error
-	Delete(userID, productID int) error
-	GetByType(productType string, productID, limit int) ([]model.Product, error)
 	IncreaseViewsCounter(productID int) error
+	Delete(userID, productID int) error
 }
 
 type ProductService struct {
@@ -29,23 +30,6 @@ type ProductService struct {
 
 func NewProductService(productRepo repository.ProductRepo, userRepo repository.UserRepo) *ProductService {
 	return &ProductService{productRepo: productRepo, userRepo: userRepo}
-}
-
-func (s *ProductService) GetAll(orderBy string) ([]model.Product, error) {
-	return s.productRepo.GetAll(orderBy)
-}
-
-func (s *ProductService) GetByID(productID int) (model.Product, error) {
-	product, err := s.productRepo.GetByID(productID)
-	if err != nil {
-		switch err {
-		case repository.ErrNotFound:
-			return model.Product{}, ErrNoProduct
-		default:
-			return model.Product{}, err
-		}
-	}
-	return product, nil
 }
 
 func (s *ProductService) Create(product model.Product) (int, error) {
@@ -59,6 +43,30 @@ func (s *ProductService) Create(product model.Product) (int, error) {
 		}
 	}
 	return id, nil
+}
+
+func (s *ProductService) GetAll(q model.ProductQueryInput) ([]model.Product, error) {
+	return s.productRepo.GetAll(q)
+}
+func (s *ProductService) GetProductsByUserID(userID int, q model.ProductQueryInput) ([]model.Product, error) {
+	return s.productRepo.GetProductsByUserID(userID, q)
+}
+
+func (s *ProductService) GetProductsByCategory(productType string, q model.ProductQueryInput) ([]model.Product, error) {
+	return s.productRepo.GetProductsByCategory(productType, q)
+}
+
+func (s *ProductService) GetByID(productID int) (model.Product, error) {
+	product, err := s.productRepo.GetByID(productID)
+	if err != nil {
+		switch err {
+		case repository.ErrNotFound:
+			return model.Product{}, ErrNoProduct
+		default:
+			return model.Product{}, err
+		}
+	}
+	return product, nil
 }
 
 func (s *ProductService) Update(userID, productID int, input model.UpdateProductInput) error {
@@ -76,6 +84,17 @@ func (s *ProductService) Update(userID, productID int, input model.UpdateProduct
 	return ErrPermissionDenied
 }
 
+func (s *ProductService) IncreaseViewsCounter(productID int) error {
+	views := 1
+	input := model.UpdateProductInput{
+		Views: &views,
+	}
+	if err := input.Validate(); err != nil {
+		return err
+	}
+	return s.productRepo.Update(productID, input)
+}
+
 func (s *ProductService) Delete(userID, productID int) error {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
@@ -86,19 +105,4 @@ func (s *ProductService) Delete(userID, productID int) error {
 	}
 
 	return ErrPermissionDenied
-}
-
-func (s *ProductService) GetByType(productType string, productID, limit int) ([]model.Product, error) {
-	return s.productRepo.GetByType(productType, productID, limit)
-}
-
-func (s *ProductService) IncreaseViewsCounter(productID int) error {
-	views := 1
-	input := model.UpdateProductInput{
-		Views: &views,
-	}
-	if err := input.Validate(); err != nil {
-		return err
-	}
-	return s.productRepo.Update(productID, input)
 }

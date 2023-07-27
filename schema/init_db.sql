@@ -35,8 +35,8 @@ CREATE TABLE products
   category      varchar(255)                                                  not null,
   description   varchar(255), 
   amount        int                                        check (amount > 0) not null,
-  created_at    timestamp                                                     not null,
-  updated_at    timestamp                                                     not null,
+  created_at    timestamp                                                     not null DEFAULT (now() AT TIME ZONE 'utc'),
+  updated_at    timestamp                                                     ,
   views         int                                                           not null,
   image_url     varchar(255)                                                  not null,
   image_id      varchar(255)                                                  not null unique
@@ -46,15 +46,15 @@ CREATE TABLE orders
 (
   id            serial                                        not null unique,
   user_id       int references users (id) on delete cascade   not null,
-  created_at    timestamp                                     not null,
+  created_at    timestamp                                     not null DEFAULT (now() AT TIME ZONE 'utc'),
   delivered_at  timestamp                                     not null
 );
 
 CREATE TABLE reviews
 (
   id              serial                                         not null unique,
-  created_at      timestamp                                      not null,
-  updated_at      timestamp                                      not null,
+  created_at      timestamp                                      not null DEFAULT (now() AT TIME ZONE 'utc'),
+  updated_at      timestamp                                      ,
   product_id      int references products (id) on delete cascade not null,
   user_id         int references users (id)                      not null,
   text            varchar(255)                                   not null,

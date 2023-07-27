@@ -13,7 +13,10 @@ import (
 	"github.com/gorilla/schema"
 )
 
-const imageUploadTimeout = 5 * time.Second
+const (
+	imageUploadTimeout   = 5 * time.Second
+	limitRelatedProducts = 5
+)
 
 func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
@@ -56,8 +59,6 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	product.UserID = sess.UserID
 	product.ImageURL = data.ImageURL
 	product.ImageID = data.ImageID
-	product.CreatedAt = time.Now()
-	product.UpdatedAt = time.Now()
 
 	defer file.Close()
 
@@ -88,9 +89,99 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
-	orderBy := r.URL.Query().Get("order_by")
 
-	products, err := h.Services.Product.GetAll(orderBy)
+	options, err := optionsFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	q := model.ProductQueryInput{
+		Limit:     options.Limit,
+		Offset:    options.Offset,
+		SortBy:    options.SortBy,
+		SortOrder: options.SortOrder,
+	}
+
+	err = q.Validate()
+	if err != nil {
+		newErrorResponse(w, "Bad query", http.StatusBadRequest)
+		return
+	}
+
+	products, err := h.Services.Product.GetAll(q)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	newGetProductsResponse(w, products, http.StatusOK)
+}
+
+func (h *Handler) getProductsByUserID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+
+	vars := mux.Vars(r)
+	userID, err := strconv.Atoi(vars["userId"])
+	if err != nil {
+		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
+		return
+	}
+
+	options, err := optionsFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	q := model.ProductQueryInput{
+		Limit:     options.Limit,
+		Offset:    options.Offset,
+		SortBy:    options.SortBy,
+		SortOrder: options.SortOrder,
+	}
+
+	err = q.Validate()
+	if err != nil {
+		newErrorResponse(w, "Bad query", http.StatusBadRequest)
+		return
+	}
+
+	products, err := h.Services.Product.GetProductsByUserID(userID, q)
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	newGetProductsResponse(w, products, http.StatusOK)
+}
+
+func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", appJSON)
+
+	vars := mux.Vars(r)
+	categoryName := vars["categoryName"]
+
+	options, err := optionsFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	q := model.ProductQueryInput{
+		Limit:     options.Limit,
+		Offset:    options.Offset,
+		SortBy:    options.SortBy,
+		SortOrder: options.SortOrder,
+	}
+
+	err = q.Validate()
+	if err != nil {
+		newErrorResponse(w, "Bad query", http.StatusBadRequest)
+		return
+	}
+
+	products, err := h.Services.Product.GetProductsByCategory(categoryName, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,7 +218,15 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedProduct.RelatedProducts, err = h.Services.Product.GetByType(selectedProduct.Category, productID, 5)
+	q := model.ProductQueryInput{
+		Limit:     5,
+		Offset:    0,
+		ProductID: productID,
+		SortBy:    model.SortByViews,
+		SortOrder: model.DESCENDING,
+	}
+
+	selectedProduct.RelatedProducts, err = h.Services.Product.GetProductsByCategory(selectedProduct.Category, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

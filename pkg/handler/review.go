@@ -52,7 +52,6 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	review.CreatedAt = time.Now()
 	review.ProductID = productID
 	review.UserID = sess.UserID
 	review.Username = sess.Username
@@ -77,7 +76,15 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetByType(product.Category, productID, 5)
+	q := model.ProductQueryInput{
+		Limit:     5,
+		Offset:    0,
+		ProductID: productID,
+		SortBy:    model.SortByViews,
+		SortOrder: model.DESCENDING,
+	}
+
+	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -154,7 +161,15 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetByType(product.Category, productID, 5)
+	q := model.ProductQueryInput{
+		Limit:     5,
+		Offset:    0,
+		ProductID: productID,
+		SortBy:    model.SortByViews,
+		SortOrder: model.DESCENDING,
+	}
+
+	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -208,7 +223,15 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetByType(product.Category, productID, 5)
+	q := model.ProductQueryInput{
+		Limit:     5,
+		Offset:    0,
+		ProductID: productID,
+		SortBy:    model.SortByViews,
+		SortOrder: model.DESCENDING,
+	}
+
+	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
