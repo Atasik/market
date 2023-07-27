@@ -18,24 +18,24 @@ const (
 	limitRelatedProducts = 5
 )
 
-//	@Summary	Add a new product to the market
-//	@Security	ApiKeyAuth
-//	@Tags		products
-//	@ID			create-product
-//	@Accept		mpfd
-//	@Product	json
-//	@Param		file		formData	file	true	"Image to Upload"
-//	@Param		title		formData	string	true	"Title of product"
-//	@Param		price		formData	number	true	"Price of product"
-//	@Param		tag			formData	string	false	"Tag of product"
-//	@Param		category	formData	string	true	"Category of product"
-//	@Param		description	formData	string	false	"Description of product"
-//	@Param		amount		formData	integer	true	"Amount of products"
-//	@Success	201			{object}	model.Product
-//	@Failure	400,404		{object}	errorResponse
-//	@Failure	500			{object}	errorResponse
-//	@Failure	default		{object}	errorResponse
-//	@Router		/api/product [post]
+// @Summary	Add a new product to the market
+// @Security	ApiKeyAuth
+// @Tags		products
+// @ID			create-product
+// @Accept		mpfd
+// @Product	json
+// @Param		file		formData	file	true	"Image to Upload"
+// @Param		title		formData	string	true	"Title of product"
+// @Param		price		formData	number	true	"Price of product"
+// @Param		tag			formData	string	false	"Tag of product"
+// @Param		category	formData	string	true	"Category of product"
+// @Param		description	formData	string	false	"Description of product"
+// @Param		amount		formData	integer	true	"Amount of products"
+// @Success	201			{object}	model.Product
+// @Failure	400,404		{object}	errorResponse
+// @Failure	500			{object}	errorResponse
+// @Failure	default		{object}	errorResponse
+// @Router		/api/product [post]
 func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	sess, err := service.SessionFromContext(r.Context())
@@ -105,15 +105,19 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//	@Summary	Get all products from the market
-//	@Tags		products
-//	@ID			get-all-products
-//	@Product	json
-//	@Success	200		{object}	getProductsResponse
-//	@Failure	400,404	{object}	errorResponse
-//	@Failure	500		{object}	errorResponse
-//	@Failure	default	{object}	errorResponse
-//	@Router		/api/products [get]
+// @Summary	Get all products from the market
+// @Tags		products
+// @ID			get-all-products
+// @Product	json
+// @Param   sort_by query   string false "sort by" Enums(views, price, created_at)
+// @Param   sort_order query string false "sort order" Enums(ASC, DESC)
+// @Param   limit   query int false "limit" Enums(10, 25, 50)
+// @Param   offset  query int false "offset"
+// @Success	200		{object}	getProductsResponse
+// @Failure	400,404	{object}	errorResponse
+// @Failure	500		{object}	errorResponse
+// @Failure	default	{object}	errorResponse
+// @Router		/api/products [get]
 func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -145,6 +149,20 @@ func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
+// @Summary	Get products by UserID
+// @Tags		products
+// @ID			get-products-by-userId
+// @Product	json
+// @Param		userId	path		integer	true	"ID of user"
+// @Param   sort_by query   string false "sort by" Enums(views, price, created_at)
+// @Param   sort_order query string false "sort order" Enums(ASC, DESC)
+// @Param   limit   query int false "limit" Enums(10, 25, 50)
+// @Param   offset  query int false "offset"
+// @Success	200		{object}	getProductsResponse
+// @Failure	400,404	{object}	errorResponse
+// @Failure	500		{object}	errorResponse
+// @Failure	default	{object}	errorResponse
+// @Router		/api/products/{userId} [get]
 func (h *Handler) getProductsByUserID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -183,6 +201,20 @@ func (h *Handler) getProductsByUserID(w http.ResponseWriter, r *http.Request) {
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
+// @Summary	Get all products by category from the market
+// @Tags		products
+// @ID			get-products-by-category
+// @Product	json
+// @Param		categoryName	path		string	true	"Name of category"
+// @Param   sort_by query   string false "sort by" Enums(views, price, created_at)
+// @Param   sort_order query string false "sort order" Enums(ASC, DESC)
+// @Param   limit   query int false "limit" Enums(10, 25, 50)
+// @Param   offset  query int false "offset"
+// @Success	200		{object}	getProductsResponse
+// @Failure	400,404	{object}	errorResponse
+// @Failure	500		{object}	errorResponse
+// @Failure	default	{object}	errorResponse
+// @Router		/api/products/{categoryName} [get]
 func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -217,16 +249,16 @@ func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) 
 	newGetProductsResponse(w, products, http.StatusOK)
 }
 
-//	@Summary	Get product by id from the market
-//	@Tags		products
-//	@ID			get-product-by-id
-//	@Product	json
-//	@Param		productId	path		integer	true	"ID of product to get"
-//	@Success	200			{object}	model.Product
-//	@Failure	400,404		{object}	errorResponse
-//	@Failure	500			{object}	errorResponse
-//	@Failure	default		{object}	errorResponse
-//	@Router		/api/product/{productId} [get]
+// @Summary	Get product by id from the market
+// @Tags		products
+// @ID			get-product-by-id
+// @Product	json
+// @Param		productId	path		integer	true	"ID of product to get"
+// @Success	200			{object}	model.Product
+// @Failure	400,404		{object}	errorResponse
+// @Failure	500			{object}	errorResponse
+// @Failure	default		{object}	errorResponse
+// @Router		/api/product/{productId} [get]
 func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -277,25 +309,25 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//	@Summary	Update an existing product from the market
-//	@Security	ApiKeyAuth
-//	@Tags		products
-//	@ID			update-product
-//	@Accept		mpfd
-//	@Product	json
-//	@Param		productId	path		integer	false	"ID of product to update"
-//	@Param		file		formData	file	false	"Image to Upload"
-//	@Param		title		formData	string	false	"Title of product"
-//	@Param		price		formData	number	false	"Price of product"
-//	@Param		tag			formData	string	false	"Tag of product"
-//	@Param		category	formData	string	false	"Category of product"
-//	@Param		description	formData	string	false	"Description of product"
-//	@Param		amount		formData	integer	false	"Amount of products"
-//	@Success	200			{object}	model.Product
-//	@Failure	400,404		{object}	errorResponse
-//	@Failure	500			{object}	errorResponse
-//	@Failure	default		{object}	errorResponse
-//	@Router		/api/product/{productId} [put]
+// @Summary	Update an existing product from the market
+// @Security	ApiKeyAuth
+// @Tags		products
+// @ID			update-product
+// @Accept		mpfd
+// @Product	json
+// @Param		productId	path		integer	false	"ID of product to update"
+// @Param		file		formData	file	false	"Image to Upload"
+// @Param		title		formData	string	false	"Title of product"
+// @Param		price		formData	number	false	"Price of product"
+// @Param		tag			formData	string	false	"Tag of product"
+// @Param		category	formData	string	false	"Category of product"
+// @Param		description	formData	string	false	"Description of product"
+// @Param		amount		formData	integer	false	"Amount of products"
+// @Success	200			{object}	model.Product
+// @Failure	400,404		{object}	errorResponse
+// @Failure	500			{object}	errorResponse
+// @Failure	default		{object}	errorResponse
+// @Router		/api/product/{productId} [put]
 func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -392,17 +424,17 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//	@Summary	Delete product from the market
-//	@Security	ApiKeyAuth
-//	@Tags		products
-//	@ID			delete-product
-//	@Product	json
-//	@Param		productId	path		integer	true	"ID of product to delete"
-//	@Success	200			{object}	statusResponse
-//	@Failure	400,404		{object}	errorResponse
-//	@Failure	500			{object}	errorResponse
-//	@Failure	default		{object}	errorResponse
-//	@Router		/api/product/{productId} [delete]
+// @Summary	Delete product from the market
+// @Security	ApiKeyAuth
+// @Tags		products
+// @ID			delete-product
+// @Product	json
+// @Param		productId	path		integer	true	"ID of product to delete"
+// @Success	200			{object}	statusResponse
+// @Failure	400,404		{object}	errorResponse
+// @Failure	500			{object}	errorResponse
+// @Failure	default		{object}	errorResponse
+// @Router		/api/product/{productId} [delete]
 func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
