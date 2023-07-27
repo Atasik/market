@@ -28,7 +28,9 @@ func (h *Handler) InitRoutes() http.Handler {
 
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	r.HandleFunc("/api/products", h.getAllProducts).Methods("GET")
+	r.HandleFunc("/api/products", query(h.getAllProducts)).Methods("GET")
+	r.HandleFunc("/api/category/{categoryName}", query(h.getProductsByCategory)).Methods("GET")
+	r.HandleFunc("/api/products/{userId}", query(h.getProductsByUserID)).Methods("GET")
 
 	authR := mux.NewRouter()
 

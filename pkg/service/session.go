@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrNoAuth = errors.New("No session found")
+	ErrNoAuth = errors.New("no session found")
 )
 
 type Session struct {
@@ -16,7 +16,9 @@ type Session struct {
 
 type sessKey string
 
-var SessionKey sessKey = "token"
+const (
+	SessionKey sessKey = "token"
+)
 
 func SessionFromContext(ctx context.Context) (*Session, error) {
 	sess, ok := ctx.Value(SessionKey).(*Session)

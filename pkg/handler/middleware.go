@@ -1,17 +1,35 @@
 package handler
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"market/pkg/model"
 	"market/pkg/service"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"go.uber.org/zap"
 )
 
+type OptionsKey string
+
+const (
+	OptionsContextKey OptionsKey = "query_options"
+)
+
 const (
 	authorizationHeader = "Authorization"
+	defaultSortField    = "views"
+	defaultLimit        = 25
+	maxLimit            = 50
+	defaultOffset       = 0
+)
+
+var (
+	ErrNoQuery = errors.New("no query")
 )
 
 func accessLog(logger *zap.SugaredLogger, next http.Handler) http.Handler {
@@ -30,7 +48,7 @@ func accessLog(logger *zap.SugaredLogger, next http.Handler) http.Handler {
 
 func auth(s service.User, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("auth middleware")
+		fmt.Println("auth middleware", r.URL.Path)
 
 		header := r.Header.Get(authorizationHeader)
 		if header == "" {
@@ -60,7 +78,7 @@ func auth(s service.User, next http.Handler) http.Handler {
 
 func panic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("panicMiddleware", r.URL.Path)
+		fmt.Println("panic middleware", r.URL.Path)
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Println("recovered", err)
@@ -69,4 +87,72 @@ func panic(next http.Handler) http.Handler {
 		}()
 		next.ServeHTTP(w, r)
 	})
+}
+
+// middleware для обработки query-запросов
+func query(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("queryMiddleware", r.URL.Path)
+
+		sortBy := r.URL.Query().Get("sort_by")
+		sortOrder := r.URL.Query().Get("sort_order")
+
+		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			newErrorResponse(w, "invalid limit", http.StatusUnauthorized)
+			return
+		}
+		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			newErrorResponse(w, "invalid offset", http.StatusUnauthorized)
+			return
+		}
+
+		if sortBy == "" {
+			sortBy = defaultSortField
+		}
+
+		if sortOrder == "" {
+			sortOrder = model.DESCENDING
+		}
+
+		if limit <= 0 {
+			limit = defaultLimit
+		}
+
+		if limit > maxLimit {
+			limit = maxLimit
+		}
+
+		if offset <= 0 {
+			offset = defaultOffset
+		}
+
+		options := &Options{
+			SortBy:    sortBy,
+			SortOrder: sortOrder,
+			Limit:     limit,
+			Offset:    offset,
+		}
+		ctx := contextWithOptions(r.Context(), options)
+		next(w, r.WithContext(ctx))
+	})
+}
+
+type Options struct {
+	SortBy, SortOrder string
+	Limit             int
+	Offset            int
+}
+
+func optionsFromContext(ctx context.Context) (*Options, error) {
+	options, ok := ctx.Value(OptionsContextKey).(*Options)
+	if !ok || options == nil {
+		return nil, ErrNoQuery
+	}
+	return options, nil
+}
+
+func contextWithOptions(ctx context.Context, opts *Options) context.Context {
+	return context.WithValue(ctx, OptionsContextKey, opts)
 }

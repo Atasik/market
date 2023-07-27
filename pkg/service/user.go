@@ -43,9 +43,9 @@ type HashConfig struct {
 }
 
 type User interface {
+	CreateUser(model.User) (int, error)
 	GenerateToken(username, password string) (string, error)
 	CheckToken(accessToken string) (*Session, error)
-	CreateUser(model.User) (int, error)
 }
 
 type UserService struct {
@@ -60,6 +60,34 @@ type tokenClaims struct {
 
 func NewUserService(userRepo repository.UserRepo) *UserService {
 	return &UserService{userRepo: userRepo}
+}
+
+func (s *UserService) CreateUser(user model.User) (int, error) {
+	hashConfig := &HashConfig{
+		Memory:      memory,
+		Iterations:  iterations,
+		Parallelism: parallelism,
+		SaltLength:  saltLength,
+		KeyLength:   keyLength,
+	}
+
+	password, err := generateHashFromPassword(user.Password, hashConfig)
+	if err != nil {
+		return 0, err
+	}
+
+	user.Password = password
+
+	id, err := s.userRepo.CreateUser(user)
+	if err != nil {
+		switch err {
+		case repository.ErrAlreadyExists:
+			return 0, ErrUserExists
+		default:
+			return 0, err
+		}
+	}
+	return id, nil
 }
 
 func (s *UserService) GenerateToken(username, password string) (string, error) {
@@ -117,34 +145,6 @@ func (s *UserService) CheckToken(accessToken string) (*Session, error) {
 	}
 
 	return &session, nil
-}
-
-func (s *UserService) CreateUser(user model.User) (int, error) {
-	hashConfig := &HashConfig{
-		Memory:      memory,
-		Iterations:  iterations,
-		Parallelism: parallelism,
-		SaltLength:  saltLength,
-		KeyLength:   keyLength,
-	}
-
-	password, err := generateHashFromPassword(user.Password, hashConfig)
-	if err != nil {
-		return 0, err
-	}
-
-	user.Password = password
-
-	id, err := s.userRepo.CreateUser(user)
-	if err != nil {
-		switch err {
-		case repository.ErrAlreadyExists:
-			return 0, ErrUserExists
-		default:
-			return 0, err
-		}
-	}
-	return id, nil
 }
 
 func generateHashFromPassword(password string, p *HashConfig) (encodedHash string, err error) {

@@ -9,12 +9,13 @@ import (
 )
 
 type ProductRepo interface {
-	GetAll(orderBy string) ([]model.Product, error)
-	GetByID(productID int) (model.Product, error)
 	Create(product model.Product) (int, error)
+	GetAll(q model.ProductQueryInput) ([]model.Product, error)
+	GetProductsByUserID(userID int, q model.ProductQueryInput) ([]model.Product, error)
+	GetByID(productID int) (model.Product, error)
+	GetProductsByCategory(productCategory string, q model.ProductQueryInput) ([]model.Product, error)
 	Update(productID int, input model.UpdateProductInput) error
 	Delete(productID int) error
-	GetByType(productType string, productID, limit int) ([]model.Product, error)
 }
 
 type ProductPostgresqlRepository struct {
@@ -25,17 +26,85 @@ func NewProductPostgresqlRepo(db *sqlx.DB) *ProductPostgresqlRepository {
 	return &ProductPostgresqlRepository{DB: db}
 }
 
-func (repo *ProductPostgresqlRepository) GetAll(orderBy string) ([]model.Product, error) {
-	var products []model.Product
-	var setValue string
+func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, error) {
+	var productId int
+	query := fmt.Sprintf("INSERT INTO %s (user_id, title, price, tag, category, description, amount, created_at, updated_at, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id", productsTable)
 
-	if orderBy != "" {
-		setValue = fmt.Sprintf("ORDER BY %s DESC", orderBy)
+	row := repo.DB.QueryRow(query, product.UserID, product.Title, product.Price, product.Tag, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
+	err := row.Scan(&productId)
+	if err != nil {
+		return 0, ParsePostgresError(err)
 	}
 
-	query := fmt.Sprintf("SELECT * FROM %s %s", productsTable, setValue)
+	return productId, nil
+}
 
-	if err := repo.DB.Select(&products, query); err != nil {
+func (repo *ProductPostgresqlRepository) GetAll(q model.ProductQueryInput) ([]model.Product, error) {
+	var products []model.Product
+	optionValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 2
+	if q.ProductID != 0 {
+		optionValues = append(optionValues, fmt.Sprintf("id!=$%d", argId))
+		args = append(args, q.ProductID)
+		argId++
+	}
+
+	if q.SortOrder == model.ASCENDING {
+		optionValues = append(optionValues, fmt.Sprintf("id > $%d", argId))
+		args = append(args, q.Offset)
+		argId++
+	}
+
+	if q.SortOrder == model.DESCENDING {
+		optionValues = append(optionValues, fmt.Sprintf("id < $%d", argId))
+		args = append(args, q.Offset)
+		argId++
+	}
+
+	optionQuery := strings.Join(optionValues, " AND ")
+
+	args = append(args, q.Limit)
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s %s LIMIT $%d", productsTable, optionQuery, q.SortBy, q.SortOrder, argId)
+
+	if err := repo.DB.Select(&products, query, args...); err != nil {
+		return nil, ParsePostgresError(err)
+	}
+
+	return products, nil
+}
+
+func (repo *ProductPostgresqlRepository) GetProductsByUserID(userID int, q model.ProductQueryInput) ([]model.Product, error) {
+	var products []model.Product
+	optionValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 2
+	if q.ProductID != 0 {
+		optionValues = append(optionValues, fmt.Sprintf("id!=$%d", argId))
+		args = append(args, q.ProductID)
+		argId++
+	}
+
+	if q.SortOrder == model.ASCENDING {
+		optionValues = append(optionValues, fmt.Sprintf("id > $%d", argId))
+		args = append(args, q.Offset)
+		argId++
+	}
+
+	if q.SortOrder == model.DESCENDING {
+		optionValues = append(optionValues, fmt.Sprintf("id < $%d", argId))
+		args = append(args, q.Offset)
+		argId++
+	}
+
+	optionQuery := strings.Join(optionValues, " AND ")
+
+	args = append(args, userID, q.Limit)
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id=$1 AND %s ORDER BY %s %s LIMIT $%d", productsTable, optionQuery, q.SortBy, q.SortOrder, argId)
+
+	if err := repo.DB.Select(&products, query, args...); err != nil {
 		return nil, ParsePostgresError(err)
 	}
 
@@ -53,21 +122,42 @@ func (repo *ProductPostgresqlRepository) GetByID(productID int) (model.Product, 
 	return product, nil
 }
 
-// проверка, что есть права
-func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, error) {
-	var productId int
-	query := fmt.Sprintf("INSERT INTO %s (user_id, title, price, tag, category, description, amount, created_at, updated_at, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id", productsTable)
-
-	row := repo.DB.QueryRow(query, product.UserID, product.Title, product.Price, product.Tag, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
-	err := row.Scan(&productId)
-	if err != nil {
-		return 0, ParsePostgresError(err)
+func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory string, q model.ProductQueryInput) ([]model.Product, error) {
+	var products []model.Product
+	optionValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 2
+	if q.ProductID != 0 {
+		optionValues = append(optionValues, fmt.Sprintf("id!=$%d", argId))
+		args = append(args, q.ProductID)
+		argId++
 	}
 
-	return productId, nil
+	if q.SortOrder == model.ASCENDING {
+		optionValues = append(optionValues, fmt.Sprintf("id > $%d", argId))
+		args = append(args, q.Offset)
+		argId++
+	}
+
+	if q.SortOrder == model.DESCENDING {
+		optionValues = append(optionValues, fmt.Sprintf("id < $%d", argId))
+		args = append(args, q.Offset)
+		argId++
+	}
+
+	optionQuery := strings.Join(optionValues, " AND ")
+
+	args = append(args, productCategory, q.Limit)
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1 AND %s ORDER BY %s %s LIMIT $%d", productsTable, optionQuery, q.SortBy, q.SortOrder, argId)
+
+	if err := repo.DB.Select(&products, query, args...); err != nil {
+		return nil, ParsePostgresError(err)
+	}
+
+	return products, nil
 }
 
-// проверка, что есть права
 func (repo *ProductPostgresqlRepository) Update(productID int, input model.UpdateProductInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
@@ -152,22 +242,4 @@ func (repo *ProductPostgresqlRepository) Delete(productId int) error {
 		return ParsePostgresError(err)
 	}
 	return nil
-}
-
-func (repo *ProductPostgresqlRepository) GetByType(productType string, productID, limit int) ([]model.Product, error) {
-	var products []model.Product
-	var setValue string
-	argId := 2
-	if productID != 0 {
-		setValue = fmt.Sprintf("AND id!=$%d", argId)
-		argId++
-	}
-
-	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1 %s LIMIT $%d", productsTable, setValue, argId)
-
-	if err := repo.DB.Select(&products, query, productType, productID, limit); err != nil {
-		return nil, ParsePostgresError(err)
-	}
-
-	return products, nil
 }
