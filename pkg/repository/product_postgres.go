@@ -55,14 +55,19 @@ func (repo *ProductPostgresqlRepository) GetProductsByUserID(userID int, q model
 	var products []model.Product
 	var setValue string
 	argId := 2
+	args := make([]interface{}, 0)
+	args = append(args, userID)
 	if q.ProductID != 0 {
 		setValue = fmt.Sprintf("AND id!=$%d", argId)
+		args = append(args, q.ProductID)
 		argId++
 	}
 
+	args = append(args, q.Limit, q.Offset)
+
 	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argId, argId+1)
 
-	if err := repo.DB.Select(&products, query, q.Limit, q.Offset); err != nil {
+	if err := repo.DB.Select(&products, query, args...); err != nil {
 		return nil, ParsePostgresError(err)
 	}
 
@@ -84,14 +89,19 @@ func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory s
 	var products []model.Product
 	var setValue string
 	argId := 2
+	args := make([]interface{}, 0)
+	args = append(args, productCategory)
 	if q.ProductID != 0 {
 		setValue = fmt.Sprintf("AND id!=$%d", argId)
+		args = append(args, q.ProductID)
 		argId++
 	}
 
+	args = append(args, q.Limit, q.Offset)
+
 	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argId, argId+1)
 
-	if err := repo.DB.Select(&products, query, q.Limit, q.Offset); err != nil {
+	if err := repo.DB.Select(&products, query, args...); err != nil {
 		return nil, ParsePostgresError(err)
 	}
 
@@ -173,7 +183,6 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 	return nil
 }
 
-// проверка, что есть права
 func (repo *ProductPostgresqlRepository) Delete(productId int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", productsTable)
 

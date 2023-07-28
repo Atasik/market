@@ -1018,8 +1018,8 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "ASC",
-                            "DESC"
+                            "asc",
+                            "desc"
                         ],
                         "type": "string",
                         "description": "sort order",
@@ -1039,8 +1039,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
+                        "description": "page",
+                        "name": "page",
                         "in": "query"
                     }
                 ],
@@ -1106,8 +1106,8 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "ASC",
-                            "DESC"
+                            "asc",
+                            "desc"
                         ],
                         "type": "string",
                         "description": "sort order",
@@ -1127,8 +1127,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
+                        "description": "page",
+                        "name": "page",
                         "in": "query"
                     }
                 ],
@@ -1194,8 +1194,8 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "ASC",
-                            "DESC"
+                            "asc",
+                            "desc"
                         ],
                         "type": "string",
                         "description": "sort order",
@@ -1215,8 +1215,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
+                        "description": "page",
+                        "name": "page",
                         "in": "query"
                     }
                 ],

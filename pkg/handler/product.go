@@ -110,9 +110,9 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 // @ID			get-all-products
 // @Product	json
 // @Param   sort_by query   string false "sort by" Enums(views, price, created_at)
-// @Param   sort_order query string false "sort order" Enums(ASC, DESC)
+// @Param   sort_order query string false "sort order" Enums(asc, desc)
 // @Param   limit   query int false "limit" Enums(10, 25, 50)
-// @Param   offset  query int false "offset"
+// @Param   page  query int false "page"
 // @Success	200		{object}	getProductsResponse
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
@@ -155,9 +155,9 @@ func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 // @Product	json
 // @Param		userId	path		integer	true	"ID of user"
 // @Param   sort_by query   string false "sort by" Enums(views, price, created_at)
-// @Param   sort_order query string false "sort order" Enums(ASC, DESC)
+// @Param   sort_order query string false "sort order" Enums(asc, desc)
 // @Param   limit   query int false "limit" Enums(10, 25, 50)
-// @Param   offset  query int false "offset"
+// @Param   page  query int false "page"
 // @Success	200		{object}	getProductsResponse
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
@@ -207,9 +207,9 @@ func (h *Handler) getProductsByUserID(w http.ResponseWriter, r *http.Request) {
 // @Product	json
 // @Param		categoryName	path		string	true	"Name of category"
 // @Param   sort_by query   string false "sort by" Enums(views, price, created_at)
-// @Param   sort_order query string false "sort order" Enums(ASC, DESC)
+// @Param   sort_order query string false "sort order" Enums(asc, desc)
 // @Param   limit   query int false "limit" Enums(10, 25, 50)
-// @Param   offset  query int false "offset"
+// @Param   page  query int false "page"
 // @Success	200		{object}	getProductsResponse
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
@@ -271,18 +271,21 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 
 	selectedProduct, err := h.Services.Product.GetByID(productID)
 	if err != nil {
+		print("1e")
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = h.Services.Product.IncreaseViewsCounter(productID)
 	if err != nil {
+		print("2e")
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	selectedProduct.Reviews, err = h.Services.Review.GetAll(productID)
 	if err != nil {
+		print("3e")
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -297,6 +300,7 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 
 	selectedProduct.RelatedProducts, err = h.Services.Product.GetProductsByCategory(selectedProduct.Category, q)
 	if err != nil {
+		print("4e")
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

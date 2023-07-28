@@ -94,8 +94,10 @@ func query(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("queryMiddleware", r.URL.Path)
 
-		sortBy := r.URL.Query().Get("sort_by")
-		sortOrder := r.URL.Query().Get("sort_order")
+		sortBy := strings.ToLower(r.URL.Query().Get("sort_by"))
+		sortOrder := strings.ToUpper(r.URL.Query().Get("sort_order"))
+
+		print(sortOrder)
 
 		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 		if err != nil {
@@ -127,7 +129,7 @@ func query(next http.HandlerFunc) http.HandlerFunc {
 		if page <= 0 {
 			offset = defaultOffset
 		} else {
-			offset = (page - 1) * defaultLimit
+			offset = (page - 1) * limit
 		}
 
 		options := &Options{

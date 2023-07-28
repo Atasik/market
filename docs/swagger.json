@@ -1011,8 +1011,8 @@
                     },
                     {
                         "enum": [
-                            "ASC",
-                            "DESC"
+                            "asc",
+                            "desc"
                         ],
                         "type": "string",
                         "description": "sort order",
@@ -1032,8 +1032,8 @@
                     },
                     {
                         "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
+                        "description": "page",
+                        "name": "page",
                         "in": "query"
                     }
                 ],
@@ -1099,8 +1099,8 @@
                     },
                     {
                         "enum": [
-                            "ASC",
-                            "DESC"
+                            "asc",
+                            "desc"
                         ],
                         "type": "string",
                         "description": "sort order",
@@ -1120,8 +1120,8 @@
                     },
                     {
                         "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
+                        "description": "page",
+                        "name": "page",
                         "in": "query"
                     }
                 ],
@@ -1187,8 +1187,8 @@
                     },
                     {
                         "enum": [
-                            "ASC",
-                            "DESC"
+                            "asc",
+                            "desc"
                         ],
                         "type": "string",
                         "description": "sort order",
@@ -1208,8 +1208,8 @@
                     },
                     {
                         "type": "integer",
-                        "description": "offset",
-                        "name": "offset",
+                        "description": "page",
+                        "name": "page",
                         "in": "query"
                     }
                 ],

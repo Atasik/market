@@ -801,8 +801,8 @@ paths:
         type: string
       - description: sort order
         enum:
-        - ASC
-        - DESC
+        - asc
+        - desc
         in: query
         name: sort_order
         type: string
@@ -814,9 +814,9 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: offset
+      - description: page
         in: query
-        name: offset
+        name: page
         type: integer
       responses:
         "200":
@@ -861,8 +861,8 @@ paths:
         type: string
       - description: sort order
         enum:
-        - ASC
-        - DESC
+        - asc
+        - desc
         in: query
         name: sort_order
         type: string
@@ -874,9 +874,9 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: offset
+      - description: page
         in: query
-        name: offset
+        name: page
         type: integer
       responses:
         "200":
@@ -921,8 +921,8 @@ paths:
         type: string
       - description: sort order
         enum:
-        - ASC
-        - DESC
+        - asc
+        - desc
         in: query
         name: sort_order
         type: string
@@ -934,9 +934,9 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: offset
+      - description: page
         in: query
-        name: offset
+        name: page
         type: integer
       responses:
         "200":
