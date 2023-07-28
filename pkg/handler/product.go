@@ -77,6 +77,8 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	product.UserID = sess.UserID
 	product.ImageURL = data.ImageURL
 	product.ImageID = data.ImageID
+	product.CreatedAt = time.Now()
+	product.UpdatedAt = time.Now()
 
 	defer file.Close()
 
@@ -271,21 +273,18 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 
 	selectedProduct, err := h.Services.Product.GetByID(productID)
 	if err != nil {
-		print("1e")
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = h.Services.Product.IncreaseViewsCounter(productID)
 	if err != nil {
-		print("2e")
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	selectedProduct.Reviews, err = h.Services.Review.GetAll(productID)
 	if err != nil {
-		print("3e")
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -300,7 +299,6 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 
 	selectedProduct.RelatedProducts, err = h.Services.Product.GetProductsByCategory(selectedProduct.Category, q)
 	if err != nil {
-		print("4e")
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

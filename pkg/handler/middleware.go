@@ -97,8 +97,6 @@ func query(next http.HandlerFunc) http.HandlerFunc {
 		sortBy := strings.ToLower(r.URL.Query().Get("sort_by"))
 		sortOrder := strings.ToUpper(r.URL.Query().Get("sort_order"))
 
-		print(sortOrder)
-
 		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 		if err != nil {
 			limit = defaultLimit

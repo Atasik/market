@@ -76,6 +76,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	review.ProductID = productID
 	review.UserID = sess.UserID
 	review.Username = sess.Username
+	review.CreatedAt = time.Now()
 
 	review.ID, err = h.Services.Review.Create(review)
 	if err != nil {
