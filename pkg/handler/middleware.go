@@ -89,7 +89,7 @@ func panic(next http.Handler) http.Handler {
 	})
 }
 
-// middleware для обработки query-запросов
+// я знаю, что это коряво, но лень рефакторить пока
 func query(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("queryMiddleware", r.URL.Path)
@@ -99,13 +99,13 @@ func query(next http.HandlerFunc) http.HandlerFunc {
 
 		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 		if err != nil {
-			newErrorResponse(w, "invalid limit", http.StatusUnauthorized)
-			return
+			limit = defaultLimit
 		}
-		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+
+		var offset int
+		page, err := strconv.Atoi(r.URL.Query().Get("page"))
 		if err != nil {
-			newErrorResponse(w, "invalid offset", http.StatusUnauthorized)
-			return
+			offset = defaultOffset
 		}
 
 		if sortBy == "" {
@@ -124,8 +124,10 @@ func query(next http.HandlerFunc) http.HandlerFunc {
 			limit = maxLimit
 		}
 
-		if offset <= 0 {
+		if page <= 0 {
 			offset = defaultOffset
+		} else {
+			offset = (page - 1) * defaultLimit
 		}
 
 		options := &Options{

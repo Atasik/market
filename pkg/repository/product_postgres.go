@@ -41,34 +41,10 @@ func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, err
 
 func (repo *ProductPostgresqlRepository) GetAll(q model.ProductQueryInput) ([]model.Product, error) {
 	var products []model.Product
-	optionValues := make([]string, 0)
-	args := make([]interface{}, 0)
-	argId := 2
-	if q.ProductID != 0 {
-		optionValues = append(optionValues, fmt.Sprintf("id!=$%d", argId))
-		args = append(args, q.ProductID)
-		argId++
-	}
 
-	if q.SortOrder == model.ASCENDING {
-		optionValues = append(optionValues, fmt.Sprintf("id > $%d", argId))
-		args = append(args, q.Offset)
-		argId++
-	}
+	query := fmt.Sprintf("SELECT * FROM %s ORDER BY %s %s LIMIT $1 OFFSET $2", productsTable, q.SortBy, q.SortOrder)
 
-	if q.SortOrder == model.DESCENDING {
-		optionValues = append(optionValues, fmt.Sprintf("id < $%d", argId))
-		args = append(args, q.Offset)
-		argId++
-	}
-
-	optionQuery := strings.Join(optionValues, " AND ")
-
-	args = append(args, q.Limit)
-
-	query := fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s %s LIMIT $%d", productsTable, optionQuery, q.SortBy, q.SortOrder, argId)
-
-	if err := repo.DB.Select(&products, query, args...); err != nil {
+	if err := repo.DB.Select(&products, query, q.Limit, q.Offset); err != nil {
 		return nil, ParsePostgresError(err)
 	}
 
@@ -77,34 +53,16 @@ func (repo *ProductPostgresqlRepository) GetAll(q model.ProductQueryInput) ([]mo
 
 func (repo *ProductPostgresqlRepository) GetProductsByUserID(userID int, q model.ProductQueryInput) ([]model.Product, error) {
 	var products []model.Product
-	optionValues := make([]string, 0)
-	args := make([]interface{}, 0)
+	var setValue string
 	argId := 2
 	if q.ProductID != 0 {
-		optionValues = append(optionValues, fmt.Sprintf("id!=$%d", argId))
-		args = append(args, q.ProductID)
+		setValue = fmt.Sprintf("AND id!=$%d", argId)
 		argId++
 	}
 
-	if q.SortOrder == model.ASCENDING {
-		optionValues = append(optionValues, fmt.Sprintf("id > $%d", argId))
-		args = append(args, q.Offset)
-		argId++
-	}
+	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argId, argId+1)
 
-	if q.SortOrder == model.DESCENDING {
-		optionValues = append(optionValues, fmt.Sprintf("id < $%d", argId))
-		args = append(args, q.Offset)
-		argId++
-	}
-
-	optionQuery := strings.Join(optionValues, " AND ")
-
-	args = append(args, userID, q.Limit)
-
-	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id=$1 AND %s ORDER BY %s %s LIMIT $%d", productsTable, optionQuery, q.SortBy, q.SortOrder, argId)
-
-	if err := repo.DB.Select(&products, query, args...); err != nil {
+	if err := repo.DB.Select(&products, query, q.Limit, q.Offset); err != nil {
 		return nil, ParsePostgresError(err)
 	}
 
@@ -124,34 +82,16 @@ func (repo *ProductPostgresqlRepository) GetByID(productID int) (model.Product, 
 
 func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory string, q model.ProductQueryInput) ([]model.Product, error) {
 	var products []model.Product
-	optionValues := make([]string, 0)
-	args := make([]interface{}, 0)
+	var setValue string
 	argId := 2
 	if q.ProductID != 0 {
-		optionValues = append(optionValues, fmt.Sprintf("id!=$%d", argId))
-		args = append(args, q.ProductID)
+		setValue = fmt.Sprintf("AND id!=$%d", argId)
 		argId++
 	}
 
-	if q.SortOrder == model.ASCENDING {
-		optionValues = append(optionValues, fmt.Sprintf("id > $%d", argId))
-		args = append(args, q.Offset)
-		argId++
-	}
+	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argId, argId+1)
 
-	if q.SortOrder == model.DESCENDING {
-		optionValues = append(optionValues, fmt.Sprintf("id < $%d", argId))
-		args = append(args, q.Offset)
-		argId++
-	}
-
-	optionQuery := strings.Join(optionValues, " AND ")
-
-	args = append(args, productCategory, q.Limit)
-
-	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1 AND %s ORDER BY %s %s LIMIT $%d", productsTable, optionQuery, q.SortBy, q.SortOrder, argId)
-
-	if err := repo.DB.Select(&products, query, args...); err != nil {
+	if err := repo.DB.Select(&products, query, q.Limit, q.Offset); err != nil {
 		return nil, ParsePostgresError(err)
 	}
 
