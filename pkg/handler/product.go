@@ -130,10 +130,12 @@ func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q := model.ProductQueryInput{
-		Limit:     options.Limit,
-		Offset:    options.Offset,
-		SortBy:    options.SortBy,
-		SortOrder: options.SortOrder,
+		QueryInput: model.QueryInput{
+			Limit:     options.Limit,
+			Offset:    options.Offset,
+			SortBy:    options.SortBy,
+			SortOrder: options.SortOrder,
+		},
 	}
 
 	err = q.Validate()
@@ -182,10 +184,12 @@ func (h *Handler) getProductsByUserID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q := model.ProductQueryInput{
-		Limit:     options.Limit,
-		Offset:    options.Offset,
-		SortBy:    options.SortBy,
-		SortOrder: options.SortOrder,
+		QueryInput: model.QueryInput{
+			Limit:     options.Limit,
+			Offset:    options.Offset,
+			SortBy:    options.SortBy,
+			SortOrder: options.SortOrder,
+		},
 	}
 
 	err = q.Validate()
@@ -230,10 +234,12 @@ func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) 
 	}
 
 	q := model.ProductQueryInput{
-		Limit:     options.Limit,
-		Offset:    options.Offset,
-		SortBy:    options.SortBy,
-		SortOrder: options.SortOrder,
+		QueryInput: model.QueryInput{
+			Limit:     options.Limit,
+			Offset:    options.Offset,
+			SortBy:    options.SortBy,
+			SortOrder: options.SortOrder,
+		},
 	}
 
 	err = q.Validate()
@@ -256,6 +262,10 @@ func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) 
 // @ID			get-product-by-id
 // @Product	json
 // @Param		productId	path		integer	true	"ID of product to get"
+// @Param   sort_by query   string false "sort by" Enums(created_at)
+// @Param   sort_order query string false "sort order" Enums(asc, desc)
+// @Param   limit   query int false "limit" Enums(10, 25, 50)
+// @Param   page  query int false "page"
 // @Success	200			{object}	model.Product
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
@@ -263,6 +273,12 @@ func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) 
 // @Router		/api/product/{productId} [get]
 func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
+
+	options, err := optionsFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	vars := mux.Vars(r)
 	productID, err := strconv.Atoi(vars["productId"])
@@ -283,21 +299,38 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedProduct.Reviews, err = h.Services.Review.GetAll(productID)
+	reviewQuery := model.ReviewQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     options.Limit,
+			Offset:    options.Offset,
+			SortBy:    options.SortBy,
+			SortOrder: options.SortOrder,
+		},
+	}
+
+	err = reviewQuery.Validate()
+	if err != nil {
+		newErrorResponse(w, "Bad query", http.StatusBadRequest)
+		return
+	}
+
+	selectedProduct.Reviews, err = h.Services.Review.GetAll(productID, reviewQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	q := model.ProductQueryInput{
-		Limit:     5,
-		Offset:    0,
+	productQuery := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     5,
+			Offset:    0,
+			SortBy:    model.SortByViews,
+			SortOrder: model.DESCENDING,
+		},
 		ProductID: productID,
-		SortBy:    model.SortByViews,
-		SortOrder: model.DESCENDING,
 	}
 
-	selectedProduct.RelatedProducts, err = h.Services.Product.GetProductsByCategory(selectedProduct.Category, q)
+	selectedProduct.RelatedProducts, err = h.Services.Product.GetProductsByCategory(selectedProduct.Category, productQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

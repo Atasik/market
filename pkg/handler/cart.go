@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"io"
+	"market/pkg/model"
 	"market/pkg/service"
 	"net/http"
 	"strconv"
@@ -78,7 +79,16 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Infof("Product was added to cart with id LastInsertId: %v", productID)
 
-	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID)
+	q := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     defaultLimit,
+			Offset:    defaultOffset,
+			SortBy:    defaultSortField,
+			SortOrder: model.DESCENDING,
+		},
+	}
+
+	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -92,6 +102,10 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 // @Tags cart
 // @ID get-products-from-cart
 // @Product json
+// @Param   sort_by query   string false "sort by" Enums(created_at)
+// @Param   sort_order query string false "sort order" Enums(asc, desc)
+// @Param   limit   query int false "limit" Enums(10, 25, 50)
+// @Param   page  query int false "page"
 // @Success 200 {object} getProductsResponse
 // @Failure 400,404 {object} errorResponse
 // @Failure 500 {object} errorResponse
@@ -105,13 +119,28 @@ func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	options, err := optionsFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	cart, err := h.Services.Cart.GetByUserID(sess.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID)
+	q := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     options.Limit,
+			Offset:    options.Offset,
+			SortBy:    options.SortBy,
+			SortOrder: options.SortOrder,
+		},
+	}
+
+	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID, q)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -192,7 +221,16 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 
 	h.Logger.Infof("Product from Cart %v was updated: %v %v", cart.ID, productID)
 
-	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID)
+	q := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     0,
+			Offset:    0,
+			SortBy:    model.SortByDate,
+			SortOrder: model.DESCENDING,
+		},
+	}
+
+	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -241,7 +279,16 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 
 	h.Logger.Infof("Product from Cart %v was deleted: %v %v", cart.ID, productID)
 
-	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID)
+	q := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     0,
+			Offset:    0,
+			SortBy:    model.SortByDate,
+			SortOrder: model.DESCENDING,
+		},
+	}
+
+	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -10,14 +10,11 @@ type Order struct {
 	UserID      int       `db:"user_id" json:"user_id"`
 	CreatedAt   time.Time `db:"created_at" json:"created_at"`
 	DeliveredAt time.Time `db:"delivered_at" json:"delivered_at"`
-	Products    []Product `json:"products,omitempty"`
+	Products    []Product `json:"products"`
 }
 
 type OrderQueryInput struct {
-	Limit     int
-	Offset    int
-	SortBy    string
-	SortOrder string
+	QueryInput
 }
 
 func (i OrderQueryInput) Validate() error {

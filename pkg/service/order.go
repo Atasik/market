@@ -13,9 +13,9 @@ var (
 
 type Order interface {
 	Create(userID int, order model.Order) (int, error)
-	GetAll(userID int) ([]model.Order, error)
+	GetAll(userID int, q model.OrderQueryInput) ([]model.Order, error)
 	GetByID(userID, orderID int) (model.Order, error)
-	GetProductsByOrderID(userID, orderID int) ([]model.Product, error)
+	GetProductsByOrderID(userID, orderID int, q model.ProductQueryInput) ([]model.Product, error)
 }
 
 type OrderService struct {
@@ -39,7 +39,16 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 			return 0, err
 		}
 
-		order.Products, err = s.cartRepo.GetAllProducts(cart.ID)
+		q := model.ProductQueryInput{
+			QueryInput: model.QueryInput{
+				Limit:     0,
+				Offset:    0,
+				SortBy:    model.SortByDate,
+				SortOrder: model.DESCENDING,
+			},
+		}
+
+		order.Products, err = s.cartRepo.GetAllProducts(cart.ID, q)
 		if err != nil {
 			return 0, err
 		}
@@ -58,13 +67,13 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 	return 0, ErrPermissionDenied
 }
 
-func (s *OrderService) GetAll(userID int) ([]model.Order, error) {
+func (s *OrderService) GetAll(userID int, q model.OrderQueryInput) ([]model.Order, error) {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return []model.Order{}, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.orderRepo.GetAll(userID)
+		return s.orderRepo.GetAll(userID, q)
 	}
 
 	return []model.Order{}, ErrPermissionDenied
@@ -91,13 +100,13 @@ func (s *OrderService) GetByID(userID, orderID int) (model.Order, error) {
 	return model.Order{}, ErrPermissionDenied
 }
 
-func (s *OrderService) GetProductsByOrderID(userID, orderID int) ([]model.Product, error) {
+func (s *OrderService) GetProductsByOrderID(userID, orderID int, q model.ProductQueryInput) ([]model.Product, error) {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return []model.Product{}, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.orderRepo.GetProductsByOrderID(orderID)
+		return s.orderRepo.GetProductsByOrderID(orderID, q)
 	}
 
 	return []model.Product{}, ErrPermissionDenied

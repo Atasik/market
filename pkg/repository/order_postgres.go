@@ -9,9 +9,9 @@ import (
 
 type OrderRepo interface {
 	Create(cartID, userID int, order model.Order) (int, error)
-	GetAll(userID int) ([]model.Order, error)
+	GetAll(userID int, q model.OrderQueryInput) ([]model.Order, error)
 	GetByID(orderID int) (model.Order, error)
-	GetProductsByOrderID(orderID int) ([]model.Product, error)
+	GetProductsByOrderID(orderID int, q model.ProductQueryInput) ([]model.Product, error)
 }
 
 type OrderPostgresqlRepository struct {
@@ -60,13 +60,13 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 	return order.ID, ParsePostgresError(tx.Commit())
 }
 
-func (repo *OrderPostgresqlRepository) GetAll(userID int) ([]model.Order, error) {
+func (repo *OrderPostgresqlRepository) GetAll(userID int, q model.OrderQueryInput) ([]model.Order, error) {
 	var orders []model.Order
 	query := fmt.Sprintf(`SELECT o.id, o.created_at, o.delivered_at FROM %s o
 			  INNER JOIN %s u on o.user_id = u.id
-			  WHERE u.id = $1`, ordersTable, usersTable)
+			  WHERE u.id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, ordersTable, usersTable, q.SortBy, q.SortOrder)
 
-	if err := repo.DB.Select(&orders, query, userID); err != nil {
+	if err := repo.DB.Select(&orders, query, userID, q.Limit, q.Offset); err != nil {
 		return []model.Order{}, ParsePostgresError(err)
 	}
 
@@ -84,14 +84,14 @@ func (repo *OrderPostgresqlRepository) GetByID(orderID int) (model.Order, error)
 	return order, nil
 }
 
-func (repo *OrderPostgresqlRepository) GetProductsByOrderID(orderID int) ([]model.Product, error) {
+func (repo *OrderPostgresqlRepository) GetProductsByOrderID(orderID int, q model.ProductQueryInput) ([]model.Product, error) {
 	var products []model.Product
 	query := fmt.Sprintf(`SELECT p.id, p.user_id, p.title, p.price, p.tag, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url FROM %s p 
 			  INNER JOIN %s po on po.product_id = p.id
 			  INNER JOIN %s o on po.order_id = o.id
-			  WHERE o.id = $1`, productsTable, productsOrdersTable, ordersTable)
+			  WHERE o.id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, productsTable, productsOrdersTable, ordersTable, q.SortBy, q.SortOrder)
 
-	if err := repo.DB.Select(&products, query, orderID); err != nil {
+	if err := repo.DB.Select(&products, query, orderID, q.Limit, q.Offset); err != nil {
 		return []model.Product{}, ParsePostgresError(err)
 	}
 

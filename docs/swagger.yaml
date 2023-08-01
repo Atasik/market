@@ -185,6 +185,32 @@ paths:
       - cart
     get:
       operationId: get-products-from-cart
+      parameters:
+      - description: sort by
+        enum:
+        - created_at
+        in: query
+        name: sort_by
+        type: string
+      - description: sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      - description: limit
+        enum:
+        - 10
+        - 25
+        - 50
+        in: query
+        name: limit
+        type: integer
+      - description: page
+        in: query
+        name: page
+        type: integer
       responses:
         "200":
           description: OK
@@ -397,14 +423,41 @@ paths:
       summary: Create order
       tags:
       - order
-  /api/order/{productId}:
+  /api/order/{orderId}:
     get:
       operationId: get-order
       parameters:
       - description: ID of order to get
         in: path
-        name: productId
+        name: orderId
         required: true
+        type: integer
+      - description: sort by
+        enum:
+        - views
+        - price
+        - created_at
+        in: query
+        name: sort_by
+        type: string
+      - description: sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      - description: limit
+        enum:
+        - 10
+        - 25
+        - 50
+        in: query
+        name: limit
+        type: integer
+      - description: page
+        in: query
+        name: page
         type: integer
       responses:
         "201":
@@ -435,6 +488,32 @@ paths:
   /api/orders:
     get:
       operationId: get-orders
+      parameters:
+      - description: sort by
+        enum:
+        - created_at
+        in: query
+        name: sort_by
+        type: string
+      - description: sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      - description: limit
+        enum:
+        - 10
+        - 25
+        - 50
+        in: query
+        name: limit
+        type: integer
+      - description: page
+        in: query
+        name: page
+        type: integer
       responses:
         "200":
           description: OK
@@ -568,6 +647,31 @@ paths:
         in: path
         name: productId
         required: true
+        type: integer
+      - description: sort by
+        enum:
+        - created_at
+        in: query
+        name: sort_by
+        type: string
+      - description: sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      - description: limit
+        enum:
+        - 10
+        - 25
+        - 50
+        in: query
+        name: limit
+        type: integer
+      - description: page
+        in: query
+        name: page
         type: integer
       responses:
         "200":

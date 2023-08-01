@@ -29,24 +29,24 @@ func (h *Handler) InitRoutes() http.Handler {
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	r.HandleFunc("/api/products", query(h.getAllProducts)).Methods("GET")
+	r.HandleFunc("/api/product/{productId}", query(h.getProductByID)).Methods("GET")
 	r.HandleFunc("/api/category/{categoryName}", query(h.getProductsByCategory)).Methods("GET")
 	r.HandleFunc("/api/products/{userId}", query(h.getProductsByUserID)).Methods("GET")
 
 	authR := mux.NewRouter()
 
-	authR.HandleFunc("/api/orders", h.getOrders).Methods("GET")
+	authR.HandleFunc("/api/orders", query(h.getOrders)).Methods("GET")
 	authR.HandleFunc("/api/order", h.createOrder).Methods("GET")
-	authR.HandleFunc("/api/order/{orderId}", h.getOrder).Methods("GET")
+	authR.HandleFunc("/api/order/{orderId}", query(h.getOrder)).Methods("GET")
 
 	authR.HandleFunc("/api/product", h.createProduct).Methods("POST")
 	authR.HandleFunc("/api/product/{productId}", h.updateProduct).Methods("PUT")
-	r.HandleFunc("/api/product/{productId}", h.getProductByID).Methods("GET")
 	authR.HandleFunc("/api/product/{productId}", h.deleteProduct).Methods("DELETE")
 	authR.HandleFunc("/api/product/{productId}/addReview", h.createReview).Methods("POST")
 	authR.HandleFunc("/api/product/{productId}/updateReview/{reviewId}", h.updateReview).Methods("PUT")
 	authR.HandleFunc("/api/product/{productId}/deleteReview/{reviewId}", h.deleteReview).Methods("DELETE")
 
-	authR.HandleFunc("/api/cart", h.getProductsFromCart).Methods("GET")
+	authR.HandleFunc("/api/cart", query(h.getProductsFromCart)).Methods("GET")
 	authR.HandleFunc("/api/cart/{productId}", h.updateProductAmountFromCart).Methods("PUT")
 	authR.HandleFunc("/api/cart/{productId}", h.addProductToCart).Methods("POST")
 	authR.HandleFunc("/api/cart/{productId}", h.deleteProductFromCart).Methods("DELETE")

@@ -92,21 +92,32 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.Reviews, err = h.Services.Review.GetAll(productID)
+	reviewQuery := model.ReviewQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     defaultLimit,
+			Offset:    defaultOffset,
+			SortBy:    defaultSortField,
+			SortOrder: model.DESCENDING,
+		},
+	}
+
+	product.Reviews, err = h.Services.Review.GetAll(productID, reviewQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	q := model.ProductQueryInput{
-		Limit:     5,
-		Offset:    0,
+	productQuery := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     5,
+			Offset:    defaultOffset,
+			SortBy:    model.SortByViews,
+			SortOrder: model.DESCENDING,
+		},
 		ProductID: productID,
-		SortBy:    model.SortByViews,
-		SortOrder: model.DESCENDING,
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, q)
+	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, productQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -191,21 +202,32 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.Reviews, err = h.Services.Review.GetAll(productID)
+	reviewQuery := model.ReviewQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     defaultLimit,
+			Offset:    defaultOffset,
+			SortBy:    defaultSortField,
+			SortOrder: model.DESCENDING,
+		},
+	}
+
+	product.Reviews, err = h.Services.Review.GetAll(productID, reviewQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	q := model.ProductQueryInput{
-		Limit:     5,
-		Offset:    0,
+	productQuery := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     5,
+			Offset:    defaultOffset,
+			SortBy:    model.SortByViews,
+			SortOrder: model.DESCENDING,
+		},
 		ProductID: productID,
-		SortBy:    model.SortByViews,
-		SortOrder: model.DESCENDING,
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, q)
+	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, productQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -265,21 +287,32 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.Reviews, err = h.Services.Review.GetAll(productID)
+	reviewQuery := model.ReviewQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     defaultLimit,
+			Offset:    defaultOffset,
+			SortBy:    defaultSortField,
+			SortOrder: model.DESCENDING,
+		},
+	}
+
+	product.Reviews, err = h.Services.Review.GetAll(productID, reviewQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	q := model.ProductQueryInput{
-		Limit:     5,
-		Offset:    0,
+	productQuery := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     5,
+			Offset:    defaultOffset,
+			SortBy:    model.SortByViews,
+			SortOrder: model.DESCENDING,
+		},
 		ProductID: productID,
-		SortBy:    model.SortByViews,
-		SortOrder: model.DESCENDING,
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, q)
+	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, productQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

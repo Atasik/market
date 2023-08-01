@@ -15,7 +15,7 @@ type Cart interface {
 	Create(userID int) (int, error)
 	AddProduct(userID, cartID, productID, amountToPurchase int) (int, error)
 	GetByUserID(userID int) (model.Cart, error)
-	GetAllProducts(userID, CartID int) ([]model.Product, error)
+	GetAllProducts(userID, CartID int, q model.ProductQueryInput) ([]model.Product, error)
 	UpdateProductAmount(userID, CartID, productID, amountToPurchase int) error
 	DeleteProduct(userID, cartID, productID int) error
 	DeleteAllProducts(userID, cartID int) error
@@ -80,13 +80,13 @@ func (s *CartService) GetByUserID(userID int) (model.Cart, error) {
 	return model.Cart{}, ErrPermissionDenied
 }
 
-func (s *CartService) GetAllProducts(userID, cartID int) ([]model.Product, error) {
+func (s *CartService) GetAllProducts(userID, cartID int, q model.ProductQueryInput) ([]model.Product, error) {
 	user, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return []model.Product{}, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		return s.cartRepo.GetAllProducts(cartID)
+		return s.cartRepo.GetAllProducts(cartID, q)
 	}
 
 	return []model.Product{}, ErrPermissionDenied

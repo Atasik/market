@@ -17,3 +17,10 @@ func RegisterCustomValidations(v *validator.Validate) error {
 	}
 	return v.RegisterValidation("review_category", ValidateReviewCategory)
 }
+
+type QueryInput struct {
+	Limit     int
+	Offset    int
+	SortBy    string
+	SortOrder string
+}

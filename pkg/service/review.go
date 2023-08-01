@@ -13,7 +13,7 @@ var (
 
 type Review interface {
 	Create(review model.Review) (int, error)
-	GetAll(productID int) ([]model.Review, error)
+	GetAll(productID int, q model.ReviewQueryInput) ([]model.Review, error)
 	Update(userID, productID int, input model.UpdateReviewInput) error
 	Delete(userID, reviewID int) error
 }
@@ -41,8 +41,8 @@ func (s *ReviewService) Create(review model.Review) (int, error) {
 	return 0, ErrReviewExists
 }
 
-func (s *ReviewService) GetAll(productID int) ([]model.Review, error) {
-	return s.reviewRepo.GetAll(productID)
+func (s *ReviewService) GetAll(productID int, q model.ReviewQueryInput) ([]model.Review, error) {
+	return s.reviewRepo.GetAll(productID, q)
 }
 
 func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewInput) error {

@@ -12,7 +12,7 @@ type ReviewRepo interface {
 	Create(review model.Review) (int, error)
 	Delete(reviewID int) error
 	Update(userID, productID int, input model.UpdateReviewInput) error
-	GetAll(productID int) ([]model.Review, error)
+	GetAll(productID int, q model.ReviewQueryInput) ([]model.Review, error)
 	GetReviewIDByProductIDUserID(productID, userID int) (int, error)
 }
 
@@ -37,7 +37,6 @@ func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error)
 	return reviewId, nil
 }
 
-// проверка, что есть права
 func (repo *ReviewPostgresqlRepository) Delete(reviewID int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", reviewsTable)
 
@@ -48,7 +47,6 @@ func (repo *ReviewPostgresqlRepository) Delete(reviewID int) error {
 	return nil
 }
 
-// проверка, что есть права
 func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input model.UpdateReviewInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
@@ -83,11 +81,11 @@ func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input mode
 	return nil
 }
 
-func (repo *ReviewPostgresqlRepository) GetAll(productID int) ([]model.Review, error) {
+func (repo *ReviewPostgresqlRepository) GetAll(productID int, q model.ReviewQueryInput) ([]model.Review, error) {
 	var rewiews []model.Review
-	query := fmt.Sprintf("SELECT * FROM %s WHERE product_id = $1", reviewsTable)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE product_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3", reviewsTable, q.SortBy, q.SortOrder)
 
-	if err := repo.DB.Select(&rewiews, query, productID); err != nil {
+	if err := repo.DB.Select(&rewiews, query, productID, q.Limit, q.Offset); err != nil {
 		return nil, ParsePostgresError(err)
 	}
 

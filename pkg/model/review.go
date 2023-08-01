@@ -25,10 +25,7 @@ type Review struct {
 }
 
 type ReviewQueryInput struct {
-	Limit     int
-	Offset    int
-	SortBy    string
-	SortOrder string
+	QueryInput
 }
 
 type UpdateReviewInput struct {

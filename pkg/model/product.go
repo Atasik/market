@@ -39,11 +39,8 @@ type UpdateProductInput struct {
 }
 
 type ProductQueryInput struct {
-	Limit     int
-	Offset    int
+	QueryInput
 	ProductID int
-	SortBy    string
-	SortOrder string
 }
 
 func (i ProductQueryInput) Validate() error {

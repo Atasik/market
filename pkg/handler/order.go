@@ -43,7 +43,16 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Infof("Order was created with id LastInsertId: %v", lastID)
 
-	orders, err := h.Services.Order.GetAll(sess.UserID)
+	q := model.OrderQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     defaultLimit,
+			Offset:    defaultOffset,
+			SortBy:    defaultSortField,
+			SortOrder: model.DESCENDING,
+		},
+	}
+
+	orders, err := h.Services.Order.GetAll(sess.UserID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -57,18 +66,28 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 // @Tags		order
 // @ID			get-order
 // @Product	json
-// @Param		productId	path		integer	true	"ID of order to get"
+// @Param		orderId	path		integer	true	"ID of order to get"
+// @Param   sort_by query   string false "sort by" Enums(views, price, created_at)
+// @Param   sort_order query string false "sort order" Enums(asc, desc)
+// @Param   limit   query int false "limit" Enums(10, 25, 50)
+// @Param   page  query int false "page"
 // @Success	201			{object}	model.Order
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/order/{productId} [get]
+// @Router		/api/order/{orderId} [get]
 func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
 	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		return
+	}
+
+	options, err := optionsFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -85,7 +104,16 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedOrder.Products, err = h.Services.Order.GetProductsByOrderID(sess.UserID, orderID)
+	q := model.ProductQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     options.Limit,
+			Offset:    options.Offset,
+			SortBy:    options.SortBy,
+			SortOrder: options.SortOrder,
+		},
+	}
+
+	selectedOrder.Products, err = h.Services.Order.GetProductsByOrderID(sess.UserID, orderID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -104,6 +132,10 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 // @Tags		order
 // @ID			get-orders
 // @Product	json
+// @Param   sort_by query   string false "sort by" Enums(created_at)
+// @Param   sort_order query string false "sort order" Enums(asc, desc)
+// @Param   limit   query int false "limit" Enums(10, 25, 50)
+// @Param   page  query int false "page"
 // @Success	200		{object}	getOrdersResponse
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
@@ -111,13 +143,29 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 // @Router		/api/orders [get]
 func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
+
+	options, err := optionsFromContext(r.Context())
+	if err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	sess, err := service.SessionFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
 		return
 	}
 
-	orders, err := h.Services.Order.GetAll(sess.UserID)
+	orderQuery := model.OrderQueryInput{
+		QueryInput: model.QueryInput{
+			Limit:     options.Limit,
+			Offset:    options.Offset,
+			SortBy:    options.SortBy,
+			SortOrder: options.SortOrder,
+		},
+	}
+
+	orders, err := h.Services.Order.GetAll(sess.UserID, orderQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

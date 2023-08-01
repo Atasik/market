@@ -12,7 +12,7 @@ type CartRepo interface {
 	AddProduct(cartID, productID, amount int) (int, error)
 	GetByUserID(userID int) (model.Cart, error)
 	GetProductByID(cartID, productID int) (model.Product, error)
-	GetAllProducts(cartID int) ([]model.Product, error)
+	GetAllProducts(cartID int, q model.ProductQueryInput) ([]model.Product, error)
 	UpdateProductAmount(cartID, productID, amount int) error
 	DeleteProduct(cartID, productID int) error
 	DeleteAllProducts(cartID int) error
@@ -39,7 +39,6 @@ func (repo *CartPostgresqlRepository) Create(userID int) (int, error) {
 	return id, nil
 }
 
-// проверка, что есть права
 func (repo *CartPostgresqlRepository) AddProduct(cartID, productID, amount int) (int, error) {
 	var id int
 	query := fmt.Sprintf("INSERT INTO %s (product_id, cart_id, purchased_amount) VALUES ($1, $2, $3) RETURNING id", productsCartsTable)
@@ -64,15 +63,26 @@ func (repo *CartPostgresqlRepository) GetByUserID(userID int) (model.Cart, error
 	return Cart, nil
 }
 
-// проверка, что есть права
-func (repo *CartPostgresqlRepository) GetAllProducts(cartID int) ([]model.Product, error) {
+func (repo *CartPostgresqlRepository) GetAllProducts(cartID int, q model.ProductQueryInput) ([]model.Product, error) {
 	var products []model.Product
+	var limitValue string
+	argId := 2
+	args := make([]interface{}, 0)
+	args = append(args, cartID)
+	if q.Limit != 0 {
+		limitValue = fmt.Sprintf("LIMIT $%d", argId)
+		args = append(args, q.Limit)
+		argId++
+	}
+
+	args = append(args, q.Offset)
+
 	query := fmt.Sprintf(`SELECT p.id, p.user_id, p.title, p.price, p.tag, p.category, p.description, p.amount, pc.purchased_amount, p.created_at, p.updated_at, p.views, p.image_url FROM %s p 
 			  INNER JOIN %s pc on pc.product_id = p.id
 			  INNER JOIN %s c on pc.cart_id = c.id
-			  WHERE c.id = $1`, productsTable, productsCartsTable, cartsTable)
+			  WHERE c.id = $1 ORDER BY %s %s %s OFFSET $%d`, productsTable, productsCartsTable, cartsTable, q.SortBy, q.SortOrder, limitValue, argId)
 
-	if err := repo.DB.Select(&products, query, cartID); err != nil {
+	if err := repo.DB.Select(&products, query, args...); err != nil {
 		return []model.Product{}, ParsePostgresError(err)
 	}
 

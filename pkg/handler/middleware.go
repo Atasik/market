@@ -22,7 +22,7 @@ const (
 
 const (
 	authorizationHeader = "Authorization"
-	defaultSortField    = "views"
+	defaultSortField    = "created_at"
 	defaultLimit        = 25
 	maxLimit            = 50
 	defaultOffset       = 0

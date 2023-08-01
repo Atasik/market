@@ -28,6 +28,44 @@ const docTemplate = `{
                 ],
                 "summary": "Get products from cart",
                 "operationId": "get-products-from-cart",
+                "parameters": [
+                    {
+                        "enum": [
+                            "created_at"
+                        ],
+                        "type": "string",
+                        "description": "sort by",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "sort order",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ],
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -395,7 +433,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/order/{productId}": {
+        "/api/order/{orderId}": {
             "get": {
                 "security": [
                     {
@@ -411,9 +449,47 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ID of order to get",
-                        "name": "productId",
+                        "name": "orderId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "enum": [
+                            "views",
+                            "price",
+                            "created_at"
+                        ],
+                        "type": "string",
+                        "description": "sort by",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "sort order",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ],
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -462,6 +538,44 @@ const docTemplate = `{
                 ],
                 "summary": "Get orders",
                 "operationId": "get-orders",
+                "parameters": [
+                    {
+                        "enum": [
+                            "created_at"
+                        ],
+                        "type": "string",
+                        "description": "sort by",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "sort order",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ],
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -608,6 +722,42 @@ const docTemplate = `{
                         "name": "productId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "enum": [
+                            "created_at"
+                        ],
+                        "type": "string",
+                        "description": "sort by",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "sort order",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            10,
+                            25,
+                            50
+                        ],
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {
