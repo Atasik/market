@@ -37,9 +37,9 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 	vars := mux.Vars(r)
@@ -74,8 +74,8 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	review.Category = input.Category
 	review.Text = input.Text
 	review.ProductID = productID
-	review.UserID = sess.UserID
-	review.Username = sess.Username
+	review.UserID = token.UserID
+	review.Username = token.Username
 	review.CreatedAt = time.Now()
 
 	review.ID, err = h.Services.Review.Create(review)
@@ -152,9 +152,9 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 	vars := mux.Vars(r)
@@ -188,13 +188,13 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	input.UpdatedAt = &currentTime
 
-	err = h.Services.Review.Update(sess.UserID, productID, input)
+	err = h.Services.Review.Update(token.UserID, productID, input)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.Logger.Infof("Review by userID [%v] to productID [%v] was updated: %v", sess.UserID, productID)
+	h.Logger.Infof("Review by userID [%v] to productID [%v] was updated: %v", token.UserID, productID)
 
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {
@@ -255,9 +255,9 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 // @Router		/api/product/{productId}/deleteReview/{reviewId} [delete]
 func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 	vars := mux.Vars(r)
@@ -267,7 +267,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Services.Review.Delete(sess.UserID, reviewID)
+	err = h.Services.Review.Delete(token.UserID, reviewID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -279,7 +279,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Review by userID [%v] to productID [%v] was deleted", sess.UserID, productID)
+	h.Logger.Infof("Review by userID [%v] to productID [%v] was deleted", token.UserID, productID)
 
 	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {

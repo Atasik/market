@@ -66,12 +66,12 @@ func auth(s service.User, next http.Handler) http.Handler {
 			return
 		}
 
-		sess, err := s.CheckToken(headerParts[1])
+		token, err := s.CheckToken(headerParts[1])
 		if err != nil {
 			newErrorResponse(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		ctx := service.ContextWithSession(r.Context(), sess)
+		ctx := service.ContextWithToken(r.Context(), token)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

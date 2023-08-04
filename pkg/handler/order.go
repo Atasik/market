@@ -24,9 +24,9 @@ import (
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -35,7 +35,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		DeliveredAt: time.Now().Add(4 * 24 * time.Hour),
 	}
 
-	lastID, err := h.Services.Order.Create(sess.UserID, order)
+	lastID, err := h.Services.Order.Create(token.UserID, order)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -52,7 +52,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	orders, err := h.Services.Order.GetAll(sess.UserID, q)
+	orders, err := h.Services.Order.GetAll(token.UserID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -79,9 +79,9 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedOrder, err := h.Services.Order.GetByID(sess.UserID, orderID)
+	selectedOrder, err := h.Services.Order.GetByID(token.UserID, orderID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -113,7 +113,7 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	selectedOrder.Products, err = h.Services.Order.GetProductsByOrderID(sess.UserID, orderID, q)
+	selectedOrder.Products, err = h.Services.Order.GetProductsByOrderID(token.UserID, orderID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -150,9 +150,9 @@ func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -165,7 +165,7 @@ func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	orders, err := h.Services.Order.GetAll(sess.UserID, orderQuery)
+	orders, err := h.Services.Order.GetAll(token.UserID, orderQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

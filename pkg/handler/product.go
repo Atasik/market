@@ -38,9 +38,9 @@ const (
 // @Router		/api/product [post]
 func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.UserID = sess.UserID
+	product.UserID = token.UserID
 	product.ImageURL = data.ImageURL
 	product.ImageID = data.ImageID
 	product.CreatedAt = time.Now()
@@ -366,9 +366,9 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -419,7 +419,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Services.Product.Update(sess.UserID, productID, input)
+	err = h.Services.Product.Update(token.UserID, productID, input)
 	if err != nil {
 		if !noFile {
 			ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
@@ -473,9 +473,9 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -492,7 +492,7 @@ func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Services.Product.Delete(sess.UserID, productId)
+	err = h.Services.Product.Delete(token.UserID, productId)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

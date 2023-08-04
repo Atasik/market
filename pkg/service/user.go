@@ -45,7 +45,7 @@ type HashConfig struct {
 type User interface {
 	CreateUser(model.User) (int, error)
 	GenerateToken(username, password string) (string, error)
-	CheckToken(accessToken string) (*Session, error)
+	CheckToken(accessToken string) (*Token, error)
 }
 
 type UserService struct {
@@ -122,7 +122,7 @@ func (s *UserService) GenerateToken(username, password string) (string, error) {
 	return token.SignedString([]byte(signingKey))
 }
 
-func (s *UserService) CheckToken(accessToken string) (*Session, error) {
+func (s *UserService) CheckToken(accessToken string) (*Token, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
@@ -131,15 +131,15 @@ func (s *UserService) CheckToken(accessToken string) (*Session, error) {
 		return []byte(signingKey), nil
 	})
 	if err != nil {
-		return &Session{}, err
+		return &Token{}, err
 	}
 
 	claims, ok := token.Claims.(*tokenClaims)
 	if !ok {
-		return &Session{}, errors.New("token claims are not of type *tokenClaims")
+		return &Token{}, errors.New("token claims are not of type *tokenClaims")
 	}
 
-	session := Session{
+	session := Token{
 		Username: claims.Username,
 		UserID:   claims.UserID,
 	}

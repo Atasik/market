@@ -31,9 +31,9 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -65,13 +65,13 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cart, err := h.Services.Cart.GetByUserID(sess.UserID)
+	cart, err := h.Services.Cart.GetByUserID(token.UserID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	_, err = h.Services.Cart.AddProduct(cart.ID, sess.UserID, productID, input.Amount)
+	_, err = h.Services.Cart.AddProduct(cart.ID, token.UserID, productID, input.Amount)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -88,7 +88,7 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID, q)
+	products, err := h.Services.Cart.GetAllProducts(token.UserID, cart.ID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -113,9 +113,9 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 // @Router /api/cart [get]
 func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cart, err := h.Services.Cart.GetByUserID(sess.UserID)
+	cart, err := h.Services.Cart.GetByUserID(token.UserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -140,7 +140,7 @@ func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID, q)
+	products, err := h.Services.Cart.GetAllProducts(token.UserID, cart.ID, q)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -173,9 +173,9 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -207,13 +207,13 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	cart, err := h.Services.Cart.GetByUserID(sess.UserID)
+	cart, err := h.Services.Cart.GetByUserID(token.UserID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = h.Services.Cart.UpdateProductAmount(cart.ID, sess.UserID, productID, input.Amount)
+	err = h.Services.Cart.UpdateProductAmount(cart.ID, token.UserID, productID, input.Amount)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -230,7 +230,7 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 		},
 	}
 
-	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID, q)
+	products, err := h.Services.Cart.GetAllProducts(token.UserID, cart.ID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -252,9 +252,9 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 // @Router /api/cart/{productId} [delete]
 func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -265,13 +265,13 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cart, err := h.Services.Cart.GetByUserID(sess.UserID)
+	cart, err := h.Services.Cart.GetByUserID(token.UserID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = h.Services.Cart.DeleteProduct(cart.ID, sess.UserID, productID)
+	err = h.Services.Cart.DeleteProduct(cart.ID, token.UserID, productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -288,7 +288,7 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 		},
 	}
 
-	products, err := h.Services.Cart.GetAllProducts(sess.UserID, cart.ID, q)
+	products, err := h.Services.Cart.GetAllProducts(token.UserID, cart.ID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -309,19 +309,19 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 // @Router /api/cart [delete]
 func (h *Handler) deleteProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
-	sess, err := service.SessionFromContext(r.Context())
+	token, err := service.TokenFromContext(r.Context())
 	if err != nil {
-		newErrorResponse(w, "Session Error", http.StatusInternalServerError)
+		newErrorResponse(w, "Token Error", http.StatusInternalServerError)
 		return
 	}
 
-	cart, err := h.Services.Cart.GetByUserID(sess.UserID)
+	cart, err := h.Services.Cart.GetByUserID(token.UserID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = h.Services.Cart.DeleteAllProducts(cart.ID, sess.UserID)
+	err = h.Services.Cart.DeleteAllProducts(cart.ID, token.UserID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
