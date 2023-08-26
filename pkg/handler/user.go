@@ -7,17 +7,17 @@ import (
 	"net/http"
 )
 
-//	@Summary	Register in the market
-//	@Tags		user
-//	@ID			register
-//	@Accept		json
-//	@Produce	json
-//	@Param		input	body		model.User	true	"Account info"
-//	@Success	200		{string}	string		"token"
-//	@Failure	400,404	{object}	errorResponse
-//	@Failure	500		{object}	errorResponse
-//	@Failure	default	{object}	errorResponse
-//	@Router		/api/register [post]
+// @Summary	Register in the market
+// @Tags		user
+// @ID			register
+// @Accept		json
+// @Produce	json
+// @Param		input	body		model.User	true	"Account info"
+// @Success	200		{string}	string		"token"
+// @Failure	400,404	{object}	errorResponse
+// @Failure	500		{object}	errorResponse
+// @Failure	default	{object}	errorResponse
+// @Router		/api/register [post]
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -44,7 +44,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Validator.Struct(user)
 	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		newErrorResponse(w, "invalid input", http.StatusBadRequest)
 		return
 	}
 
@@ -86,17 +86,17 @@ type signInInput struct {
 	Password string `db:"password" json:"password" validate:"required"`
 }
 
-//	@Summary	Login into market
-//	@Tags		user
-//	@ID			login
-//	@Accept		json
-//	@Produce	json
-//	@Param		input	body		signInInput	true	"Username and password"
-//	@Success	200		{string}	string		"token"
-//	@Failure	400,404	{object}	errorResponse
-//	@Failure	500		{object}	errorResponse
-//	@Failure	default	{object}	errorResponse
-//	@Router		/api/login [post]
+// @Summary	Login into market
+// @Tags		user
+// @ID			login
+// @Accept		json
+// @Produce	json
+// @Param		input	body		signInInput	true	"Username and password"
+// @Success	200		{string}	string		"token"
+// @Failure	400,404	{object}	errorResponse
+// @Failure	500		{object}	errorResponse
+// @Failure	default	{object}	errorResponse
+// @Router		/api/login [post]
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -121,7 +121,7 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Validator.Struct(input)
 	if err != nil {
-		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		newErrorResponse(w, "invalid input", http.StatusBadRequest)
 		return
 	}
 
