@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"market/internal/model"
 	"market/pkg/database/postgres"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -19,19 +20,35 @@ func NewOrderPostgresqlRepo(db *sqlx.DB) *OrderPostgresqlRepository {
 func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Order) (int, error) {
 	tx, err := repo.DB.Begin()
 	if err != nil {
+		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
 
 	query := fmt.Sprintf("INSERT INTO %s (created_at, delivered_at, user_id) VALUES ($1, $2, $3) RETURNING id", ordersTable)
 	row := tx.QueryRow(query, order.CreatedAt, order.DeliveredAt, userID)
 	if err := row.Scan(&order.ID); err != nil {
-		tx.Rollback()
+		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
-	query = fmt.Sprintf("INSERT INTO %s (order_id, product_id, purchased_amount) VALUES ($1, $2, $3)", productsOrdersTable)
-	for _, product := range order.Products {
-		if _, err := tx.Exec(query, order.ID, product.ID, product.PurchasedAmount); err != nil {
-			tx.Rollback()
+
+	if len(order.Products) != 0 {
+		var insertQueryBuilder strings.Builder
+
+		insertQueryBuilder.WriteString(fmt.Sprintf("INSERT INTO %s (order_id, product_id, purchased_amount)", productsOrdersTable))
+
+		args := []interface{}{}
+		argID := 1
+		for _, prod := range order.Products {
+			args = append(args, order.ID, prod.ID, prod.PurchasedAmount)
+			insertQueryBuilder.WriteString(fmt.Sprintf(`($%d,$%d,$%d),`, argID, argID+1, argID+2))
+			argID += 3
+		}
+
+		query = strings.TrimSuffix(insertQueryBuilder.String(), ",")
+
+		_, err = tx.Exec(query, args...)
+		if err != nil {
+			tx.Rollback() //nolint:errcheck
 			return 0, postgres.ParsePostgresError(err)
 		}
 	}
@@ -41,13 +58,13 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 					     FROM %s AS pc 
 						 WHERE pc.product_id = p.id AND pc.cart_id = $1`, productsTable, productsCartsTable)
 	if _, err := tx.Exec(query, cartID); err != nil {
-		tx.Rollback()
+		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
 
 	query = fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1`, productsCartsTable)
 	if _, err = tx.Exec(query, cartID); err != nil {
-		tx.Rollback()
+		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
 
