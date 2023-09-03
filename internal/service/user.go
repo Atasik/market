@@ -25,8 +25,8 @@ type UserService struct {
 	tokenManager auth.TokenManager
 }
 
-func NewUserService(userRepo repository.UserRepo) *UserService {
-	return &UserService{userRepo: userRepo}
+func NewUserService(userRepo repository.UserRepo, hasher hash.PasswordHasher, tokenManager auth.TokenManager) *UserService {
+	return &UserService{userRepo: userRepo, hasher: hasher, tokenManager: tokenManager}
 }
 
 func (s *UserService) CreateUser(user model.User) (int, error) {

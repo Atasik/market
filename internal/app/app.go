@@ -1,20 +1,25 @@
 package app
 
 import (
+	"context"
 	"log"
 	"market/internal/config"
 	"market/internal/handler"
 	"market/internal/model"
 	"market/internal/repository"
+	"market/internal/server"
 	"market/internal/service"
+	"market/pkg/auth"
 	"market/pkg/cloud"
 	"market/pkg/database/postgres"
-	"net/http"
+	"market/pkg/hash"
+	"os"
+	"os/signal"
+	"syscall"
 
 	_ "github.com/lib/pq"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -45,32 +50,57 @@ func Run(configDir string) {
 		log.Fatal("Error occured while loading Cloudinary: ", err.Error())
 	}
 
+	hasher := hash.NewArgon2Hasher(cfg.Auth.Argon2.Memory, cfg.Auth.Argon2.Iterations, cfg.Auth.Argon2.SaltLength,
+		cfg.Auth.Argon2.KeyLength, cfg.Auth.Argon2.Parallelism)
+
+	tokenManager, err := auth.NewManager(cfg.Auth.JWT.SigningKey)
+	if err != nil {
+		log.Fatal("Error occured while creating tokenManager: ", err.Error())
+	}
+
 	repos := repository.NewRepository(db)
-	services := service.NewService(repos, cld)
+	services := service.NewService(repos, cld, hasher, tokenManager)
 	zapLogger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatal("Error occured while loading zapLogger: ", err.Error())
 	}
-	defer zapLogger.Sync() // flushes buffer, if any
+	defer zapLogger.Sync()
 	logger := zapLogger.Sugar()
 
 	validate := validator.New()
 	model.RegisterCustomValidations(validate)
 
-	hand := &handler.Handler{
-		Services:  services,
-		Logger:    logger,
-		Validator: validate,
+	h := &handler.Handler{
+		Services:     services,
+		Logger:       logger,
+		TokenManager: tokenManager,
+		Validator:    validate,
 	}
 
-	mux := hand.InitRoutes()
+	mux := h.InitRoutes()
 
-	//поменять
-	addr := ":" + viper.GetString("port")
-	logger.Infow("starting server",
-		"type", "START",
-		"addr", addr,
-	)
+	srv := server.NewServer(cfg, mux)
 
-	log.Fatalln(http.ListenAndServe(addr, mux))
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		if err := srv.Run(); err != nil {
+			log.Println("error happened: ", err.Error())
+		}
+	}()
+
+	log.Println("Application is running")
+
+	<-quit
+
+	log.Println("Application is shutting down")
+
+	if err := srv.Shutdown(context.Background()); err != nil {
+		log.Printf("error occurred on server shutting down: %s", err.Error())
+	}
+
+	if err := db.Close(); err != nil {
+		log.Printf("error occurred on db connection close: %s", err.Error())
+	}
 }

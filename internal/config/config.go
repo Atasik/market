@@ -19,6 +19,7 @@ type (
 		Postgres   PostgresConfig
 		HTTP       HTTPConfig
 		Cloudinary CloudinaryConfig
+		Auth       AuthConfig
 	}
 
 	PostgresConfig struct {
@@ -37,6 +38,24 @@ type (
 		ReadTimeout    time.Duration `mapstructure:"readTimeout"`
 		WriteTimeout   time.Duration `mapstructure:"writeTimeout"`
 		MaxHeaderBytes int           `mapstructure:"maxHeaderMegaBytes"`
+	}
+
+	AuthConfig struct {
+		JWT    JWTConfig
+		Argon2 Argon2Config
+	}
+
+	JWTConfig struct {
+		AccessTokenTTL time.Duration `mapstructure:"accessTokenTTL"`
+		SigningKey     string
+	}
+
+	Argon2Config struct {
+		Memory      uint32
+		Iterations  uint32
+		Parallelism uint8
+		SaltLength  uint32
+		KeyLength   uint32
 	}
 
 	CloudinaryConfig struct {
