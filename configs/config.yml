@@ -1,13 +1,19 @@
-port: "8080"
+postgres:
+  dbname: marketDb
+  sslmode: disable
 
-db:
-  username: "postgres"
-  host: "localhost"
-  port: "5436"
-  dbname: "database"
-  sslmode: "disable"
+http:
+  port: 8080
+  readTimeout: 10s
+  writeTimeout: 10s
+  maxHeaderMegaBytes: 1
+
+auth:
+  accessTokenTTL: 12h
+
 hash:
-  memory: 65536
+  memoryMegaBytes: 1
   iterations: 3
-  saltlength: 16
-  keylength: 32
+  parallelism: 2
+  saltLength: 16
+  keyLength: 32
