@@ -27,7 +27,7 @@ func (repo *UserPostgresqlRepository) GetUser(login string) (model.User, error) 
 	return user, nil
 }
 
-func (repo *UserPostgresqlRepository) GetUserById(userID int) (model.User, error) {
+func (repo *UserPostgresqlRepository) GetUserByID(userID int) (model.User, error) {
 	var user model.User
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", usersTable)
 

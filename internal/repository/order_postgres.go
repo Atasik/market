@@ -26,7 +26,7 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 
 	query := fmt.Sprintf("INSERT INTO %s (created_at, delivered_at, user_id) VALUES ($1, $2, $3) RETURNING id", ordersTable)
 	row := tx.QueryRow(query, order.CreatedAt, order.DeliveredAt, userID)
-	if err := row.Scan(&order.ID); err != nil {
+	if err = row.Scan(&order.ID); err != nil {
 		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
@@ -40,7 +40,7 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 		argID := 1
 		for _, prod := range order.Products {
 			args = append(args, order.ID, prod.ID, prod.PurchasedAmount)
-			insertQueryBuilder.WriteString(fmt.Sprintf(`($%d,$%d,$%d),`, argID, argID+1, argID+2))
+			insertQueryBuilder.WriteString(fmt.Sprintf(`($%d,$%d,$%d),`, argID, argID+1, argID+2)) //nolint:gomnd
 			argID += 3
 		}
 
@@ -57,7 +57,7 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 						 SET amount = p.amount - pc.purchased_amount
 					     FROM %s AS pc 
 						 WHERE pc.product_id = p.id AND pc.cart_id = $1`, productsTable, productsCartsTable)
-	if _, err := tx.Exec(query, cartID); err != nil {
+	if _, err = tx.Exec(query, cartID); err != nil {
 		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}

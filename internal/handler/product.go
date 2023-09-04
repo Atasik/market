@@ -16,6 +16,7 @@ import (
 const (
 	imageUploadTimeout   = 5 * time.Second
 	limitRelatedProducts = 5
+	limitFileBytes       = 10 << 20
 )
 
 // @Summary	Add a new product to the market
@@ -44,7 +45,11 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.ParseMultipartForm(10 << 20)
+	err = r.ParseMultipartForm(limitFileBytes)
+	if err != nil {
+		newErrorResponse(w, "Failed to Parse MultipartForm", http.StatusInternalServerError)
+		return
+	}
 	product := model.Product{}
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
@@ -100,7 +105,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Infof("Product was created with id LastInsertId: %v", productID)
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(product)
+	err = json.NewEncoder(w).Encode(product)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
@@ -322,8 +327,7 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 
 	productQuery := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
-			Limit:     5,
-			Offset:    0,
+			Limit:     limitRelatedProducts,
 			SortBy:    model.SortByViews,
 			SortOrder: model.DESCENDING,
 		},
@@ -337,7 +341,7 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(selectedProduct)
+	err = json.NewEncoder(w).Encode(selectedProduct)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
@@ -379,7 +383,11 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.ParseMultipartForm(10 << 20)
+	err = r.ParseMultipartForm(limitFileBytes)
+	if err != nil {
+		newErrorResponse(w, "Failed to Parse MultipartForm", http.StatusInternalServerError)
+		return
+	}
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
 	var input model.UpdateProductInput
@@ -390,17 +398,16 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	file, _, err := r.FormFile("file")
-	noFile := err == http.ErrMissingFile
-	print(noFile)
-	if err != nil && !noFile {
+	fileExists := !(err == http.ErrMissingFile)
+	if err != nil && fileExists {
 		newErrorResponse(w, "Error Retrieving the File", http.StatusBadRequest)
 		return
 	}
 
-	if !noFile {
+	if fileExists {
 		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 		defer cancel()
-		data, err := h.Services.Image.Upload(ctx, file)
+		data, err := h.Services.Image.Upload(ctx, file) //nolint:govet
 		if err != nil {
 			newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 			return
@@ -421,7 +428,8 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Services.Product.Update(token.UserID, productID, input)
 	if err != nil {
-		if !noFile {
+		switch fileExists {
+		case true:
 			ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 			defer cancel()
 			err = h.Services.Image.Delete(ctx, *input.ImageID)
@@ -429,12 +437,14 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 				newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 				return
 			}
+			fallthrough
+		default:
+			newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
-	if !noFile {
+	if fileExists {
 		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 		defer cancel()
 		err = h.Services.Image.Delete(ctx, oldProduct.ImageID)
@@ -452,7 +462,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Infof("Product was updated: %v", product)
 
-	json.NewEncoder(w).Encode(product)
+	err = json.NewEncoder(w).Encode(product)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
@@ -480,19 +490,19 @@ func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	productId, err := strconv.Atoi(vars["productId"])
+	productID, err := strconv.Atoi(vars["productId"])
 	if err != nil {
 		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
 		return
 	}
 
-	product, err := h.Services.Product.GetByID(productId)
+	product, err := h.Services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = h.Services.Product.Delete(token.UserID, productId)
+	err = h.Services.Product.Delete(token.UserID, productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

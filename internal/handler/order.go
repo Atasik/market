@@ -46,7 +46,6 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	q := model.OrderQueryInput{
 		QueryInput: model.QueryInput{
 			Limit:     defaultLimit,
-			Offset:    defaultOffset,
 			SortBy:    defaultSortField,
 			SortOrder: model.DESCENDING,
 		},
@@ -120,7 +119,7 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(selectedOrder)
+	err = json.NewEncoder(w).Encode(selectedOrder)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return

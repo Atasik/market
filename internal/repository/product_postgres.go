@@ -18,16 +18,16 @@ func NewProductPostgresqlRepo(db *sqlx.DB) *ProductPostgresqlRepository {
 }
 
 func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, error) {
-	var productId int
+	var productID int
 	query := fmt.Sprintf("INSERT INTO %s (user_id, title, price, tag, category, description, amount, created_at, updated_at, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id", productsTable)
 
 	row := repo.DB.QueryRow(query, product.UserID, product.Title, product.Price, product.Tag, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
-	err := row.Scan(&productId)
+	err := row.Scan(&productID)
 	if err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
 
-	return productId, nil
+	return productID, nil
 }
 
 func (repo *ProductPostgresqlRepository) GetAll(q model.ProductQueryInput) ([]model.Product, error) {
@@ -45,18 +45,18 @@ func (repo *ProductPostgresqlRepository) GetAll(q model.ProductQueryInput) ([]mo
 func (repo *ProductPostgresqlRepository) GetProductsByUserID(userID int, q model.ProductQueryInput) ([]model.Product, error) {
 	var products []model.Product
 	var setValue string
-	argId := 2
+	argID := 2
 	args := make([]interface{}, 0)
 	args = append(args, userID)
 	if q.ProductID != 0 {
-		setValue = fmt.Sprintf("AND id!=$%d", argId)
+		setValue = fmt.Sprintf("AND id!=$%d", argID)
 		args = append(args, q.ProductID)
-		argId++
+		argID++
 	}
 
 	args = append(args, q.Limit, q.Offset)
 
-	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argId, argId+1)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argID, argID+1)
 
 	if err := repo.DB.Select(&products, query, args...); err != nil {
 		return nil, postgres.ParsePostgresError(err)
@@ -79,18 +79,18 @@ func (repo *ProductPostgresqlRepository) GetByID(productID int) (model.Product, 
 func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory string, q model.ProductQueryInput) ([]model.Product, error) {
 	var products []model.Product
 	var setValue string
-	argId := 2
+	argID := 2
 	args := make([]interface{}, 0)
 	args = append(args, productCategory)
 	if q.ProductID != 0 {
-		setValue = fmt.Sprintf("AND id!=$%d", argId)
+		setValue = fmt.Sprintf("AND id!=$%d", argID)
 		args = append(args, q.ProductID)
-		argId++
+		argID++
 	}
 
 	args = append(args, q.Limit, q.Offset)
 
-	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argId, argId+1)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argID, argID+1)
 
 	if err := repo.DB.Select(&products, query, args...); err != nil {
 		return nil, postgres.ParsePostgresError(err)
@@ -102,42 +102,42 @@ func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory s
 func (repo *ProductPostgresqlRepository) Update(productID int, input model.UpdateProductInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
-	argId := 1
+	argID := 1
 
 	if input.Title != nil {
-		setValues = append(setValues, fmt.Sprintf("title=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("title=$%d", argID))
 		args = append(args, *input.Title)
-		argId++
+		argID++
 	}
 
 	if input.Price != nil {
-		setValues = append(setValues, fmt.Sprintf("price=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("price=$%d", argID))
 		args = append(args, *input.Price)
-		argId++
+		argID++
 	}
 
 	if input.Tag != nil {
-		setValues = append(setValues, fmt.Sprintf("tag=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("tag=$%d", argID))
 		args = append(args, *input.Tag)
-		argId++
+		argID++
 	}
 
 	if input.Type != nil {
-		setValues = append(setValues, fmt.Sprintf("category=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("category=$%d", argID))
 		args = append(args, *input.Type)
-		argId++
+		argID++
 	}
 
 	if input.Description != nil {
-		setValues = append(setValues, fmt.Sprintf("description=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argID))
 		args = append(args, *input.Description)
-		argId++
+		argID++
 	}
 
 	if input.Amount != nil {
-		setValues = append(setValues, fmt.Sprintf("amount=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("amount=$%d", argID))
 		args = append(args, *input.Amount)
-		argId++
+		argID++
 	}
 
 	if input.Views != nil {
@@ -145,26 +145,26 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 	}
 
 	if input.ImageURL != nil {
-		setValues = append(setValues, fmt.Sprintf("image_url=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("image_url=$%d", argID))
 		args = append(args, *input.ImageURL)
-		argId++
+		argID++
 	}
 
 	if input.ImageURL != nil {
-		setValues = append(setValues, fmt.Sprintf("image_id=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("image_id=$%d", argID))
 		args = append(args, *input.ImageID)
-		argId++
+		argID++
 	}
 
 	if input.UpdatedAt != nil {
-		setValues = append(setValues, fmt.Sprintf("updated_at=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("updated_at=$%d", argID))
 		args = append(args, *input.UpdatedAt)
-		argId++
+		argID++
 	}
 
 	setQuery := strings.Join(setValues, ", ")
 
-	query := fmt.Sprintf(`UPDATE %s SET %s WHERE id = $%d`, productsTable, setQuery, argId)
+	query := fmt.Sprintf(`UPDATE %s SET %s WHERE id = $%d`, productsTable, setQuery, argID)
 	args = append(args, productID)
 
 	_, err := repo.DB.Exec(query, args...)
@@ -174,10 +174,10 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 	return nil
 }
 
-func (repo *ProductPostgresqlRepository) Delete(productId int) error {
+func (repo *ProductPostgresqlRepository) Delete(productID int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", productsTable)
 
-	_, err := repo.DB.Exec(query, productId)
+	_, err := repo.DB.Exec(query, productID)
 	if err != nil {
 		return postgres.ParsePostgresError(err)
 	}

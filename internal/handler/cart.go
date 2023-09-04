@@ -82,7 +82,6 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	q := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
 			Limit:     defaultLimit,
-			Offset:    defaultOffset,
 			SortBy:    defaultSortField,
 			SortOrder: model.DESCENDING,
 		},

@@ -56,13 +56,13 @@ func (repo *CartPostgresqlRepository) GetByUserID(userID int) (model.Cart, error
 func (repo *CartPostgresqlRepository) GetAllProducts(cartID int, q model.ProductQueryInput) ([]model.Product, error) {
 	var products []model.Product
 	var limitValue string
-	argId := 2
+	argID := 2
 	args := make([]interface{}, 0)
 	args = append(args, cartID)
 	if q.Limit != 0 {
-		limitValue = fmt.Sprintf("LIMIT $%d", argId)
+		limitValue = fmt.Sprintf("LIMIT $%d", argID)
 		args = append(args, q.Limit)
-		argId++
+		argID++
 	}
 
 	args = append(args, q.Offset)
@@ -70,7 +70,7 @@ func (repo *CartPostgresqlRepository) GetAllProducts(cartID int, q model.Product
 	query := fmt.Sprintf(`SELECT p.id, p.user_id, p.title, p.price, p.tag, p.category, p.description, p.amount, pc.purchased_amount, p.created_at, p.updated_at, p.views, p.image_url FROM %s p 
 			  INNER JOIN %s pc on pc.product_id = p.id
 			  INNER JOIN %s c on pc.cart_id = c.id
-			  WHERE c.id = $1 ORDER BY %s %s %s OFFSET $%d`, productsTable, productsCartsTable, cartsTable, q.SortBy, q.SortOrder, limitValue, argId)
+			  WHERE c.id = $1 ORDER BY %s %s %s OFFSET $%d`, productsTable, productsCartsTable, cartsTable, q.SortBy, q.SortOrder, limitValue, argID)
 
 	if err := repo.DB.Select(&products, query, args...); err != nil {
 		return []model.Product{}, postgres.ParsePostgresError(err)

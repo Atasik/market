@@ -27,7 +27,7 @@ func (s *CartService) Create(userID int) (int, error) {
 }
 
 func (s *CartService) AddProduct(userID, cartID, productID, amountToPurchase int) (int, error) {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return 0, err
 	}
@@ -55,7 +55,7 @@ func (s *CartService) AddProduct(userID, cartID, productID, amountToPurchase int
 }
 
 func (s *CartService) GetByUserID(userID int) (model.Cart, error) {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return model.Cart{}, err
 	}
@@ -67,7 +67,7 @@ func (s *CartService) GetByUserID(userID int) (model.Cart, error) {
 }
 
 func (s *CartService) GetAllProducts(userID, cartID int, q model.ProductQueryInput) ([]model.Product, error) {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return []model.Product{}, err
 	}
@@ -79,7 +79,7 @@ func (s *CartService) GetAllProducts(userID, cartID int, q model.ProductQueryInp
 }
 
 func (s *CartService) UpdateProductAmount(userID, cartID, productID, amountToPurchase int) error {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (s *CartService) UpdateProductAmount(userID, cartID, productID, amountToPur
 }
 
 func (s *CartService) DeleteProduct(userID, cartID, productID int) error {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func (s *CartService) DeleteProduct(userID, cartID, productID int) error {
 }
 
 func (s *CartService) DeleteAllProducts(userID, cartID int) error {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}

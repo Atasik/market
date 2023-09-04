@@ -22,7 +22,7 @@ func NewOrderService(orderRepo repository.OrderRepo, cartRepo repository.CartRep
 }
 
 func (s *OrderService) Create(userID int, order model.Order) (int, error) {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return 0, err
 	}
@@ -61,7 +61,7 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 }
 
 func (s *OrderService) GetAll(userID int, q model.OrderQueryInput) ([]model.Order, error) {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return []model.Order{}, err
 	}
@@ -73,7 +73,7 @@ func (s *OrderService) GetAll(userID int, q model.OrderQueryInput) ([]model.Orde
 }
 
 func (s *OrderService) GetByID(userID, orderID int) (model.Order, error) {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return model.Order{}, err
 	}
@@ -89,7 +89,7 @@ func (s *OrderService) GetByID(userID, orderID int) (model.Order, error) {
 }
 
 func (s *OrderService) GetProductsByOrderID(userID, orderID int, q model.ProductQueryInput) ([]model.Product, error) {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return []model.Product{}, err
 	}

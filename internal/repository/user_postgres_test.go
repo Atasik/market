@@ -178,7 +178,7 @@ func TestUserPostgres_GetUserById(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock()
 
-			got, err := r.GetUserById(tt.input)
+			got, err := r.GetUserByID(tt.input)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

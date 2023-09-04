@@ -7,13 +7,15 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2"
 )
 
+const timeout = 5 * time.Second
+
 func NewCloudinary(cloud, key, secret string) (*cloudinary.Cloudinary, error) {
 	cld, err := cloudinary.NewFromParams(cloud, key, secret)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	_, err = cld.Admin.Ping(ctx)
 	if err != nil {

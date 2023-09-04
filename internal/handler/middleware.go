@@ -23,7 +23,6 @@ const (
 	defaultSortField    = "created_at"
 	defaultLimit        = 25
 	maxLimit            = 50
-	defaultOffset       = 0
 )
 
 var (
@@ -101,10 +100,7 @@ func queryMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		var offset int
-		page, err := strconv.Atoi(r.URL.Query().Get("page"))
-		if err != nil {
-			offset = defaultOffset
-		}
+		page, _ := strconv.Atoi(r.URL.Query().Get("page")) //nolint:errcheck
 
 		if sortBy == "" {
 			sortBy = defaultSortField
@@ -123,7 +119,7 @@ func queryMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if page <= 0 {
-			offset = defaultOffset
+			offset = 0
 		} else {
 			offset = (page - 1) * limit
 		}

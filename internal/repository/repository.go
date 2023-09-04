@@ -55,7 +55,7 @@ type CartRepo interface {
 
 type UserRepo interface {
 	GetUser(login string) (model.User, error)
-	GetUserById(userID int) (model.User, error)
+	GetUserByID(userID int) (model.User, error)
 	CreateUser(model.User) (int, error)
 }
 

@@ -23,25 +23,25 @@ type getOrdersResponse struct {
 }
 
 func newErrorResponse(w http.ResponseWriter, msg string, status int) {
-	resp, _ := json.Marshal(errorResponse{msg})
+	resp, _ := json.Marshal(errorResponse{msg}) //nolint:errcheck
 	w.WriteHeader(status)
-	w.Write(resp)
+	w.Write(resp) //nolint:errcheck
 }
 
 func newStatusReponse(w http.ResponseWriter, msg string, status int) {
-	resp, _ := json.Marshal(statusResponse{msg})
+	resp, _ := json.Marshal(statusResponse{msg}) //nolint:errcheck
 	w.WriteHeader(status)
-	w.Write(resp)
+	w.Write(resp) //nolint:errcheck
 }
 
 func newGetProductsResponse(w http.ResponseWriter, products []model.Product, status int) {
-	resp, _ := json.Marshal(getProductsResponse{products})
+	resp, _ := json.Marshal(getProductsResponse{products}) //nolint:errcheck
 	w.WriteHeader(status)
-	w.Write(resp)
+	w.Write(resp) //nolint:errcheck
 }
 
 func newGetOrdersResponse(w http.ResponseWriter, orders []model.Order, status int) {
-	resp, _ := json.Marshal(getOrdersResponse{orders})
+	resp, _ := json.Marshal(getOrdersResponse{orders}) //nolint:errcheck
 	w.WriteHeader(status)
-	w.Write(resp)
+	w.Write(resp) //nolint:errcheck
 }

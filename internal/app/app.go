@@ -24,6 +24,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const timeout = 5 * time.Second
+
 // @title Market API
 // @version 1.0
 // @description Simple market API
@@ -37,37 +39,37 @@ import (
 func Run(configDir string) {
 	zapLogger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatalf("Error occured while loading zapLogger: %s\n", err.Error())
+		log.Fatalf("Error occurred while loading zapLogger: %s\n", err.Error())
 		return
 	}
-	defer zapLogger.Sync()
+	defer zapLogger.Sync() //nolint:errcheck
 	logger := zapLogger.Sugar()
 
 	cfg, err := config.InitConfig(configDir)
 	if err != nil {
-		logger.Errorf("Error occured while loading config: %s\n", err.Error())
+		logger.Errorf("Error occurred while loading config: %s\n", err.Error())
 		return
 	}
 
 	db, err := postgres.NewPostgresqlDB(cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.User,
 		cfg.Postgres.DBName, cfg.Postgres.Password, cfg.Postgres.SSLMode)
 	if err != nil {
-		logger.Errorf("Error occured while loading DB: %s\n", err.Error())
+		logger.Errorf("Error occurred while loading DB: %s\n", err.Error())
 		return
 	}
 
 	cld, err := cloud.NewCloudinary(cfg.Cloudinary.Cloud, cfg.Cloudinary.Key, cfg.Cloudinary.Secret)
 	if err != nil {
-		logger.Errorf("Error occured while loading Cloudinary: %s\n", err.Error())
+		logger.Errorf("Error occurred while loading Cloudinary: %s\n", err.Error())
 		return
 	}
 
-	hasher := hash.NewArgon2Hasher(cfg.Auth.Argon2.MemoryMegaBytes<<18, cfg.Auth.Argon2.Iterations, cfg.Auth.Argon2.SaltLength,
+	hasher := hash.NewArgon2Hasher(cfg.Auth.Argon2.MemoryMegaBytes<<18, cfg.Auth.Argon2.Iterations, cfg.Auth.Argon2.SaltLength, //nolint:gomnd
 		cfg.Auth.Argon2.KeyLength, cfg.Auth.Argon2.Parallelism)
 
 	tokenManager, err := auth.NewManager(cfg.Auth.JWT.SigningKey)
 	if err != nil {
-		logger.Errorf("Error occured while creating tokenManager: %s\n", err.Error())
+		logger.Errorf("Error occurred while creating tokenManager: %s\n", err.Error())
 		return
 	}
 
@@ -75,7 +77,11 @@ func Run(configDir string) {
 	services := service.NewService(repos, cld, hasher, tokenManager, cfg.Auth.JWT.AccessTokenTTL)
 
 	validate := validator.New()
-	model.RegisterCustomValidations(validate)
+	err = model.RegisterCustomValidations(validate)
+	if err != nil {
+		logger.Errorf("Error occurred while registering validations: %s\n", err.Error())
+		return
+	}
 
 	h := &handler.Handler{
 		Services:     services,
@@ -100,8 +106,6 @@ func Run(configDir string) {
 	logger.Info("Application is running")
 
 	<-quit
-
-	const timeout = 5 * time.Second
 
 	ctx, shutdown := context.WithTimeout(context.Background(), timeout)
 	defer shutdown()

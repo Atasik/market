@@ -95,7 +95,6 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	reviewQuery := model.ReviewQueryInput{
 		QueryInput: model.QueryInput{
 			Limit:     defaultLimit,
-			Offset:    defaultOffset,
 			SortBy:    defaultSortField,
 			SortOrder: model.DESCENDING,
 		},
@@ -109,8 +108,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 
 	productQuery := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
-			Limit:     5,
-			Offset:    defaultOffset,
+			Limit:     limitRelatedProducts,
 			SortBy:    model.SortByViews,
 			SortOrder: model.DESCENDING,
 		},
@@ -124,7 +122,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(product)
+	err = json.NewEncoder(w).Encode(product)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
@@ -205,7 +203,6 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	reviewQuery := model.ReviewQueryInput{
 		QueryInput: model.QueryInput{
 			Limit:     defaultLimit,
-			Offset:    defaultOffset,
 			SortBy:    defaultSortField,
 			SortOrder: model.DESCENDING,
 		},
@@ -219,8 +216,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 
 	productQuery := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
-			Limit:     5,
-			Offset:    defaultOffset,
+			Limit:     limitRelatedProducts,
 			SortBy:    model.SortByViews,
 			SortOrder: model.DESCENDING,
 		},
@@ -234,7 +230,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(product)
+	err = json.NewEncoder(w).Encode(product)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
@@ -290,7 +286,6 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 	reviewQuery := model.ReviewQueryInput{
 		QueryInput: model.QueryInput{
 			Limit:     defaultLimit,
-			Offset:    defaultOffset,
 			SortBy:    defaultSortField,
 			SortOrder: model.DESCENDING,
 		},
@@ -304,8 +299,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 
 	productQuery := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
-			Limit:     5,
-			Offset:    defaultOffset,
+			Limit:     limitRelatedProducts,
 			SortBy:    model.SortByViews,
 			SortOrder: model.DESCENDING,
 		},
@@ -318,7 +312,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(product)
+	err = json.NewEncoder(w).Encode(product)
 	if err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return

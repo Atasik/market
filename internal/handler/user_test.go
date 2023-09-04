@@ -81,7 +81,7 @@ func TestHandler_signUp(t *testing.T) {
 			services := &service.Service{User: repoUser, Cart: repoCart}
 
 			validate := validator.New()
-			model.RegisterCustomValidations(validate)
+			model.RegisterCustomValidations(validate) //nolint:errcheck
 			logger := zap.NewNop().Sugar()
 			h := &Handler{
 				Services:  services,
@@ -164,7 +164,7 @@ func TestHandler_signIn(t *testing.T) {
 			services := &service.Service{User: repoUser}
 
 			validate := validator.New()
-			model.RegisterCustomValidations(validate)
+			model.RegisterCustomValidations(validate) //nolint:errcheck
 			logger := zap.NewNop().Sugar()
 			h := &Handler{
 				Services:  services,

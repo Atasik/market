@@ -18,16 +18,16 @@ func NewReviewPostgresqlRepo(db *sqlx.DB) *ReviewPostgresqlRepository {
 }
 
 func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error) {
-	var reviewId int
+	var reviewID int
 	query := fmt.Sprintf("INSERT INTO %s (created_at, updated_at, product_id, user_id, text, category) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id", reviewsTable)
 
 	row := repo.DB.QueryRow(query, review.CreatedAt, review.UpdatedAt, review.ProductID, review.UserID, review.Text, review.Category)
-	err := row.Scan(&reviewId)
+	err := row.Scan(&reviewID)
 	if err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
 
-	return reviewId, nil
+	return reviewID, nil
 }
 
 func (repo *ReviewPostgresqlRepository) Delete(reviewID int) error {
@@ -43,28 +43,28 @@ func (repo *ReviewPostgresqlRepository) Delete(reviewID int) error {
 func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input model.UpdateReviewInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
-	argId := 1
+	argID := 1
 	if input.Text != nil {
-		setValues = append(setValues, fmt.Sprintf("text=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("text=$%d", argID))
 		args = append(args, *input.Text)
-		argId++
+		argID++
 	}
 
 	if input.Category != nil {
-		setValues = append(setValues, fmt.Sprintf("category=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("category=$%d", argID))
 		args = append(args, input.Category)
-		argId++
+		argID++
 	}
 
 	if input.UpdatedAt != nil {
-		setValues = append(setValues, fmt.Sprintf("updated_at=$%d", argId))
+		setValues = append(setValues, fmt.Sprintf("updated_at=$%d", argID))
 		args = append(args, input.UpdatedAt)
-		argId++
+		argID++
 	}
 
 	setQuery := strings.Join(setValues, ", ")
 
-	query := fmt.Sprintf("UPDATE %s SET %s WHERE (user_id = $%d AND product_id = $%d)", reviewsTable, setQuery, argId, argId+1)
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE (user_id = $%d AND product_id = $%d)", reviewsTable, setQuery, argID, argID+1)
 	args = append(args, userID, productID)
 
 	_, err := repo.DB.Exec(query, args...)

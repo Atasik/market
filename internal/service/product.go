@@ -49,7 +49,7 @@ func (s *ProductService) GetByID(productID int) (model.Product, error) {
 }
 
 func (s *ProductService) Update(userID, productID int, input model.UpdateProductInput) error {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (s *ProductService) IncreaseViewsCounter(productID int) error {
 }
 
 func (s *ProductService) Delete(userID, productID int) error {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}

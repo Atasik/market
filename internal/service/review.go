@@ -40,7 +40,7 @@ func (s *ReviewService) GetAll(productID int, q model.ReviewQueryInput) ([]model
 }
 
 func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewInput) error {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewIn
 }
 
 func (s *ReviewService) Delete(userID, reviewID int) error {
-	user, err := s.userRepo.GetUserById(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}

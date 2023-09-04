@@ -79,7 +79,7 @@ func (h *Argon2Hasher) Verify(password, encodedHash string) (match bool, err err
 
 func decodeHash(encodedHash string) (p *parameters, salt, hash []byte, err error) {
 	vals := strings.Split(encodedHash, "$")
-	if len(vals) != 6 {
+	if len(vals) != 6 { //nolint:gomnd
 		return nil, nil, nil, errInvalidFormat
 	}
 
