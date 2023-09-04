@@ -4,7 +4,7 @@ import (
 	"errors"
 	"market/internal/model"
 	"market/internal/repository"
-	auth "market/pkg/auth"
+	"market/pkg/auth"
 	"market/pkg/hash"
 	"time"
 )
@@ -15,18 +15,16 @@ var (
 	ErrUserExists = errors.New("user already exists")
 )
 
-const (
-	tokenTTL = 12 * time.Hour
-)
-
 type UserService struct {
 	userRepo     repository.UserRepo
 	hasher       hash.PasswordHasher
 	tokenManager auth.TokenManager
+
+	accessTokenTTL time.Duration
 }
 
-func NewUserService(userRepo repository.UserRepo, hasher hash.PasswordHasher, tokenManager auth.TokenManager) *UserService {
-	return &UserService{userRepo: userRepo, hasher: hasher, tokenManager: tokenManager}
+func NewUserService(userRepo repository.UserRepo, hasher hash.PasswordHasher, tokenManager auth.TokenManager, accessTTL time.Duration) *UserService {
+	return &UserService{userRepo: userRepo, hasher: hasher, tokenManager: tokenManager, accessTokenTTL: accessTTL}
 }
 
 func (s *UserService) CreateUser(user model.User) (int, error) {
@@ -59,5 +57,5 @@ func (s *UserService) GenerateToken(username, password string) (string, error) {
 		return "", ErrBadPass
 	}
 
-	return s.tokenManager.NewJWT(user.ID, username, tokenTTL)
+	return s.tokenManager.NewJWT(user.ID, username, s.accessTokenTTL)
 }

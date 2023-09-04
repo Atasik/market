@@ -7,6 +7,7 @@ import (
 	"market/pkg/auth"
 	"market/pkg/hash"
 	"mime/multipart"
+	"time"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 )
@@ -65,13 +66,13 @@ type Service struct {
 	Image
 }
 
-func NewService(repos *repository.Repository, cloudinary *cloudinary.Cloudinary, hasher hash.PasswordHasher, tokenManager auth.TokenManager) *Service {
+func NewService(repos *repository.Repository, cloudinary *cloudinary.Cloudinary, hasher hash.PasswordHasher, tokenManager auth.TokenManager, accessTTL time.Duration) *Service {
 	return &Service{
 		Product: NewProductService(repos.ProductRepo, repos.UserRepo),
 		Cart:    NewCartService(repos.CartRepo, repos.UserRepo, repos.ProductRepo),
 		Order:   NewOrderService(repos.OrderRepo, repos.CartRepo, repos.UserRepo),
 		Review:  NewReviewService(repos.ReviewRepo, repos.UserRepo, repos.ProductRepo),
-		User:    NewUserService(repos.UserRepo, hasher, tokenManager),
+		User:    NewUserService(repos.UserRepo, hasher, tokenManager, accessTTL),
 		Image:   NewImageServiceCloudinary(cloudinary),
 	}
 }

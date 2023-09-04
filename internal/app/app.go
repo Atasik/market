@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -34,38 +35,44 @@ import (
 // @in header
 // @name Authorization
 func Run(configDir string) {
+	zapLogger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("Error occured while loading zapLogger: %s\n", err.Error())
+		return
+	}
+	defer zapLogger.Sync()
+	logger := zapLogger.Sugar()
+
 	cfg, err := config.InitConfig(configDir)
 	if err != nil {
-		log.Fatal("Error occured while loading config: ", err.Error())
+		logger.Errorf("Error occured while loading config: %s\n", err.Error())
+		return
 	}
 
-	db, err := postgres.NewPostgresqlDB(cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Username,
+	db, err := postgres.NewPostgresqlDB(cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.User,
 		cfg.Postgres.DBName, cfg.Postgres.Password, cfg.Postgres.SSLMode)
 	if err != nil {
-		log.Fatal("Error occured while loading DB: ", err.Error())
+		logger.Errorf("Error occured while loading DB: %s\n", err.Error())
+		return
 	}
 
 	cld, err := cloud.NewCloudinary(cfg.Cloudinary.Cloud, cfg.Cloudinary.Key, cfg.Cloudinary.Secret)
 	if err != nil {
-		log.Fatal("Error occured while loading Cloudinary: ", err.Error())
+		logger.Errorf("Error occured while loading Cloudinary: %s\n", err.Error())
+		return
 	}
 
-	hasher := hash.NewArgon2Hasher(cfg.Auth.Argon2.Memory, cfg.Auth.Argon2.Iterations, cfg.Auth.Argon2.SaltLength,
+	hasher := hash.NewArgon2Hasher(cfg.Auth.Argon2.MemoryMegaBytes<<18, cfg.Auth.Argon2.Iterations, cfg.Auth.Argon2.SaltLength,
 		cfg.Auth.Argon2.KeyLength, cfg.Auth.Argon2.Parallelism)
 
 	tokenManager, err := auth.NewManager(cfg.Auth.JWT.SigningKey)
 	if err != nil {
-		log.Fatal("Error occured while creating tokenManager: ", err.Error())
+		logger.Errorf("Error occured while creating tokenManager: %s\n", err.Error())
+		return
 	}
 
 	repos := repository.NewRepository(db)
-	services := service.NewService(repos, cld, hasher, tokenManager)
-	zapLogger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatal("Error occured while loading zapLogger: ", err.Error())
-	}
-	defer zapLogger.Sync()
-	logger := zapLogger.Sugar()
+	services := service.NewService(repos, cld, hasher, tokenManager, cfg.Auth.JWT.AccessTokenTTL)
 
 	validate := validator.New()
 	model.RegisterCustomValidations(validate)
@@ -86,21 +93,26 @@ func Run(configDir string) {
 
 	go func() {
 		if err := srv.Run(); err != nil {
-			log.Println("error happened: ", err.Error())
+			logger.Errorf("Failed to start server: %s\n", err.Error())
 		}
 	}()
 
-	log.Println("Application is running")
+	logger.Info("Application is running")
 
 	<-quit
 
-	log.Println("Application is shutting down")
+	const timeout = 5 * time.Second
 
-	if err := srv.Shutdown(context.Background()); err != nil {
-		log.Printf("error occurred on server shutting down: %s", err.Error())
+	ctx, shutdown := context.WithTimeout(context.Background(), timeout)
+	defer shutdown()
+
+	logger.Info("Application is shutting down")
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Error(err.Error())
 	}
 
 	if err := db.Close(); err != nil {
-		log.Printf("error occurred on db connection close: %s", err.Error())
+		logger.Error(err.Error())
 	}
 }

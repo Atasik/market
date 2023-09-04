@@ -8,7 +8,6 @@ import (
 	context "context"
 	model "market/internal/model"
 	service "market/internal/service"
-	auth "market/pkg/auth"
 	multipart "mime/multipart"
 	reflect "reflect"
 
@@ -36,21 +35,6 @@ func NewMockUser(ctrl *gomock.Controller) *MockUser {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUser) EXPECT() *MockUserMockRecorder {
 	return m.recorder
-}
-
-// CheckToken mocks base method.
-func (m *MockUser) CheckToken(accessToken string) (*auth.Token, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckToken", accessToken)
-	ret0, _ := ret[0].(*auth.Token)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CheckToken indicates an expected call of CheckToken.
-func (mr *MockUserMockRecorder) CheckToken(accessToken interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckToken", reflect.TypeOf((*MockUser)(nil).CheckToken), accessToken)
 }
 
 // CreateUser mocks base method.
