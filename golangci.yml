@@ -6,13 +6,6 @@ run:
   skip-dirs:
     - bin$
     - \.git$
-    - misc$
-    - spec$
-    - pkg$
-
-  skip-files:
-    - "_easyjson.go"
-    - "jwt_example.go"
 
 linters-settings:
   errcheck:
@@ -36,24 +29,27 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    # - bodyclose
-    # - dupl
     - errcheck
+    - ineffassign
+    - gosimple
+    - govet
+    - typecheck
+    - unused
     - goconst
     - gocritic
     - gocyclo
-    - gosimple
-    - govet
-    - ineffassign
     - nakedret
     - prealloc
-    - structcheck
     - stylecheck
-    - typecheck
     - unconvert
     - unparam
-    # - unused
-    - varcheck
+    - bodyclose
+    - gochecknoglobals
+    - gomnd
+    - misspell
+    - whitespace
+    - unconvert
+    - nestif
   fast: false
 
 issues:
