@@ -1,24 +1,33 @@
 # Прототип API интернет-магазина
 *Это немного видоизмененный бэкенд, поэтому CORS-ов тут нет, да и без фронта он не нужен
 
+К сожалению, пока нет времени добавить вариант использования приложения без внешних сервисов (Хотя интерфейсы все прописаны). Поэтому дела обстоят так, что для работы добавления товаров, нужно обязательно зарегистрироваться в сервисе [Cloudinary](https://cloudinary.com/) (на 2023 год можно только через VPN) и занести следующие переменные окружения для работы приложения:
+```````
+CLOUDINARY_CLOUD=<ваш cloud из сервиса Cloudinary>
+CLOUDINARY_KEY=<ваш key из сервиса Cloudinary>
+CLOUDINARY_SECRET=<ваш secret из сервиса Cloudinary>
+
+POSTGRES_PASSWORD=qwerty
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+
+JWT_SIGNING_KEY=<ваш signing key>
+
+HTTP_HOST=localhost
+```````
+
 Запуск:
 ```
-docker-compose up
-go run cmd/market/main.go
+make run
 ```
 
-Чтобы протестировать api, надо зайти по этому адресу:
+Чтобы протестировать api, надо зайти по этому адресу (если HTTP_HOST=localhost):
 ```
 http://localhost:8080/swagger
 ```
 
-К сожалению, пока нет времени до конца доделать приложение (добавить вариант без внешних сервисов). Поэтому дела обстоят так, что для работы добавления товаров, нужно обязательно зарегистрироваться в сервисе [Cloudinary](https://cloudinary.com/) (на 2023 год можно только через VPN) и занести следующие переменные окружения:
-- CLOUD
-- KEY
-- SECRET
-
 Подробнее прочитать, где можно найти api-ключи, описанные выше, можно [здесь](https://cloudinary.com/documentation/admin_api#:~:text=Your%20Cloudinary%20API%20Key%20and,are%20used%20for%20the%20authentication.).
-Также [тут](https://support.microsoft.com/ru-ru/topic/%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BF%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D1%85-%D1%81%D1%80%D0%B5%D0%B4%D1%8B-%D0%B2-windows-xp-5bf6725b-655e-151c-0b55-9a8c9c7f747d#:~:text=%D0%9F%D0%B5%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5%20%D1%81%D1%80%D0%B5%D0%B4%D1%8B%20%E2%80%94%20%D1%8D%D1%82%D0%BE%20%D1%81%D1%82%D1%80%D0%BE%D0%BA%D0%B8%2C%20%D1%81%D0%BE%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D1%89%D0%B8%D0%B5,%D0%BA%D0%B0%D0%BA%20%D0%BF%D1%83%D1%82%D1%8C%20%D0%BA%20%D1%84%D0%B0%D0%B9%D0%BB%D0%B0%D0%BC%20Windows.) можно прочитать, как добавлять переменные окружения, если у вас Windows.
 
 Road-map:
 - [x] Регистрация, авторизация (пароли хэшируются);
@@ -28,7 +37,7 @@ Road-map:
 - [x] Хранение истории заказов;
 - [x] Сортировка товаров по дате добавления/популярности;
 - [ ] Возможность добавлять типы продуктов;
-- [ ] unit-тесты;
+- [ ] unit-тесты (2%);
 - [ ] JS-фронтенд;
 - [x] Работающий Dockerfile;
 - [ ] CI/CD;
