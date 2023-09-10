@@ -33,7 +33,6 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 
 	var user model.User
-
 	err = json.Unmarshal(body, &user)
 	if err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
@@ -82,8 +81,8 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 }
 
 type signInInput struct {
-	Username string `db:"username" json:"username" validate:"required"`
-	Password string `db:"password" json:"password" validate:"required"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 // @Summary	Login into market
@@ -112,7 +111,6 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 
 	var input signInInput
-
 	err = json.Unmarshal(body, &input)
 	if err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)

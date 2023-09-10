@@ -13,8 +13,8 @@ import (
 )
 
 type reviewInput struct {
-	Text     string `db:"text" json:"text" validate:"required"`
-	Category string `db:"category" json:"category" validate:"review_category,required"`
+	Text     string `json:"text" validate:"required"`
+	Category string `json:"category" validate:"review_category,required"`
 }
 
 // @Summary	Create review

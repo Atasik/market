@@ -50,7 +50,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		newErrorResponse(w, "Failed to Parse MultipartForm", http.StatusInternalServerError)
 		return
 	}
-	product := model.Product{}
+	var product model.Product
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
 	err = decoder.Decode(&product, r.PostForm)

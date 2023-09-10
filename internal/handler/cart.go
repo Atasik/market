@@ -11,6 +11,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type cartInput struct {
+	Amount int `json:"amount" validate:"required"`
+}
+
 // @Summary Add product to cart
 // @Security ApiKeyAuth
 // @Tags cart
@@ -52,7 +56,6 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 
 	var input cartInput
-
 	err = json.Unmarshal(body, &input)
 	if err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
@@ -146,10 +149,6 @@ func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newGetProductsResponse(w, products, http.StatusOK)
-}
-
-type cartInput struct {
-	Amount int `json:"amount" validate:"required"`
 }
 
 // @Summary Update product amount from cart
