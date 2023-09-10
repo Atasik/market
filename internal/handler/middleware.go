@@ -21,6 +21,7 @@ const (
 const (
 	authorizationHeader = "Authorization"
 	defaultSortField    = "created_at"
+	defaultPage         = 1
 	defaultLimit        = 25
 	maxLimit            = 50
 )
@@ -86,21 +87,20 @@ func panicMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// я знаю, что это коряво, но лень рефакторить пока
 func queryMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("queryMiddleware", r.URL.Path)
 
 		sortBy := strings.ToLower(r.URL.Query().Get("sort_by"))
 		sortOrder := strings.ToUpper(r.URL.Query().Get("sort_order"))
-
 		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 		if err != nil {
 			limit = defaultLimit
 		}
-
-		var offset int
-		page, _ := strconv.Atoi(r.URL.Query().Get("page")) //nolint:errcheck
+		page, err := strconv.Atoi(r.URL.Query().Get("page"))
+		if err != nil {
+			page = defaultPage
+		}
 
 		if sortBy == "" {
 			sortBy = defaultSortField
@@ -110,7 +110,7 @@ func queryMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			sortOrder = model.DESCENDING
 		}
 
-		if limit <= 0 {
+		if limit < 1 {
 			limit = defaultLimit
 		}
 
@@ -118,21 +118,20 @@ func queryMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			limit = maxLimit
 		}
 
-		if page <= 0 {
-			offset = 0
-		} else {
-			offset = (page - 1) * limit
+		if page < 1 {
+			page = defaultPage
 		}
 
 		options := &Options{
 			SortBy:    sortBy,
 			SortOrder: sortOrder,
 			Limit:     limit,
-			Offset:    offset,
+			Offset:    (page - 1) * limit,
 		}
 		ctx := contextWithOptions(r.Context(), options)
+
 		next(w, r.WithContext(ctx))
-	})
+	}
 }
 
 type Options struct {
