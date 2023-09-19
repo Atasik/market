@@ -9,18 +9,18 @@ import (
 )
 
 type CartPostgresqlRepository struct {
-	DB *sqlx.DB
+	db *sqlx.DB
 }
 
 func NewCartPostgresqlRepo(db *sqlx.DB) *CartPostgresqlRepository {
-	return &CartPostgresqlRepository{DB: db}
+	return &CartPostgresqlRepository{db: db}
 }
 
 func (repo *CartPostgresqlRepository) Create(userID int) (int, error) {
 	var id int
 	query := fmt.Sprintf("INSERT INTO %s (user_id) VALUES ($1) RETURNING id", cartsTable)
 
-	row := repo.DB.QueryRow(query, userID)
+	row := repo.db.QueryRow(query, userID)
 	err := row.Scan(&id)
 	if err != nil {
 		return 0, postgres.ParsePostgresError(err)
@@ -33,7 +33,7 @@ func (repo *CartPostgresqlRepository) AddProduct(cartID, productID, amount int) 
 	var id int
 	query := fmt.Sprintf("INSERT INTO %s (product_id, cart_id, purchased_amount) VALUES ($1, $2, $3) RETURNING id", productsCartsTable)
 
-	row := repo.DB.QueryRow(query, productID, cartID, amount)
+	row := repo.db.QueryRow(query, productID, cartID, amount)
 	err := row.Scan(&id)
 	if err != nil {
 		return 0, postgres.ParsePostgresError(err)
@@ -46,7 +46,7 @@ func (repo *CartPostgresqlRepository) GetByUserID(userID int) (model.Cart, error
 	var Cart model.Cart
 	query := fmt.Sprintf(`SELECT * FROM %s WHERE user_id = $1`, cartsTable)
 
-	if err := repo.DB.Get(&Cart, query, userID); err != nil {
+	if err := repo.db.Get(&Cart, query, userID); err != nil {
 		return model.Cart{}, postgres.ParsePostgresError(err)
 	}
 
@@ -72,7 +72,7 @@ func (repo *CartPostgresqlRepository) GetAllProducts(cartID int, q model.Product
 			  			  INNER JOIN %s c on pc.cart_id = c.id
 			 			  WHERE c.id = $1 ORDER BY %s %s %s OFFSET $%d`, productsTable, productsCartsTable, cartsTable, q.SortBy, q.SortOrder, limitValue, argID)
 
-	if err := repo.DB.Select(&products, query, args...); err != nil {
+	if err := repo.db.Select(&products, query, args...); err != nil {
 		return []model.Product{}, postgres.ParsePostgresError(err)
 	}
 
@@ -86,7 +86,7 @@ func (repo *CartPostgresqlRepository) GetProductByID(cartID, productID int) (mod
 			  			  INNER JOIN %s c on pc.cart_id = c.id
 			 			  WHERE c.id = $1 AND p.id = $2`, productsTable, productsCartsTable, cartsTable)
 
-	if err := repo.DB.Get(&product, query, cartID, productID); err != nil {
+	if err := repo.db.Get(&product, query, cartID, productID); err != nil {
 		return model.Product{}, postgres.ParsePostgresError(err)
 	}
 
@@ -95,7 +95,7 @@ func (repo *CartPostgresqlRepository) GetProductByID(cartID, productID int) (mod
 
 func (repo *CartPostgresqlRepository) UpdateProductAmount(cartID, productID, amount int) error {
 	query := fmt.Sprintf(`UPDATE %s SET purchased_amount = $1 WHERE cart_id = $2`, productsCartsTable)
-	if _, err := repo.DB.Exec(query, amount, cartID); err != nil {
+	if _, err := repo.db.Exec(query, amount, cartID); err != nil {
 		return postgres.ParsePostgresError(err)
 	}
 	return nil
@@ -103,7 +103,7 @@ func (repo *CartPostgresqlRepository) UpdateProductAmount(cartID, productID, amo
 
 func (repo *CartPostgresqlRepository) DeleteProduct(cartID, productID int) error {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1 AND product_id = $2`, productsCartsTable)
-	_, err := repo.DB.Exec(query, cartID, productID)
+	_, err := repo.db.Exec(query, cartID, productID)
 	if err != nil {
 		return postgres.ParsePostgresError(err)
 	}
@@ -112,7 +112,7 @@ func (repo *CartPostgresqlRepository) DeleteProduct(cartID, productID int) error
 
 func (repo *CartPostgresqlRepository) DeleteAllProducts(cartID int) error {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1`, productsCartsTable)
-	_, err := repo.DB.Exec(query, cartID)
+	_, err := repo.db.Exec(query, cartID)
 	if err != nil {
 		return postgres.ParsePostgresError(err)
 	}

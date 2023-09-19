@@ -9,7 +9,7 @@ import (
 )
 
 type ImageServiceCloudinary struct {
-	Cloudinary *cloudinary.Cloudinary
+	cloudinary *cloudinary.Cloudinary
 }
 
 type ImageData struct {
@@ -18,11 +18,11 @@ type ImageData struct {
 }
 
 func NewImageServiceCloudinary(cloudinary *cloudinary.Cloudinary) *ImageServiceCloudinary {
-	return &ImageServiceCloudinary{Cloudinary: cloudinary}
+	return &ImageServiceCloudinary{cloudinary: cloudinary}
 }
 
 func (s *ImageServiceCloudinary) Upload(ctx context.Context, file multipart.File) (ImageData, error) {
-	resp, err := s.Cloudinary.Upload.Upload(ctx, file, uploader.UploadParams{})
+	resp, err := s.cloudinary.Upload.Upload(ctx, file, uploader.UploadParams{})
 	if err != nil {
 		return ImageData{}, err
 	}
@@ -31,7 +31,7 @@ func (s *ImageServiceCloudinary) Upload(ctx context.Context, file multipart.File
 }
 
 func (s *ImageServiceCloudinary) Delete(ctx context.Context, imageID string) error {
-	_, err := s.Cloudinary.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: imageID})
+	_, err := s.cloudinary.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: imageID})
 	if err != nil {
 		return err
 	}

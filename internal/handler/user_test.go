@@ -84,9 +84,9 @@ func TestHandler_signUp(t *testing.T) {
 			model.RegisterCustomValidations(validate) //nolint:errcheck
 			logger := zap.NewNop().Sugar()
 			h := &Handler{
-				Services:  services,
-				Logger:    logger,
-				Validator: validate,
+				services:  services,
+				logger:    logger,
+				validator: validate,
 			}
 
 			r := mux.NewRouter()
@@ -167,9 +167,9 @@ func TestHandler_signIn(t *testing.T) {
 			model.RegisterCustomValidations(validate) //nolint:errcheck
 			logger := zap.NewNop().Sugar()
 			h := &Handler{
-				Services:  services,
-				Logger:    logger,
-				Validator: validate,
+				services:  services,
+				logger:    logger,
+				validator: validate,
 			}
 
 			r := mux.NewRouter()

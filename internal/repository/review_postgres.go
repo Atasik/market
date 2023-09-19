@@ -10,18 +10,18 @@ import (
 )
 
 type ReviewPostgresqlRepository struct {
-	DB *sqlx.DB
+	db *sqlx.DB
 }
 
 func NewReviewPostgresqlRepo(db *sqlx.DB) *ReviewPostgresqlRepository {
-	return &ReviewPostgresqlRepository{DB: db}
+	return &ReviewPostgresqlRepository{db: db}
 }
 
 func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error) {
 	var reviewID int
 	query := fmt.Sprintf("INSERT INTO %s (created_at, updated_at, product_id, user_id, text, category) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id", reviewsTable)
 
-	row := repo.DB.QueryRow(query, review.CreatedAt, review.UpdatedAt, review.ProductID, review.UserID, review.Text, review.Category)
+	row := repo.db.QueryRow(query, review.CreatedAt, review.UpdatedAt, review.ProductID, review.UserID, review.Text, review.Category)
 	err := row.Scan(&reviewID)
 	if err != nil {
 		return 0, postgres.ParsePostgresError(err)
@@ -33,7 +33,7 @@ func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error)
 func (repo *ReviewPostgresqlRepository) Delete(reviewID int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", reviewsTable)
 
-	_, err := repo.DB.Exec(query, reviewID)
+	_, err := repo.db.Exec(query, reviewID)
 	if err != nil {
 		return postgres.ParsePostgresError(err)
 	}
@@ -67,7 +67,7 @@ func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input mode
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE (user_id = $%d AND product_id = $%d)", reviewsTable, setQuery, argID, argID+1)
 	args = append(args, userID, productID)
 
-	_, err := repo.DB.Exec(query, args...)
+	_, err := repo.db.Exec(query, args...)
 	if err != nil {
 		return postgres.ParsePostgresError(err)
 	}
@@ -78,7 +78,7 @@ func (repo *ReviewPostgresqlRepository) GetAll(productID int, q model.ReviewQuer
 	var rewiews []model.Review
 	query := fmt.Sprintf("SELECT * FROM %s WHERE product_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3", reviewsTable, q.SortBy, q.SortOrder)
 
-	if err := repo.DB.Select(&rewiews, query, productID, q.Limit, q.Offset); err != nil {
+	if err := repo.db.Select(&rewiews, query, productID, q.Limit, q.Offset); err != nil {
 		return nil, postgres.ParsePostgresError(err)
 	}
 
@@ -89,7 +89,7 @@ func (repo *ReviewPostgresqlRepository) GetReviewIDByProductIDUserID(productID, 
 	var id int
 	query := fmt.Sprintf("SELECT id FROM %s WHERE product_id = $1 AND user_id = $2", reviewsTable)
 
-	if err := repo.DB.Get(&id, query, productID, userID); err != nil {
+	if err := repo.db.Get(&id, query, productID, userID); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
 

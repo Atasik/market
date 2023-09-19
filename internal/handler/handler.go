@@ -19,10 +19,19 @@ const (
 )
 
 type Handler struct {
-	Logger       *zap.SugaredLogger
-	Services     *service.Service
-	TokenManager auth.TokenManager
-	Validator    *validator.Validate
+	logger       *zap.SugaredLogger
+	services     *service.Service
+	tokenManager auth.TokenManager
+	validator    *validator.Validate
+}
+
+func NewHandler(services *service.Service, validator *validator.Validate, logger *zap.SugaredLogger, tokenManager auth.TokenManager) *Handler {
+	return &Handler{
+		services:     services,
+		validator:    validator,
+		logger:       logger,
+		tokenManager: tokenManager,
+	}
 }
 
 func (h *Handler) InitRoutes() http.Handler {

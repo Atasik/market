@@ -35,7 +35,7 @@ func (h *Handler) accessLogMiddleware(next http.Handler) http.Handler {
 		fmt.Println("access log middleware")
 		start := time.Now()
 		next.ServeHTTP(w, r)
-		h.Logger.Infow("New request",
+		h.logger.Infow("New request",
 			"method", r.Method,
 			"remote_addr", r.RemoteAddr,
 			"url", r.URL.Path,
@@ -64,7 +64,7 @@ func (h *Handler) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		token, err := h.TokenManager.Parse(headerParts[1])
+		token, err := h.tokenManager.Parse(headerParts[1])
 		if err != nil {
 			newErrorResponse(w, err.Error(), http.StatusUnauthorized)
 			return

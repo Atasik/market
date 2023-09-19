@@ -35,13 +35,13 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		DeliveredAt: time.Now().Add(4 * 24 * time.Hour),
 	}
 
-	lastID, err := h.Services.Order.Create(token.UserID, order)
+	lastID, err := h.services.Order.Create(token.UserID, order)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.Logger.Infof("Order was created with id LastInsertId: %v", lastID)
+	h.logger.Infof("Order was created with id LastInsertId: %v", lastID)
 
 	q := model.OrderQueryInput{
 		QueryInput: model.QueryInput{
@@ -51,7 +51,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	orders, err := h.Services.Order.GetAll(token.UserID, q)
+	orders, err := h.services.Order.GetAll(token.UserID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,7 +97,7 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedOrder, err := h.Services.Order.GetByID(token.UserID, orderID)
+	selectedOrder, err := h.services.Order.GetByID(token.UserID, orderID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -112,7 +112,7 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	selectedOrder.Products, err = h.Services.Order.GetProductsByOrderID(token.UserID, orderID, q)
+	selectedOrder.Products, err = h.services.Order.GetProductsByOrderID(token.UserID, orderID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -164,7 +164,7 @@ func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	orders, err := h.Services.Order.GetAll(token.UserID, orderQuery)
+	orders, err := h.services.Order.GetAll(token.UserID, orderQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

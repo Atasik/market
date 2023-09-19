@@ -83,12 +83,7 @@ func Run(configDir string) {
 		return
 	}
 
-	h := &handler.Handler{
-		Services:     services,
-		Logger:       logger,
-		TokenManager: tokenManager,
-		Validator:    validate,
-	}
+	h := handler.NewHandler(services, validate, logger, tokenManager)
 
 	mux := h.InitRoutes()
 

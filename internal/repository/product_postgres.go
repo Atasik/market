@@ -10,18 +10,18 @@ import (
 )
 
 type ProductPostgresqlRepository struct {
-	DB *sqlx.DB
+	db *sqlx.DB
 }
 
 func NewProductPostgresqlRepo(db *sqlx.DB) *ProductPostgresqlRepository {
-	return &ProductPostgresqlRepository{DB: db}
+	return &ProductPostgresqlRepository{db: db}
 }
 
 func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, error) {
 	var productID int
 	query := fmt.Sprintf("INSERT INTO %s (user_id, title, price, tag, category, description, amount, created_at, updated_at, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id", productsTable)
 
-	row := repo.DB.QueryRow(query, product.UserID, product.Title, product.Price, product.Tag, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
+	row := repo.db.QueryRow(query, product.UserID, product.Title, product.Price, product.Tag, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
 	err := row.Scan(&productID)
 	if err != nil {
 		return 0, postgres.ParsePostgresError(err)
@@ -35,7 +35,7 @@ func (repo *ProductPostgresqlRepository) GetAll(q model.ProductQueryInput) ([]mo
 
 	query := fmt.Sprintf("SELECT * FROM %s ORDER BY %s %s LIMIT $1 OFFSET $2", productsTable, q.SortBy, q.SortOrder)
 
-	if err := repo.DB.Select(&products, query, q.Limit, q.Offset); err != nil {
+	if err := repo.db.Select(&products, query, q.Limit, q.Offset); err != nil {
 		return nil, postgres.ParsePostgresError(err)
 	}
 
@@ -58,7 +58,7 @@ func (repo *ProductPostgresqlRepository) GetProductsByUserID(userID int, q model
 
 	query := fmt.Sprintf("SELECT * FROM %s WHERE user_id = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argID, argID+1)
 
-	if err := repo.DB.Select(&products, query, args...); err != nil {
+	if err := repo.db.Select(&products, query, args...); err != nil {
 		return nil, postgres.ParsePostgresError(err)
 	}
 
@@ -69,7 +69,7 @@ func (repo *ProductPostgresqlRepository) GetByID(productID int) (model.Product, 
 	var product model.Product
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", productsTable)
 
-	if err := repo.DB.Get(&product, query, productID); err != nil {
+	if err := repo.db.Get(&product, query, productID); err != nil {
 		return model.Product{}, postgres.ParsePostgresError(err)
 	}
 
@@ -92,7 +92,7 @@ func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory s
 
 	query := fmt.Sprintf("SELECT * FROM %s WHERE category = $1 %s ORDER BY %s %s LIMIT $%d OFFSET $%d", productsTable, setValue, q.SortBy, q.SortOrder, argID, argID+1)
 
-	if err := repo.DB.Select(&products, query, args...); err != nil {
+	if err := repo.db.Select(&products, query, args...); err != nil {
 		return nil, postgres.ParsePostgresError(err)
 	}
 
@@ -167,7 +167,7 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 	query := fmt.Sprintf(`UPDATE %s SET %s WHERE id = $%d`, productsTable, setQuery, argID)
 	args = append(args, productID)
 
-	_, err := repo.DB.Exec(query, args...)
+	_, err := repo.db.Exec(query, args...)
 	if err != nil {
 		return postgres.ParsePostgresError(err)
 	}
@@ -177,7 +177,7 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 func (repo *ProductPostgresqlRepository) Delete(productID int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", productsTable)
 
-	_, err := repo.DB.Exec(query, productID)
+	_, err := repo.db.Exec(query, productID)
 	if err != nil {
 		return postgres.ParsePostgresError(err)
 	}

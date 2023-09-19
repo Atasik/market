@@ -41,25 +41,25 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 
 	user.Role = model.USER
 
-	err = h.Validator.Struct(user)
+	err = h.validator.Struct(user)
 	if err != nil {
 		newErrorResponse(w, "invalid input", http.StatusBadRequest)
 		return
 	}
 
-	userID, err := h.Services.User.CreateUser(user)
+	userID, err := h.services.User.CreateUser(user)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	_, err = h.Services.Cart.Create(userID)
+	_, err = h.services.Cart.Create(userID)
 	if err != nil {
 		newErrorResponse(w, "Create Basket Error", http.StatusInternalServerError)
 		return
 	}
 
-	token, err := h.Services.User.GenerateToken(user.Username, user.Password)
+	token, err := h.services.User.GenerateToken(user.Username, user.Password)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -117,13 +117,13 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Validator.Struct(input)
+	err = h.validator.Struct(input)
 	if err != nil {
 		newErrorResponse(w, "invalid input", http.StatusBadRequest)
 		return
 	}
 
-	token, err := h.Services.User.GenerateToken(input.Username, input.Password)
+	token, err := h.services.User.GenerateToken(input.Username, input.Password)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

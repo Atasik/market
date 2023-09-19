@@ -59,7 +59,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Validator.Struct(product)
+	err = h.validator.Struct(product)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
@@ -73,7 +73,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 	defer cancel()
-	data, err := h.Services.Image.Upload(ctx, file)
+	data, err := h.services.Image.Upload(ctx, file)
 	if err != nil {
 		newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 		return
@@ -87,11 +87,11 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	productID, err := h.Services.Product.Create(product)
+	productID, err := h.services.Product.Create(product)
 	if err != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 		defer cancel()
-		err = h.Services.Image.Delete(ctx, product.ImageID)
+		err = h.services.Image.Delete(ctx, product.ImageID)
 		if err != nil {
 			newErrorResponse(w, `ImageServer Error`, http.StatusInternalServerError)
 			return
@@ -102,7 +102,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 
 	product.ID = productID
 
-	h.Logger.Infof("Product was created with id LastInsertId: %v", productID)
+	h.logger.Infof("Product was created with id LastInsertId: %v", productID)
 
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(product)
@@ -149,7 +149,7 @@ func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	products, err := h.Services.Product.GetAll(q)
+	products, err := h.services.Product.GetAll(q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -203,7 +203,7 @@ func (h *Handler) getProductsByUserID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	products, err := h.Services.Product.GetProductsByUserID(userID, q)
+	products, err := h.services.Product.GetProductsByUserID(userID, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -253,7 +253,7 @@ func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	products, err := h.Services.Product.GetProductsByCategory(categoryName, q)
+	products, err := h.services.Product.GetProductsByCategory(categoryName, q)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -292,13 +292,13 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedProduct, err := h.Services.Product.GetByID(productID)
+	selectedProduct, err := h.services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = h.Services.Product.IncreaseViewsCounter(productID)
+	err = h.services.Product.IncreaseViewsCounter(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -319,7 +319,7 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedProduct.Reviews, err = h.Services.Review.GetAll(productID, reviewQuery)
+	selectedProduct.Reviews, err = h.services.Review.GetAll(productID, reviewQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -334,7 +334,7 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 		ProductID: productID,
 	}
 
-	selectedProduct.RelatedProducts, err = h.Services.Product.GetProductsByCategory(selectedProduct.Category, productQuery)
+	selectedProduct.RelatedProducts, err = h.services.Product.GetProductsByCategory(selectedProduct.Category, productQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -407,7 +407,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	if fileExists {
 		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 		defer cancel()
-		data, err := h.Services.Image.Upload(ctx, file) //nolint:govet
+		data, err := h.services.Image.Upload(ctx, file) //nolint:govet
 		if err != nil {
 			newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 			return
@@ -420,19 +420,19 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	input.UpdatedAt = &currentTime
 
-	oldProduct, err := h.Services.Product.GetByID(productID)
+	oldProduct, err := h.services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = h.Services.Product.Update(token.UserID, productID, input)
+	err = h.services.Product.Update(token.UserID, productID, input)
 	if err != nil {
 		switch fileExists {
 		case true:
 			ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 			defer cancel()
-			err = h.Services.Image.Delete(ctx, *input.ImageID)
+			err = h.services.Image.Delete(ctx, *input.ImageID)
 			if err != nil {
 				newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 				return
@@ -447,20 +447,20 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	if fileExists {
 		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 		defer cancel()
-		err = h.Services.Image.Delete(ctx, oldProduct.ImageID)
+		err = h.services.Image.Delete(ctx, oldProduct.ImageID)
 		if err != nil {
 			newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 			return
 		}
 	}
 
-	product, err := h.Services.Product.GetByID(productID)
+	product, err := h.services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.Logger.Infof("Product was updated: %v", product)
+	h.logger.Infof("Product was updated: %v", product)
 
 	err = json.NewEncoder(w).Encode(product)
 	if err != nil {
@@ -496,22 +496,22 @@ func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product, err := h.Services.Product.GetByID(productID)
+	product, err := h.services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = h.Services.Product.Delete(token.UserID, productID)
+	err = h.services.Product.Delete(token.UserID, productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	h.Logger.Infof("Product was deleted: %v", product)
+	h.logger.Infof("Product was deleted: %v", product)
 
 	ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 	defer cancel()
-	err = h.Services.Image.Delete(ctx, product.ImageID)
+	err = h.services.Image.Delete(ctx, product.ImageID)
 	if err != nil {
 		newErrorResponse(w, "ImageService Error", http.StatusInternalServerError)
 		return

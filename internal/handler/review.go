@@ -64,7 +64,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Validator.Struct(input)
+	err = h.validator.Struct(input)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
@@ -78,15 +78,15 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	review.Username = token.Username
 	review.CreatedAt = time.Now()
 
-	review.ID, err = h.Services.Review.Create(review)
+	review.ID, err = h.services.Review.Create(review)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.Logger.Infof("Review was created with id LastInsertId: %v", review.ID)
+	h.logger.Infof("Review was created with id LastInsertId: %v", review.ID)
 
-	product, err := h.Services.Product.GetByID(productID)
+	product, err := h.services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -100,7 +100,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	product.Reviews, err = h.Services.Review.GetAll(productID, reviewQuery)
+	product.Reviews, err = h.services.Review.GetAll(productID, reviewQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -115,7 +115,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		ProductID: productID,
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, productQuery)
+	product.RelatedProducts, err = h.services.Product.GetProductsByCategory(product.Category, productQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -177,7 +177,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Validator.Struct(input)
+	err = h.validator.Struct(input)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
@@ -186,15 +186,15 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	input.UpdatedAt = &currentTime
 
-	err = h.Services.Review.Update(token.UserID, productID, input)
+	err = h.services.Review.Update(token.UserID, productID, input)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.Logger.Infof("Review by userID [%v] to productID [%v] was updated: %v", token.UserID, productID)
+	h.logger.Infof("Review by userID [%v] to productID [%v] was updated: %v", token.UserID, productID)
 
-	product, err := h.Services.Product.GetByID(productID)
+	product, err := h.services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -208,7 +208,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	product.Reviews, err = h.Services.Review.GetAll(productID, reviewQuery)
+	product.Reviews, err = h.services.Review.GetAll(productID, reviewQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -223,7 +223,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		ProductID: productID,
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, productQuery)
+	product.RelatedProducts, err = h.services.Product.GetProductsByCategory(product.Category, productQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -263,7 +263,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Services.Review.Delete(token.UserID, reviewID)
+	err = h.services.Review.Delete(token.UserID, reviewID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -275,9 +275,9 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.Infof("Review by userID [%v] to productID [%v] was deleted", token.UserID, productID)
+	h.logger.Infof("Review by userID [%v] to productID [%v] was deleted", token.UserID, productID)
 
-	product, err := h.Services.Product.GetByID(productID)
+	product, err := h.services.Product.GetByID(productID)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -291,7 +291,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	product.Reviews, err = h.Services.Review.GetAll(productID, reviewQuery)
+	product.Reviews, err = h.services.Review.GetAll(productID, reviewQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -306,7 +306,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		ProductID: productID,
 	}
 
-	product.RelatedProducts, err = h.Services.Product.GetProductsByCategory(product.Category, productQuery)
+	product.RelatedProducts, err = h.services.Product.GetProductsByCategory(product.Category, productQuery)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

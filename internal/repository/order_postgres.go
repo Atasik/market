@@ -10,15 +10,15 @@ import (
 )
 
 type OrderPostgresqlRepository struct {
-	DB *sqlx.DB
+	db *sqlx.DB
 }
 
 func NewOrderPostgresqlRepo(db *sqlx.DB) *OrderPostgresqlRepository {
-	return &OrderPostgresqlRepository{DB: db}
+	return &OrderPostgresqlRepository{db: db}
 }
 
 func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Order) (int, error) {
-	tx, err := repo.DB.Begin()
+	tx, err := repo.db.Begin()
 	if err != nil {
 		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
@@ -77,7 +77,7 @@ func (repo *OrderPostgresqlRepository) GetAll(userID int, q model.OrderQueryInpu
 			              INNER JOIN %s u on o.user_id = u.id
 			              WHERE u.id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, ordersTable, usersTable, q.SortBy, q.SortOrder)
 
-	if err := repo.DB.Select(&orders, query, userID, q.Limit, q.Offset); err != nil {
+	if err := repo.db.Select(&orders, query, userID, q.Limit, q.Offset); err != nil {
 		return []model.Order{}, postgres.ParsePostgresError(err)
 	}
 
@@ -88,7 +88,7 @@ func (repo *OrderPostgresqlRepository) GetByID(orderID int) (model.Order, error)
 	var order model.Order
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", ordersTable)
 
-	if err := repo.DB.Get(&order, query, orderID); err != nil {
+	if err := repo.db.Get(&order, query, orderID); err != nil {
 		return model.Order{}, postgres.ParsePostgresError(err)
 	}
 
@@ -102,7 +102,7 @@ func (repo *OrderPostgresqlRepository) GetProductsByOrderID(orderID int, q model
 			              INNER JOIN %s o on po.order_id = o.id
 			              WHERE o.id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, productsTable, productsOrdersTable, ordersTable, q.SortBy, q.SortOrder)
 
-	if err := repo.DB.Select(&products, query, orderID, q.Limit, q.Offset); err != nil {
+	if err := repo.db.Select(&products, query, orderID, q.Limit, q.Offset); err != nil {
 		return []model.Product{}, postgres.ParsePostgresError(err)
 	}
 
