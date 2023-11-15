@@ -39,7 +39,7 @@ const timeout = 5 * time.Second
 func Run(configDir string) {
 	zapLogger, err := logger.NewZapLogger("zap", context.TODO())
 	if err != nil {
-		log.Fatalf("Error occurred while loading zapLogger", err.Error())
+		log.Fatalf("Error occurred while loading zapLogger: %v", err.Error())
 		return
 	}
 	defer func() error {
