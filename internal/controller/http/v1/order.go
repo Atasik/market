@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"encoding/json"
@@ -10,6 +10,17 @@ import (
 
 	"github.com/gorilla/mux"
 )
+
+func (h *Handler) initOrderRoutes(api *mux.Router) {
+	order := api.PathPrefix("/order").Subrouter()
+	order.Methods("POST").HandlerFunc(h.authMiddleware(h.createOrder))
+	order.HandleFunc("/{orderId}", h.authMiddleware(h.getOrder)).Methods("GET")
+}
+
+func (h *Handler) initOrdersRoutes(api *mux.Router) {
+	orders := api.PathPrefix("/orders").Subrouter()
+	orders.Methods("GET").HandlerFunc(h.authMiddleware(h.getOrders))
+}
 
 // @Summary	Create order
 // @Security	ApiKeyAuth

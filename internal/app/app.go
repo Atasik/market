@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"market/internal/config"
-	"market/internal/handler"
+	ctrl "market/internal/controller/http"
 	"market/internal/model"
 	"market/internal/repository"
 	"market/internal/server"
@@ -82,7 +82,7 @@ func Run(configDir string) {
 		return
 	}
 
-	h := handler.NewHandler(services, validate, logger, tokenManager)
+	h := ctrl.NewHandler(services, validate, logger, tokenManager)
 
 	mux := h.InitRoutes()
 

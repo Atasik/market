@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"context"
@@ -18,6 +18,25 @@ const (
 	limitRelatedProducts = 5
 	limitFileBytes       = 10 << 20
 )
+
+func (h *Handler) initProductRoutes(api *mux.Router) {
+	product := api.PathPrefix("/product").Subrouter()
+	product.Methods("POST").HandlerFunc(h.authMiddleware(h.createProduct))
+	product.HandleFunc("/{productId}", queryMiddleware(h.getProductByID)).Methods("GET")
+	product.HandleFunc("/{productId}", h.authMiddleware(h.updateProduct)).Methods("PUT")
+	product.HandleFunc("/{productId}", h.authMiddleware(h.deleteProduct)).Methods("DELETE")
+
+	review := product.PathPrefix("/review").Subrouter()
+	review.Methods("POST").HandlerFunc(h.authMiddleware(h.createReview))
+	review.HandleFunc("/{reviewId}", h.authMiddleware(h.updateReview)).Methods("PUT")
+	review.HandleFunc("/{reviewId}", h.authMiddleware(h.deleteReview)).Methods("DELETE")
+}
+
+func (h *Handler) initProductsRoutes(api *mux.Router) {
+	products := api.PathPrefix("products").Subrouter()
+	products.Methods("GET").HandlerFunc(queryMiddleware(h.getAllProducts))
+	products.HandleFunc("/products/category/{categoryName}", queryMiddleware(h.getProductsByCategory)).Methods("GET")
+}
 
 // @Summary	Add a new product to the market
 // @Security	ApiKeyAuth

@@ -1,11 +1,20 @@
-package handler
+package v1
 
 import (
 	"encoding/json"
 	"io"
 	"market/internal/model"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
+
+func (h *Handler) initUserRoutes(api *mux.Router) {
+	user := api.PathPrefix("/user").Subrouter()
+	user.HandleFunc("/sign-in", h.signIn).Methods("POST")
+	user.HandleFunc("/sign-up", h.signUp).Methods("POST")
+	user.HandleFunc("/{userId}/products", queryMiddleware(h.getProductsByUserID)).Methods("GET")
+}
 
 // @Summary	Register in the market
 // @Tags		user

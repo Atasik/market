@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"encoding/json"
@@ -10,6 +10,15 @@ import (
 
 	"github.com/gorilla/mux"
 )
+
+func (h *Handler) initCartRoutes(api *mux.Router) {
+	r := api.PathPrefix("/cart").Subrouter()
+	r.Methods("GET").HandlerFunc(queryMiddleware(h.authMiddleware(h.getProductsFromCart)))
+	r.Methods("DELETE").HandlerFunc(h.authMiddleware(h.deleteProductsFromCart))
+	r.HandleFunc("/{productId}", h.authMiddleware(h.updateProductAmountFromCart)).Methods("PUT")
+	r.HandleFunc("/{productId}", h.authMiddleware(h.addProductToCart)).Methods("POST")
+	r.HandleFunc("/{productId}", h.authMiddleware(h.deleteProductFromCart)).Methods("DELETE")
+}
 
 type cartInput struct {
 	Amount int `json:"amount" validate:"required"`

@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type OptionsKey string
@@ -30,21 +29,7 @@ var (
 	ErrNoQuery = errors.New("no query")
 )
 
-func (h *Handler) accessLogMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("access log middleware")
-		start := time.Now()
-		next.ServeHTTP(w, r)
-		h.logger.Infow("New request",
-			"method", r.Method,
-			"remote_addr", r.RemoteAddr,
-			"url", r.URL.Path,
-			"time", time.Since(start),
-		)
-	})
-}
-
-func (h *Handler) authMiddleware(next http.Handler) http.Handler {
+func (h *Handler) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("auth middleware", r.URL.Path)
 
@@ -71,19 +56,6 @@ func (h *Handler) authMiddleware(next http.Handler) http.Handler {
 		}
 		ctx := auth.ContextWithToken(r.Context(), token)
 		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func panicMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("panic middleware", r.URL.Path)
-		defer func() {
-			if err := recover(); err != nil {
-				fmt.Println("recovered", err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-			}
-		}()
-		next.ServeHTTP(w, r)
 	})
 }
 
