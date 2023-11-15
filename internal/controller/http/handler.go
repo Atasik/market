@@ -4,6 +4,7 @@ import (
 	v1 "market/internal/controller/http/v1"
 	"market/internal/service"
 	"market/pkg/auth"
+	"market/pkg/logger"
 	"net/http"
 
 	_ "market/docs"
@@ -11,17 +12,16 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
-	"go.uber.org/zap"
 )
 
 type Handler struct {
-	logger       *zap.SugaredLogger
+	logger       logger.Logger
 	services     *service.Service
 	tokenManager auth.TokenManager
 	validator    *validator.Validate
 }
 
-func NewHandler(services *service.Service, validator *validator.Validate, logger *zap.SugaredLogger, tokenManager auth.TokenManager) *Handler {
+func NewHandler(services *service.Service, validator *validator.Validate, logger logger.Logger, tokenManager auth.TokenManager) *Handler {
 	return &Handler{
 		services:     services,
 		validator:    validator,

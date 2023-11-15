@@ -11,12 +11,12 @@ func (h *Handler) accessLogMiddleware(next http.Handler) http.Handler {
 		fmt.Println("access log middleware")
 		start := time.Now()
 		next.ServeHTTP(w, r)
-		h.logger.Infow("New request",
-			"method", r.Method,
-			"remote_addr", r.RemoteAddr,
-			"url", r.URL.Path,
-			"time", time.Since(start),
-		)
+		h.logger.Info("New request", map[string]interface{}{
+			"method":      r.Method,
+			"remote_addr": r.RemoteAddr,
+			"url":         r.URL.Path,
+			"time":        time.Since(start),
+		})
 	})
 }
 

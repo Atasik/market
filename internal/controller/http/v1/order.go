@@ -52,7 +52,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Infof("Order was created with id LastInsertId: %v", lastID)
+	h.logger.Info("Order was created with id", map[string]interface{}{"lastInsetedId": lastID})
 
 	q := model.OrderQueryInput{
 		QueryInput: model.QueryInput{

@@ -117,7 +117,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 
 	product.ID = productID
 
-	h.logger.Infof("Product was created with id LastInsertId: %v", productID)
+	h.logger.Info("Product was created", map[string]interface{}{"lastInsetedId": productID})
 
 	w.WriteHeader(http.StatusCreated)
 	if err = json.NewEncoder(w).Encode(product); err != nil {
@@ -463,7 +463,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Infof("Product was updated: %v", product)
+	h.logger.Info("Product was updated", map[string]interface{}{"product": product})
 
 	if err = json.NewEncoder(w).Encode(product); err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
@@ -508,7 +508,8 @@ func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	h.logger.Infof("Product was deleted: %v", product)
+
+	h.logger.Info("Product was deleted", map[string]interface{}{"product": product})
 
 	ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 	defer cancel()

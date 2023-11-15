@@ -13,6 +13,7 @@ import (
 	"market/pkg/cloud"
 	"market/pkg/database/postgres"
 	"market/pkg/hash"
+	"market/pkg/logger"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,7 +22,6 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/go-playground/validator/v10"
-	"go.uber.org/zap"
 )
 
 const timeout = 5 * time.Second
@@ -37,30 +37,34 @@ const timeout = 5 * time.Second
 // @in header
 // @name Authorization
 func Run(configDir string) {
-	zapLogger, err := zap.NewProduction()
+	zapLogger, err := logger.NewZapLogger("zap", context.TODO())
 	if err != nil {
-		log.Fatalf("Error occurred while loading zapLogger: %s\n", err.Error())
+		log.Fatalf("Error occurred while loading zapLogger", err.Error())
 		return
 	}
-	defer zapLogger.Sync() //nolint:errcheck
-	logger := zapLogger.Sugar()
+	defer func() error {
+		if err := zapLogger.Sync(); err != nil {
+			zapLogger.Error("Error occurred while Sync", map[string]interface{}{"error": err.Error()})
+		}
+		return nil
+	}()
 
 	cfg, err := config.InitConfig(configDir)
 	if err != nil {
-		logger.Errorf("Error occurred while loading config: %s\n", err.Error())
+		zapLogger.Error("Error occurred while loading config", map[string]interface{}{"error": err.Error()})
 		return
 	}
 
 	db, err := postgres.NewPostgresqlDB(cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.User,
 		cfg.Postgres.DBName, cfg.Postgres.Password, cfg.Postgres.SSLMode)
 	if err != nil {
-		logger.Errorf("Error occurred while loading DB: %s\n", err.Error())
+		zapLogger.Error("Error occurred while loading DB", map[string]interface{}{"error": err.Error()})
 		return
 	}
 
 	cld, err := cloud.NewCloudinary(cfg.Cloudinary.Cloud, cfg.Cloudinary.Key, cfg.Cloudinary.Secret)
 	if err != nil {
-		logger.Errorf("Error occurred while loading Cloudinary: %s\n", err.Error())
+		zapLogger.Error("Error occurred while loading Cloudinary", map[string]interface{}{"error": err.Error()})
 		return
 	}
 
@@ -69,7 +73,7 @@ func Run(configDir string) {
 
 	tokenManager, err := auth.NewManager(cfg.Auth.JWT.SigningKey)
 	if err != nil {
-		logger.Errorf("Error occurred while creating tokenManager: %s\n", err.Error())
+		zapLogger.Error("Error occurred while creating tokenManager", map[string]interface{}{"error": err.Error()})
 		return
 	}
 
@@ -78,11 +82,11 @@ func Run(configDir string) {
 
 	validate := validator.New()
 	if err = model.RegisterCustomValidations(validate); err != nil {
-		logger.Errorf("Error occurred while registering validations: %s\n", err.Error())
+		zapLogger.Error("Error occurred while registering validations", map[string]interface{}{"error": err.Error()})
 		return
 	}
 
-	h := ctrl.NewHandler(services, validate, logger, tokenManager)
+	h := ctrl.NewHandler(services, validate, zapLogger, tokenManager)
 
 	mux := h.InitRoutes()
 
@@ -93,24 +97,24 @@ func Run(configDir string) {
 
 	go func() {
 		if err := srv.Run(); err != nil {
-			logger.Errorf("Failed to start server: %s\n", err.Error())
+			zapLogger.Error("Failed to start server", map[string]interface{}{"error": err.Error()})
 		}
 	}()
 
-	logger.Info("Application is running")
+	zapLogger.Info("Application is running", nil)
 
 	<-quit
 
 	ctx, shutdown := context.WithTimeout(context.Background(), timeout)
 	defer shutdown()
 
-	logger.Info("Application is shutting down")
+	zapLogger.Info("Application is shutting down", nil)
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Error(err.Error())
+		zapLogger.Error("Error occured", map[string]interface{}{"error": err.Error()})
 	}
 
 	if err := db.Close(); err != nil {
-		logger.Error(err.Error())
+		zapLogger.Error("Error occured", map[string]interface{}{"error": err.Error()})
 	}
 }

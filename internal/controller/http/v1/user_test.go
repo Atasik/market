@@ -2,10 +2,12 @@ package v1
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"market/internal/model"
 	"market/internal/service"
 	mock_service "market/internal/service/mocks"
+	"market/pkg/logger"
 	"net/http/httptest"
 	"testing"
 
@@ -13,7 +15,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/magiconair/properties/assert"
 	"go.uber.org/mock/gomock"
-	"go.uber.org/zap"
 )
 
 func TestHandler_signUp(t *testing.T) {
@@ -82,7 +83,7 @@ func TestHandler_signUp(t *testing.T) {
 
 			validate := validator.New()
 			model.RegisterCustomValidations(validate) //nolint:errcheck
-			logger := zap.NewNop().Sugar()
+			logger, _ := logger.NewZapLogger("zap", context.Background())
 			h := &Handler{
 				services:  services,
 				logger:    logger,
@@ -165,7 +166,7 @@ func TestHandler_signIn(t *testing.T) {
 
 			validate := validator.New()
 			model.RegisterCustomValidations(validate) //nolint:errcheck
-			logger := zap.NewNop().Sugar()
+			logger, _ := logger.NewZapLogger("zap", context.Background())
 			h := &Handler{
 				services:  services,
 				logger:    logger,

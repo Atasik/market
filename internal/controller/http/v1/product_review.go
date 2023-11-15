@@ -82,7 +82,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Infof("Review was created with id LastInsertId: %v", review.ID)
+	h.logger.Info("Review was created with id", map[string]interface{}{"lastInsetedId": review.ID})
 
 	product, err := h.services.Product.GetByID(productID)
 	if err != nil {
@@ -186,7 +186,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Infof("Review by userID [%v] to productID [%v] was updated: %v", token.UserID, productID)
+	h.logger.Info("Review was updated", map[string]interface{}{"userId": token.UserID, "lastInsetedId": productID})
 
 	product, err := h.services.Product.GetByID(productID)
 	if err != nil {
@@ -267,7 +267,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Infof("Review by userID [%v] to productID [%v] was deleted", token.UserID, productID)
+	h.logger.Info("Review was deleted", map[string]interface{}{"userId": token.UserID, "lastInsetedId": productID})
 
 	product, err := h.services.Product.GetByID(productID)
 	if err != nil {

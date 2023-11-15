@@ -86,7 +86,7 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Infof("Product was added to cart with id LastInsertId: %v", productID)
+	h.logger.Info("Product was added to Cart", map[string]interface{}{"LastInsertId": productID})
 
 	q := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
@@ -220,7 +220,7 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	h.logger.Infof("Product from Cart %v was updated: %v %v", cart.ID, productID)
+	h.logger.Info("Product from Cart was updated", map[string]interface{}{"CartId": cart.ID, "LastInsertId": productID})
 
 	q := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
@@ -277,7 +277,7 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.logger.Infof("Product from Cart %v was deleted: %v %v", cart.ID, productID)
+	h.logger.Info("Product was deleted", map[string]interface{}{"CartId": cart.ID, "LastInsertId": productID})
 
 	q := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
@@ -326,7 +326,7 @@ func (h *Handler) deleteProductsFromCart(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	h.logger.Infof("Products was deleted from Cart: %v %v", cart.ID)
+	h.logger.Info("Product from Cart was deleted", map[string]interface{}{"CartId": cart.ID})
 
 	newStatusReponse(w, "done", http.StatusOK)
 }
