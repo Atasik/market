@@ -33,8 +33,7 @@ func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error)
 func (repo *ReviewPostgresqlRepository) Delete(reviewID int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", reviewsTable)
 
-	_, err := repo.db.Exec(query, reviewID)
-	if err != nil {
+	if _, err := repo.db.Exec(query, reviewID); err != nil {
 		return postgres.ParsePostgresError(err)
 	}
 	return nil
@@ -67,8 +66,7 @@ func (repo *ReviewPostgresqlRepository) Update(userID, productID int, input mode
 	query := fmt.Sprintf("UPDATE %s SET %s WHERE (user_id = $%d AND product_id = $%d)", reviewsTable, setQuery, argID, argID+1)
 	args = append(args, userID, productID)
 
-	_, err := repo.db.Exec(query, args...)
-	if err != nil {
+	if _, err := repo.db.Exec(query, args...); err != nil {
 		return postgres.ParsePostgresError(err)
 	}
 	return nil

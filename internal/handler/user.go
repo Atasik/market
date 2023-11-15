@@ -33,16 +33,14 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 
 	var user model.User
-	err = json.Unmarshal(body, &user)
-	if err != nil {
+	if err = json.Unmarshal(body, &user); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
 	user.Role = model.USER
 
-	err = h.validator.Struct(user)
-	if err != nil {
+	if err = h.validator.Struct(user); err != nil {
 		newErrorResponse(w, "invalid input", http.StatusBadRequest)
 		return
 	}
@@ -53,8 +51,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.services.Cart.Create(userID)
-	if err != nil {
+	if _, err = h.services.Cart.Create(userID); err != nil {
 		newErrorResponse(w, "Create Basket Error", http.StatusInternalServerError)
 		return
 	}
@@ -73,8 +70,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = w.Write(resp)
-	if err != nil {
+	if _, err = w.Write(resp); err != nil {
 		newErrorResponse(w, `can't write resp`, http.StatusInternalServerError)
 		return
 	}
@@ -111,14 +107,12 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 
 	var input signInInput
-	err = json.Unmarshal(body, &input)
-	if err != nil {
+	if err = json.Unmarshal(body, &input); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	err = h.validator.Struct(input)
-	if err != nil {
+	if err = h.validator.Struct(input); err != nil {
 		newErrorResponse(w, "invalid input", http.StatusBadRequest)
 		return
 	}
@@ -137,8 +131,7 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = w.Write(resp)
-	if err != nil {
+	if _, err = w.Write(resp); err != nil {
 		newErrorResponse(w, `can't write resp`, http.StatusInternalServerError)
 		return
 	}

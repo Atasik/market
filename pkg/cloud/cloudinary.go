@@ -17,8 +17,7 @@ func NewCloudinary(cloud, key, secret string) (*cloudinary.Cloudinary, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	_, err = cld.Admin.Ping(ctx)
-	if err != nil {
+	if _, err = cld.Admin.Ping(ctx); err != nil {
 		return nil, err
 	}
 

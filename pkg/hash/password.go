@@ -84,8 +84,7 @@ func decodeHash(encodedHash string) (p *parameters, salt, hash []byte, err error
 	}
 
 	var version int
-	_, err = fmt.Sscanf(vals[2], "v=%d", &version)
-	if err != nil {
+	if _, err = fmt.Sscanf(vals[2], "v=%d", &version); err != nil {
 		return nil, nil, nil, err
 	}
 	if version != argon2.Version {
@@ -93,8 +92,7 @@ func decodeHash(encodedHash string) (p *parameters, salt, hash []byte, err error
 	}
 
 	p = &parameters{}
-	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &p.memory, &p.iterations, &p.parallelism)
-	if err != nil {
+	if _, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &p.memory, &p.iterations, &p.parallelism); err != nil {
 		return nil, nil, nil, err
 	}
 
@@ -115,8 +113,7 @@ func decodeHash(encodedHash string) (p *parameters, salt, hash []byte, err error
 
 func generateRandomBytes(n uint32) ([]byte, error) {
 	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
+	if _, err := rand.Read(b); err != nil {
 		return nil, err
 	}
 

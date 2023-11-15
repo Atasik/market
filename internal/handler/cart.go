@@ -56,14 +56,12 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 
 	var input cartInput
-	err = json.Unmarshal(body, &input)
-	if err != nil {
+	if err = json.Unmarshal(body, &input); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	err = h.validator.Struct(input)
-	if err != nil {
+	if err = h.validator.Struct(input); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -74,8 +72,7 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.services.Cart.AddProduct(cart.ID, token.UserID, productID, input.Amount)
-	if err != nil {
+	if _, err = h.services.Cart.AddProduct(cart.ID, token.UserID, productID, input.Amount); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -193,14 +190,12 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 
 	var input cartInput
 
-	err = json.Unmarshal(body, &input)
-	if err != nil {
+	if err = json.Unmarshal(body, &input); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	err = h.validator.Struct(input)
-	if err != nil {
+	if err = h.validator.Struct(input); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -211,8 +206,7 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err = h.services.Cart.UpdateProductAmount(cart.ID, token.UserID, productID, input.Amount)
-	if err != nil {
+	if err = h.services.Cart.UpdateProductAmount(cart.ID, token.UserID, productID, input.Amount); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -269,8 +263,7 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = h.services.Cart.DeleteProduct(cart.ID, token.UserID, productID)
-	if err != nil {
+	if err = h.services.Cart.DeleteProduct(cart.ID, token.UserID, productID); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -319,8 +312,7 @@ func (h *Handler) deleteProductsFromCart(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.services.Cart.DeleteAllProducts(cart.ID, token.UserID)
-	if err != nil {
+	if err = h.services.Cart.DeleteAllProducts(cart.ID, token.UserID); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

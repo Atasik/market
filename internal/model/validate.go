@@ -11,8 +11,7 @@ const (
 )
 
 func RegisterCustomValidations(v *validator.Validate) error {
-	err := v.RegisterValidation("user_role", ValidateRole)
-	if err != nil {
+	if err := v.RegisterValidation("user_role", ValidateRole); err != nil {
 		return err
 	}
 	return v.RegisterValidation("review_category", ValidateReviewCategory)

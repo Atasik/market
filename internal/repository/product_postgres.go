@@ -22,8 +22,7 @@ func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, err
 	query := fmt.Sprintf("INSERT INTO %s (user_id, title, price, tag, category, description, amount, created_at, updated_at, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id", productsTable)
 
 	row := repo.db.QueryRow(query, product.UserID, product.Title, product.Price, product.Tag, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
-	err := row.Scan(&productID)
-	if err != nil {
+	if err := row.Scan(&productID); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
 
@@ -167,8 +166,7 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 	query := fmt.Sprintf(`UPDATE %s SET %s WHERE id = $%d`, productsTable, setQuery, argID)
 	args = append(args, productID)
 
-	_, err := repo.db.Exec(query, args...)
-	if err != nil {
+	if _, err := repo.db.Exec(query, args...); err != nil {
 		return postgres.ParsePostgresError(err)
 	}
 	return nil
@@ -177,8 +175,7 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 func (repo *ProductPostgresqlRepository) Delete(productID int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", productsTable)
 
-	_, err := repo.db.Exec(query, productID)
-	if err != nil {
+	if _, err := repo.db.Exec(query, productID); err != nil {
 		return postgres.ParsePostgresError(err)
 	}
 	return nil

@@ -46,8 +46,7 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 
 		query = strings.TrimSuffix(insertQueryBuilder.String(), ",")
 
-		_, err = tx.Exec(query, args...)
-		if err != nil {
+		if _, err = tx.Exec(query, args...); err != nil {
 			tx.Rollback() //nolint:errcheck
 			return 0, postgres.ParsePostgresError(err)
 		}

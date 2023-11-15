@@ -31,8 +31,7 @@ func (s *ImageServiceCloudinary) Upload(ctx context.Context, file multipart.File
 }
 
 func (s *ImageServiceCloudinary) Delete(ctx context.Context, imageID string) error {
-	_, err := s.cloudinary.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: imageID})
-	if err != nil {
+	if _, err := s.cloudinary.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: imageID}); err != nil {
 		return err
 	}
 	return nil

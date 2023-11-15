@@ -21,8 +21,7 @@ func NewPostgresqlDB(host, port, user, dbname, password, sslmode string) (*sqlx.
 		return nil, err
 	}
 
-	err = db.Ping()
-	if err != nil {
+	if err = db.Ping(); err != nil {
 		return nil, err
 	}
 

@@ -58,14 +58,12 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 
 	var input reviewInput
 
-	err = json.Unmarshal(body, &input)
-	if err != nil {
+	if err = json.Unmarshal(body, &input); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	err = h.validator.Struct(input)
-	if err != nil {
+	if err = h.validator.Struct(input); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -122,8 +120,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(product)
-	if err != nil {
+	if err = json.NewEncoder(w).Encode(product); err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
 	}
@@ -171,14 +168,12 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 
 	var input model.UpdateReviewInput
 
-	err = json.Unmarshal(body, &input)
-	if err != nil {
+	if err = json.Unmarshal(body, &input); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	err = h.validator.Struct(input)
-	if err != nil {
+	if err = h.validator.Struct(input); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -186,8 +181,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	input.UpdatedAt = &currentTime
 
-	err = h.services.Review.Update(token.UserID, productID, input)
-	if err != nil {
+	if err = h.services.Review.Update(token.UserID, productID, input); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -230,8 +224,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(product)
-	if err != nil {
+	if err = json.NewEncoder(w).Encode(product); err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
 	}
@@ -263,8 +256,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.services.Review.Delete(token.UserID, reviewID)
-	if err != nil {
+	if err = h.services.Review.Delete(token.UserID, reviewID); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -312,8 +304,7 @@ func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(product)
-	if err != nil {
+	if err = json.NewEncoder(w).Encode(product); err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
 	}

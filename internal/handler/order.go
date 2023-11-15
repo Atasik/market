@@ -119,8 +119,7 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(selectedOrder)
-	if err != nil {
+	if err = json.NewEncoder(w).Encode(selectedOrder); err != nil {
 		newErrorResponse(w, "server error", http.StatusInternalServerError)
 		return
 	}

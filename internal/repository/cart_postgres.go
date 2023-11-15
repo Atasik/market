@@ -21,8 +21,7 @@ func (repo *CartPostgresqlRepository) Create(userID int) (int, error) {
 	query := fmt.Sprintf("INSERT INTO %s (user_id) VALUES ($1) RETURNING id", cartsTable)
 
 	row := repo.db.QueryRow(query, userID)
-	err := row.Scan(&id)
-	if err != nil {
+	if err := row.Scan(&id); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
 
@@ -34,8 +33,7 @@ func (repo *CartPostgresqlRepository) AddProduct(cartID, productID, amount int) 
 	query := fmt.Sprintf("INSERT INTO %s (product_id, cart_id, purchased_amount) VALUES ($1, $2, $3) RETURNING id", productsCartsTable)
 
 	row := repo.db.QueryRow(query, productID, cartID, amount)
-	err := row.Scan(&id)
-	if err != nil {
+	if err := row.Scan(&id); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
 
@@ -103,8 +101,7 @@ func (repo *CartPostgresqlRepository) UpdateProductAmount(cartID, productID, amo
 
 func (repo *CartPostgresqlRepository) DeleteProduct(cartID, productID int) error {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1 AND product_id = $2`, productsCartsTable)
-	_, err := repo.db.Exec(query, cartID, productID)
-	if err != nil {
+	if _, err := repo.db.Exec(query, cartID, productID); err != nil {
 		return postgres.ParsePostgresError(err)
 	}
 	return nil
@@ -112,8 +109,7 @@ func (repo *CartPostgresqlRepository) DeleteProduct(cartID, productID int) error
 
 func (repo *CartPostgresqlRepository) DeleteAllProducts(cartID int) error {
 	query := fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1`, productsCartsTable)
-	_, err := repo.db.Exec(query, cartID)
-	if err != nil {
+	if _, err := repo.db.Exec(query, cartID); err != nil {
 		return postgres.ParsePostgresError(err)
 	}
 	return nil

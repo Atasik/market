@@ -77,8 +77,7 @@ func Run(configDir string) {
 	services := service.NewService(repos, cld, hasher, tokenManager, cfg.Auth.JWT.AccessTokenTTL)
 
 	validate := validator.New()
-	err = model.RegisterCustomValidations(validate)
-	if err != nil {
+	if err = model.RegisterCustomValidations(validate); err != nil {
 		logger.Errorf("Error occurred while registering validations: %s\n", err.Error())
 		return
 	}

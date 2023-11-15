@@ -36,8 +36,7 @@ func (s *CartService) AddProduct(userID, cartID, productID, amountToPurchase int
 		if err != nil {
 			return 0, err
 		}
-		_, err = s.cartRepo.GetProductByID(cartID, productID)
-		if err != nil {
+		if _, err = s.cartRepo.GetProductByID(cartID, productID); err != nil {
 			switch err {
 			case postgres.ErrNotFound:
 				if product.Amount < amountToPurchase {
