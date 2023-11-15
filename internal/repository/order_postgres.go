@@ -20,14 +20,19 @@ func NewOrderPostgresqlRepo(db *sqlx.DB) *OrderPostgresqlRepository {
 func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Order) (int, error) {
 	tx, err := repo.db.Begin()
 	if err != nil {
-		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
+
+	defer func() (int, error) {
+		if err := tx.Rollback(); err != nil {
+			return 0, postgres.ParsePostgresError(err)
+		}
+		return 0, nil
+	}()
 
 	query := fmt.Sprintf("INSERT INTO %s (created_at, delivered_at, user_id) VALUES ($1, $2, $3) RETURNING id", ordersTable)
 	row := tx.QueryRow(query, order.CreatedAt, order.DeliveredAt, userID)
 	if err = row.Scan(&order.ID); err != nil {
-		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
 
@@ -47,7 +52,6 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 		query = strings.TrimSuffix(insertQueryBuilder.String(), ",")
 
 		if _, err = tx.Exec(query, args...); err != nil {
-			tx.Rollback() //nolint:errcheck
 			return 0, postgres.ParsePostgresError(err)
 		}
 	}
@@ -57,13 +61,11 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 					     FROM %s AS pc 
 						 WHERE pc.product_id = p.id AND pc.cart_id = $1`, productsTable, productsCartsTable)
 	if _, err = tx.Exec(query, cartID); err != nil {
-		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
 
 	query = fmt.Sprintf(`DELETE FROM %s WHERE cart_id = $1`, productsCartsTable)
 	if _, err = tx.Exec(query, cartID); err != nil {
-		tx.Rollback() //nolint:errcheck
 		return 0, postgres.ParsePostgresError(err)
 	}
 
