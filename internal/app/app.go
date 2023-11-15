@@ -96,6 +96,11 @@ func Run(configDir string) {
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				zapLogger.Error("Panic occured", map[string]interface{}{"error": err})
+			}
+		}()
 		if err := srv.Run(); err != nil {
 			zapLogger.Error("Failed to start server", map[string]interface{}{"error": err.Error()})
 		}
