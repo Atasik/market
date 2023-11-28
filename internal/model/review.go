@@ -43,7 +43,6 @@ func (i ReviewQueryInput) Validate() error {
 	if i.SortBy != SortByDate || (i.SortOrder != ASCENDING && i.SortOrder != DESCENDING) {
 		return errors.New("invalid sort query")
 	}
-
 	return nil
 }
 
@@ -51,6 +50,5 @@ func (i UpdateReviewInput) Validate() error {
 	if i.Text == nil && i.UpdatedAt == nil && i.Category != nil {
 		return errors.New("update structure has no values")
 	}
-
 	return nil
 }

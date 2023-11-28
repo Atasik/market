@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"log"
 	"market/internal/model"
 	"market/pkg/database/postgres"
 	"strings"
@@ -23,11 +24,10 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 		return 0, postgres.ParsePostgresError(err)
 	}
 
-	defer func() (int, error) {
-		if err := tx.Rollback(); err != nil {
-			return 0, postgres.ParsePostgresError(err)
+	defer func() {
+		if err = tx.Rollback(); err != nil {
+			log.Println("Error rolling back transaction:", err)
 		}
-		return 0, nil
 	}()
 
 	query := fmt.Sprintf("INSERT INTO %s (created_at, delivered_at, user_id) VALUES ($1, $2, $3) RETURNING id", ordersTable)
@@ -39,7 +39,7 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 	if len(order.Products) != 0 {
 		var insertQueryBuilder strings.Builder
 
-		insertQueryBuilder.WriteString(fmt.Sprintf("INSERT INTO %s (order_id, product_id, purchased_amount)", productsOrdersTable))
+		insertQueryBuilder.WriteString(fmt.Sprintf("INSERT INTO %s (order_id, product_id, purchased_amount) VALUES ", productsOrdersTable))
 
 		args := []interface{}{}
 		argID := 1
@@ -68,7 +68,6 @@ func (repo *OrderPostgresqlRepository) Create(cartID, userID int, order model.Or
 	if _, err = tx.Exec(query, cartID); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
-
 	return order.ID, postgres.ParsePostgresError(tx.Commit())
 }
 
@@ -81,7 +80,6 @@ func (repo *OrderPostgresqlRepository) GetAll(userID int, q model.OrderQueryInpu
 	if err := repo.db.Select(&orders, query, userID, q.Limit, q.Offset); err != nil {
 		return []model.Order{}, postgres.ParsePostgresError(err)
 	}
-
 	return orders, nil
 }
 
@@ -92,7 +90,6 @@ func (repo *OrderPostgresqlRepository) GetByID(orderID int) (model.Order, error)
 	if err := repo.db.Get(&order, query, orderID); err != nil {
 		return model.Order{}, postgres.ParsePostgresError(err)
 	}
-
 	return order, nil
 }
 
@@ -106,6 +103,5 @@ func (repo *OrderPostgresqlRepository) GetProductsByOrderID(orderID int, q model
 	if err := repo.db.Select(&products, query, orderID, q.Limit, q.Offset); err != nil {
 		return []model.Product{}, postgres.ParsePostgresError(err)
 	}
-
 	return products, nil
 }

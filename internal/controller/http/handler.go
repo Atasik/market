@@ -45,6 +45,47 @@ func (h *Handler) initAPI(router *mux.Router) {
 	handlerV1.Init(api)
 }
 
+// endpoints
+//
+// /api/v1/products - GET - Получить продукты
+//
+// /api/v1/products/category/{categoryName} - GET - Получить продукты в категории
+//
+// /api/v1/product/{productId} - GET - Получить продукт
+//
+// /api/v1/product/{productId} - DELETE - Удалить продукт
+//
+// /api/v1/product/{productId} - POST - Создать продукт
+//
+// /api/v1/product/{productId} - PUT - Изменить продукт
+//
+// /api/v1/product/{productId}/review - POST - Создать отзыв
+//
+// /api/v1/product/{productId}/review/{reviewId} - PUT - Изменить отзыв
+//
+// /api/v1/product/{productId}/review/{reviewId} - DELETE - Создаить отзыв
+//
+// /api/v1/cart - GET - Получить содержимое корзины
+//
+// /api/v1/cart - DELETE - Очистить корзину
+//
+// /api/v1/cart/{productId} - PUT - Изменить кол-во продуктов в корзине
+//
+// /api/v1/cart/{productId} - POST - Добавить в корзину
+//
+// /api/v1/cart/{productId} - DELETE - Удалить из корзины
+//
+// /api/v1/orders - GET - Получить заказы
+//
+// /api/v1/order/{orderId} - GET - Получить заказ
+//
+// /api/v1/order - POST - Создать заказ
+//
+// /api/v1/user/sign-up - POST - Выйти
+//
+// /api/v1/user/sign-in - POST - Войти
+//
+// /api/v1/user/{userId}/products - GET - Получить продукты юзера
 func (h *Handler) InitRoutes() http.Handler {
 	r := mux.NewRouter()
 
@@ -54,31 +95,5 @@ func (h *Handler) InitRoutes() http.Handler {
 
 	mux := h.accessLogMiddleware(r)
 	mux = panicMiddleware(mux)
-
 	return mux
 }
-
-//endpoints
-// /api/v1/products - GET
-// /api/v1/products/category/{categoryName} - GET
-// /api/v1/product/{productId} - GET
-// /api/v1/product/{productId} - DELETE
-// /api/v1/product/{productId} - POST
-// /api/v1/product/{productId} - PUT
-// /api/v1/product/{productId}/review - POST
-// /api/v1/product/{productId}/review/{reviewId} - PUT
-// /api/v1/product/{productId}/review/{reviewId} - POST
-
-// /api/v1/cart - GET
-// /api/v1/cart - DELETE
-// /api/v1/cart/{productId} - PUT
-// /api/v1/cart/{productId} - POST
-// /api/v1/cart/{productId} - DELETE
-
-// /api/v1/orders - GET
-// /api/v1/order - GET
-// /api/v1/order - POST
-
-// /api/v1/user/sign-up - POST
-// /api/v1/user/sign-in - POST
-// /api/v1/user/{userId}/products - GET

@@ -26,7 +26,6 @@ func (repo *ReviewPostgresqlRepository) Create(review model.Review) (int, error)
 	if err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
-
 	return reviewID, nil
 }
 
@@ -79,7 +78,6 @@ func (repo *ReviewPostgresqlRepository) GetAll(productID int, q model.ReviewQuer
 	if err := repo.db.Select(&rewiews, query, productID, q.Limit, q.Offset); err != nil {
 		return nil, postgres.ParsePostgresError(err)
 	}
-
 	return rewiews, nil
 }
 
@@ -90,6 +88,5 @@ func (repo *ReviewPostgresqlRepository) GetReviewIDByProductIDUserID(productID, 
 	if err := repo.db.Get(&id, query, productID, userID); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
-
 	return id, nil
 }

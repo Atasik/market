@@ -1,56 +1,5 @@
 basePath: /
 definitions:
-  handler.cartInput:
-    properties:
-      amount:
-        type: integer
-    required:
-    - amount
-    type: object
-  handler.errorResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  handler.getOrdersResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/model.Order'
-        type: array
-    type: object
-  handler.getProductsResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/model.Product'
-        type: array
-    type: object
-  handler.reviewInput:
-    properties:
-      category:
-        type: string
-      text:
-        type: string
-    required:
-    - category
-    - text
-    type: object
-  handler.signInInput:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    required:
-    - password
-    - username
-    type: object
-  handler.statusResponse:
-    properties:
-      status:
-        type: string
-    type: object
   model.Order:
     properties:
       created_at:
@@ -147,6 +96,57 @@ definitions:
     - role
     - username
     type: object
+  v1.cartInput:
+    properties:
+      amount:
+        type: integer
+    required:
+    - amount
+    type: object
+  v1.errorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  v1.getOrdersResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Order'
+        type: array
+    type: object
+  v1.getProductsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/model.Product'
+        type: array
+    type: object
+  v1.reviewInput:
+    properties:
+      category:
+        type: string
+      text:
+        type: string
+    required:
+    - category
+    - text
+    type: object
+  v1.signInInput:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  v1.statusResponse:
+    properties:
+      status:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -154,30 +154,30 @@ info:
   title: Market API
   version: "1.0"
 paths:
-  /api/cart:
+  /api/v1/cart:
     delete:
       operationId: delete-products-from-cart
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.statusResponse'
+            $ref: '#/definitions/v1.statusResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Delete products from cart
@@ -215,29 +215,29 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getProductsResponse'
+            $ref: '#/definitions/v1.getProductsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Get products from cart
       tags:
       - cart
-  /api/cart/{productId}:
+  /api/v1/cart/{productId}:
     delete:
       operationId: delete-product-from-cart
       parameters:
@@ -250,23 +250,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getProductsResponse'
+            $ref: '#/definitions/v1.getProductsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Delete product from cart
@@ -287,28 +287,28 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handler.cartInput'
+          $ref: '#/definitions/v1.cartInput'
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getProductsResponse'
+            $ref: '#/definitions/v1.getProductsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Add product to cart
@@ -329,101 +329,63 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handler.cartInput'
+          $ref: '#/definitions/v1.cartInput'
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getProductsResponse'
+            $ref: '#/definitions/v1.getProductsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Update product amount from cart
       tags:
       - cart
-  /api/login:
+  /api/v1/order:
     post:
-      consumes:
-      - application/json
-      operationId: login
-      parameters:
-      - description: Username and password
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/handler.signInInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: token
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        default:
-          description: ""
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-      summary: Login into market
-      tags:
-      - user
-  /api/order:
-    get:
       operationId: create-order
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getOrdersResponse'
+            $ref: '#/definitions/v1.getOrdersResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Create order
       tags:
       - order
-  /api/order/{orderId}:
+  /api/v1/order/{orderId}:
     get:
       operationId: get-order
       parameters:
@@ -467,25 +429,25 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Get order
       tags:
       - order
-  /api/orders:
+  /api/v1/orders:
     get:
       operationId: get-orders
       parameters:
@@ -518,29 +480,29 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getOrdersResponse'
+            $ref: '#/definitions/v1.getOrdersResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Get orders
       tags:
       - order
-  /api/product:
+  /api/v1/product:
     post:
       consumes:
       - multipart/form-data
@@ -587,25 +549,25 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Add a new product to the market
       tags:
       - products
-  /api/product/{productId}:
+  /api/v1/product/{productId}:
     delete:
       operationId: delete-product
       parameters:
@@ -618,23 +580,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.statusResponse'
+            $ref: '#/definitions/v1.statusResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Delete product from the market
@@ -681,19 +643,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       summary: Get product by id from the market
       tags:
       - products
@@ -742,25 +704,25 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Update an existing product from the market
       tags:
       - products
-  /api/product/{productId}/addReview:
+  /api/v1/product/{productId}/review:
     post:
       consumes:
       - application/json
@@ -776,7 +738,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handler.reviewInput'
+          $ref: '#/definitions/v1.reviewInput'
       responses:
         "201":
           description: Created
@@ -785,25 +747,25 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Create review
       tags:
       - review
-  /api/product/{productId}/deleteReview/{reviewId}:
+  /api/v1/product/{productId}/review/{reviewId}:
     delete:
       operationId: delete-review
       parameters:
@@ -825,25 +787,24 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Delete review
       tags:
       - review
-  /api/product/{productId}/updateReview/{reviewId}:
     put:
       consumes:
       - application/json
@@ -864,7 +825,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/handler.reviewInput'
+          $ref: '#/definitions/v1.reviewInput'
       responses:
         "201":
           description: Created
@@ -873,25 +834,25 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       security:
       - ApiKeyAuth: []
       summary: Update review
       tags:
       - review
-  /api/products:
+  /api/v1/products:
     get:
       operationId: get-all-products
       parameters:
@@ -926,27 +887,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getProductsResponse'
+            $ref: '#/definitions/v1.getProductsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       summary: Get all products from the market
       tags:
       - products
-  /api/products/{categoryName}:
+  /api/v1/products/{categoryName}:
     get:
       operationId: get-products-by-category
       parameters:
@@ -986,27 +947,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getProductsResponse'
+            $ref: '#/definitions/v1.getProductsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       summary: Get all products by category from the market
       tags:
       - products
-  /api/products/{userId}:
+  /api/v1/products/{userId}:
     get:
       operationId: get-products-by-userId
       parameters:
@@ -1046,27 +1007,65 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.getProductsResponse'
+            $ref: '#/definitions/v1.getProductsResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       summary: Get products by UserID
       tags:
       - products
-  /api/register:
+  /api/v1/user/sign-in:
+    post:
+      consumes:
+      - application/json
+      operationId: login
+      parameters:
+      - description: Username and password
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/v1.signInInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+      summary: Login into market
+      tags:
+      - user
+  /api/v1/user/sign-up:
     post:
       consumes:
       - application/json
@@ -1088,19 +1087,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
         default:
           description: ""
           schema:
-            $ref: '#/definitions/handler.errorResponse'
+            $ref: '#/definitions/v1.errorResponse'
       summary: Register in the market
       tags:
       - user

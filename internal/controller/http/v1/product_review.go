@@ -29,7 +29,7 @@ type reviewInput struct {
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/product/{productId}/addReview [post]
+// @Router		/api/v1/product/{productId}/review [post]
 func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -56,21 +56,21 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var input reviewInput
+	var inp reviewInput
 
-	if err = json.Unmarshal(body, &input); err != nil {
+	if err = json.Unmarshal(body, &inp); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	if err = h.validator.Struct(input); err != nil {
+	if err = h.validator.Struct(inp); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var review model.Review
-	review.Category = input.Category
-	review.Text = input.Text
+	review.Category = inp.Category
+	review.Text = inp.Text
 	review.ProductID = productID
 	review.UserID = token.UserID
 	review.Username = token.Username
@@ -139,7 +139,7 @@ func (h *Handler) createReview(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/product/{productId}/updateReview/{reviewId} [put]
+// @Router		/api/v1/product/{productId}/review/{reviewId} [put]
 func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -166,22 +166,27 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var input model.UpdateReviewInput
+	var inp model.UpdateReviewInput
 
-	if err = json.Unmarshal(body, &input); err != nil {
+	if err = json.Unmarshal(body, &inp); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	if err = h.validator.Struct(input); err != nil {
+	if err = h.validator.Struct(inp); err != nil {
+		newErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err = inp.Validate(); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	currentTime := time.Now()
-	input.UpdatedAt = &currentTime
+	inp.UpdatedAt = &currentTime
 
-	if err = h.services.Review.Update(token.UserID, productID, input); err != nil {
+	if err = h.services.Review.Update(token.UserID, productID, inp); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -241,7 +246,7 @@ func (h *Handler) updateReview(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/product/{productId}/deleteReview/{reviewId} [delete]
+// @Router		/api/v1/product/{productId}/review/{reviewId} [delete]
 func (h *Handler) deleteReview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	token, err := auth.TokenFromContext(r.Context())

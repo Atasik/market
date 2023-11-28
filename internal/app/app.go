@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"log"
 	"market/internal/config"
 	ctrl "market/internal/controller/http"
 	"market/internal/model"
@@ -37,17 +36,19 @@ const timeout = 5 * time.Second
 // @in header
 // @name Authorization
 func Run(configDir string) {
-	zapLogger, err := logger.NewZapLogger("zap", context.TODO())
-	if err != nil {
-		log.Fatalf("Error occurred while loading zapLogger: %v", err.Error())
-		return
-	}
-	defer func() error {
-		if err := zapLogger.Sync(); err != nil {
-			zapLogger.Error("Error occurred while Sync", map[string]interface{}{"error": err.Error()})
-		}
-		return nil
-	}()
+	// TODO: refactor logger
+
+	// zapLogger, err := logger.NewZapLogger("zap", context.TODO())
+	// if err != nil {
+	// 	log.Fatalf("Error occurred while loading zapLogger: %v", err.Error())
+	// 	return
+	// }
+	// defer func() {
+	// 	if err = zapLogger.Sync(); err != nil {
+	// 		zapLogger.Error("Error occurred while Sync", map[string]interface{}{"error": err.Error()})
+	// 	}
+	// }()
+	zapLogger, err := logger.NewBlobLogger()
 
 	cfg, err := config.InitConfig(configDir)
 	if err != nil {
@@ -98,7 +99,7 @@ func Run(configDir string) {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				zapLogger.Error("Panic occured", map[string]interface{}{"error": err})
+				zapLogger.Error("Panic occurred", map[string]interface{}{"error": err})
 			}
 		}()
 		if err := srv.Run(); err != nil {
@@ -116,10 +117,10 @@ func Run(configDir string) {
 	zapLogger.Info("Application is shutting down", nil)
 
 	if err := srv.Shutdown(ctx); err != nil {
-		zapLogger.Error("Error occured", map[string]interface{}{"error": err.Error()})
+		zapLogger.Error("Error occurred", map[string]interface{}{"error": err.Error()})
 	}
 
 	if err := db.Close(); err != nil {
-		zapLogger.Error("Error occured", map[string]interface{}{"error": err.Error()})
+		zapLogger.Error("Error occurred", map[string]interface{}{"error": err.Error()})
 	}
 }

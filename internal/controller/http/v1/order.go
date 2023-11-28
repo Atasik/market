@@ -13,13 +13,13 @@ import (
 
 func (h *Handler) initOrderRoutes(api *mux.Router) {
 	order := api.PathPrefix("/order").Subrouter()
-	order.Methods("POST").HandlerFunc(h.authMiddleware(h.createOrder))
-	order.HandleFunc("/{orderId}", h.authMiddleware(h.getOrder)).Methods("GET")
+	order.HandleFunc("", h.authMiddleware(h.createOrder)).Methods("POST")
+	order.HandleFunc("/{orderId}", queryMiddleware(h.authMiddleware(h.getOrder))).Methods("GET")
 }
 
 func (h *Handler) initOrdersRoutes(api *mux.Router) {
 	orders := api.PathPrefix("/orders").Subrouter()
-	orders.Methods("GET").HandlerFunc(h.authMiddleware(h.getOrders))
+	orders.Methods("GET").HandlerFunc(queryMiddleware(h.authMiddleware(h.getOrders)))
 }
 
 // @Summary	Create order
@@ -31,7 +31,7 @@ func (h *Handler) initOrdersRoutes(api *mux.Router) {
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
 // @Failure	default	{object}	errorResponse
-// @Router		/api/order [get]
+// @Router		/api/v1/order [post]
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -85,7 +85,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/order/{orderId} [get]
+// @Router		/api/v1/order/{orderId} [get]
 func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -149,7 +149,7 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
 // @Failure	default	{object}	errorResponse
-// @Router		/api/orders [get]
+// @Router		/api/v1/orders [get]
 func (h *Handler) getOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 

@@ -36,7 +36,7 @@ type cartInput struct {
 // @Failure 400,404 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
-// @Router /api/cart/{productId} [post]
+// @Router /api/v1/cart/{productId} [post]
 func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -64,13 +64,13 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var input cartInput
-	if err = json.Unmarshal(body, &input); err != nil {
+	var inp cartInput
+	if err = json.Unmarshal(body, &inp); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	if err = h.validator.Struct(input); err != nil {
+	if err = h.validator.Struct(inp); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -81,7 +81,7 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err = h.services.Cart.AddProduct(cart.ID, token.UserID, productID, input.Amount); err != nil {
+	if _, err = h.services.Cart.AddProduct(cart.ID, token.UserID, productID, inp.Amount); err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -118,7 +118,7 @@ func (h *Handler) addProductToCart(w http.ResponseWriter, r *http.Request) {
 // @Failure 400,404 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
-// @Router /api/cart [get]
+// @Router /api/v1/cart [get]
 func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	token, err := auth.TokenFromContext(r.Context())
@@ -169,7 +169,7 @@ func (h *Handler) getProductsFromCart(w http.ResponseWriter, r *http.Request) {
 // @Failure 400,404 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
-// @Router /api/cart/{productId} [put]
+// @Router /api/v1/cart/{productId} [put]
 func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -224,8 +224,6 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 
 	q := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
-			Limit:     0,
-			Offset:    0,
 			SortBy:    model.SortByDate,
 			SortOrder: model.DESCENDING,
 		},
@@ -250,7 +248,7 @@ func (h *Handler) updateProductAmountFromCart(w http.ResponseWriter, r *http.Req
 // @Failure 400,404 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
-// @Router /api/cart/{productId} [delete]
+// @Router /api/v1/cart/{productId} [delete]
 func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	token, err := auth.TokenFromContext(r.Context())
@@ -281,8 +279,6 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 
 	q := model.ProductQueryInput{
 		QueryInput: model.QueryInput{
-			Limit:     0,
-			Offset:    0,
 			SortBy:    model.SortByDate,
 			SortOrder: model.DESCENDING,
 		},
@@ -306,7 +302,7 @@ func (h *Handler) deleteProductFromCart(w http.ResponseWriter, r *http.Request) 
 // @Failure 400,404 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
-// @Router /api/cart [delete]
+// @Router /api/v1/cart [delete]
 func (h *Handler) deleteProductsFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	token, err := auth.TokenFromContext(r.Context())

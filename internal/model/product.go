@@ -47,7 +47,6 @@ func (i ProductQueryInput) Validate() error {
 	if i.SortBy != SortByViews && i.SortBy != SortByPrice && i.SortBy != SortByDate || (i.SortOrder != ASCENDING && i.SortOrder != DESCENDING) {
 		return errors.New("invalid sort query")
 	}
-
 	return nil
 }
 
@@ -55,6 +54,5 @@ func (i UpdateProductInput) Validate() error {
 	if i.Title == nil && i.Price == nil && i.Tag == nil && i.Type == nil && i.Description == nil && i.Amount == nil && i.Views == nil && i.UpdatedAt == nil && (i.ImageURL == nil && i.ImageURL != i.ImageID) {
 		return errors.New("update structure has no values")
 	}
-
 	return nil
 }

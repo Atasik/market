@@ -21,6 +21,5 @@ func (i OrderQueryInput) Validate() error {
 	if i.SortBy != SortByDate || (i.SortOrder != ASCENDING && i.SortOrder != DESCENDING) {
 		return errors.New("invalid sort query")
 	}
-
 	return nil
 }

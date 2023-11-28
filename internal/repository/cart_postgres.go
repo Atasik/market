@@ -24,7 +24,6 @@ func (repo *CartPostgresqlRepository) Create(userID int) (int, error) {
 	if err := row.Scan(&id); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
-
 	return id, nil
 }
 
@@ -36,7 +35,6 @@ func (repo *CartPostgresqlRepository) AddProduct(cartID, productID, amount int) 
 	if err := row.Scan(&id); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
-
 	return id, nil
 }
 
@@ -47,7 +45,6 @@ func (repo *CartPostgresqlRepository) GetByUserID(userID int) (model.Cart, error
 	if err := repo.db.Get(&Cart, query, userID); err != nil {
 		return model.Cart{}, postgres.ParsePostgresError(err)
 	}
-
 	return Cart, nil
 }
 
@@ -73,7 +70,6 @@ func (repo *CartPostgresqlRepository) GetAllProducts(cartID int, q model.Product
 	if err := repo.db.Select(&products, query, args...); err != nil {
 		return []model.Product{}, postgres.ParsePostgresError(err)
 	}
-
 	return products, nil
 }
 
@@ -87,7 +83,6 @@ func (repo *CartPostgresqlRepository) GetProductByID(cartID, productID int) (mod
 	if err := repo.db.Get(&product, query, cartID, productID); err != nil {
 		return model.Product{}, postgres.ParsePostgresError(err)
 	}
-
 	return product, nil
 }
 

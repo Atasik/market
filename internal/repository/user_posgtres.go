@@ -23,7 +23,6 @@ func (repo *UserPostgresqlRepository) GetUser(login string) (model.User, error) 
 	if err := repo.db.Get(&user, query, login); err != nil {
 		return model.User{}, postgres.ParsePostgresError(err)
 	}
-
 	return user, nil
 }
 
@@ -34,7 +33,6 @@ func (repo *UserPostgresqlRepository) GetUserByID(userID int) (model.User, error
 	if err := repo.db.Get(&user, query, userID); err != nil {
 		return model.User{}, postgres.ParsePostgresError(err)
 	}
-
 	return user, nil
 }
 
@@ -46,6 +44,5 @@ func (repo *UserPostgresqlRepository) CreateUser(user model.User) (int, error) {
 	if err := row.Scan(&id); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
-
 	return id, nil
 }

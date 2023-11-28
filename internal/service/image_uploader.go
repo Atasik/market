@@ -26,7 +26,6 @@ func (s *ImageServiceCloudinary) Upload(ctx context.Context, file multipart.File
 	if err != nil {
 		return ImageData{}, err
 	}
-
 	return ImageData{ImageURL: resp.URL, ImageID: resp.PublicID}, nil
 }
 

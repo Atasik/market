@@ -21,21 +21,19 @@ const (
 
 func (h *Handler) initProductRoutes(api *mux.Router) {
 	product := api.PathPrefix("/product").Subrouter()
-	product.Methods("POST").HandlerFunc(h.authMiddleware(h.createProduct))
+	product.HandleFunc("", h.authMiddleware(h.createProduct)).Methods("POST")
 	product.HandleFunc("/{productId}", queryMiddleware(h.getProductByID)).Methods("GET")
 	product.HandleFunc("/{productId}", h.authMiddleware(h.updateProduct)).Methods("PUT")
 	product.HandleFunc("/{productId}", h.authMiddleware(h.deleteProduct)).Methods("DELETE")
-
-	review := product.PathPrefix("/review").Subrouter()
-	review.Methods("POST").HandlerFunc(h.authMiddleware(h.createReview))
-	review.HandleFunc("/{reviewId}", h.authMiddleware(h.updateReview)).Methods("PUT")
-	review.HandleFunc("/{reviewId}", h.authMiddleware(h.deleteReview)).Methods("DELETE")
+	product.HandleFunc("/{productId}/review", h.authMiddleware(h.createReview)).Methods("POST")
+	product.HandleFunc("/{productId}/review/{reviewId}", h.authMiddleware(h.updateReview)).Methods("PUT")
+	product.HandleFunc("/{productId}/review/{reviewId}", h.authMiddleware(h.deleteReview)).Methods("DELETE")
 }
 
 func (h *Handler) initProductsRoutes(api *mux.Router) {
-	products := api.PathPrefix("products").Subrouter()
+	products := api.PathPrefix("/products").Subrouter()
 	products.Methods("GET").HandlerFunc(queryMiddleware(h.getAllProducts))
-	products.HandleFunc("/products/category/{categoryName}", queryMiddleware(h.getProductsByCategory)).Methods("GET")
+	products.HandleFunc("/category/{categoryName}", queryMiddleware(h.getProductsByCategory)).Methods("GET")
 }
 
 // @Summary	Add a new product to the market
@@ -55,7 +53,7 @@ func (h *Handler) initProductsRoutes(api *mux.Router) {
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/product [post]
+// @Router		/api/v1/product [post]
 func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	token, err := auth.TokenFromContext(r.Context())
@@ -86,6 +84,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		newErrorResponse(w, "Error Retrieving the File", http.StatusBadRequest)
 		return
 	}
+	defer file.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 	defer cancel()
@@ -101,12 +100,11 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 	product.CreatedAt = time.Now()
 	product.UpdatedAt = time.Now()
 
-	defer file.Close()
-
 	productID, err := h.services.Product.Create(product)
 	if err != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 		defer cancel()
+
 		if err = h.services.Image.Delete(ctx, product.ImageID); err != nil {
 			newErrorResponse(w, `ImageServer Error`, http.StatusInternalServerError)
 			return
@@ -138,7 +136,7 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
 // @Failure	default	{object}	errorResponse
-// @Router		/api/products [get]
+// @Router		/api/v1/products [get]
 func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -184,7 +182,7 @@ func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
 // @Failure	default	{object}	errorResponse
-// @Router		/api/products/{userId} [get]
+// @Router		/api/v1/products/{userId} [get]
 func (h *Handler) getProductsByUserID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -237,7 +235,7 @@ func (h *Handler) getProductsByUserID(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
 // @Failure	default	{object}	errorResponse
-// @Router		/api/products/{categoryName} [get]
+// @Router		/api/v1/products/{categoryName} [get]
 func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -286,7 +284,7 @@ func (h *Handler) getProductsByCategory(w http.ResponseWriter, r *http.Request) 
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/product/{productId} [get]
+// @Router		/api/v1/product/{productId} [get]
 func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -374,7 +372,7 @@ func (h *Handler) getProductByID(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/product/{productId} [put]
+// @Router		/api/v1/product/{productId} [put]
 func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 
@@ -433,19 +431,16 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = h.services.Product.Update(token.UserID, productID, input); err != nil {
-		switch fileExists {
-		case true:
+		if fileExists {
 			ctx, cancel := context.WithTimeout(context.Background(), imageUploadTimeout)
 			defer cancel()
 			if err = h.services.Image.Delete(ctx, *input.ImageID); err != nil {
 				newErrorResponse(w, `ImageService Error`, http.StatusInternalServerError)
 				return
 			}
-			fallthrough
-		default:
-			newErrorResponse(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
+		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	if fileExists {
@@ -481,7 +476,7 @@ func (h *Handler) updateProduct(w http.ResponseWriter, r *http.Request) {
 // @Failure	400,404		{object}	errorResponse
 // @Failure	500			{object}	errorResponse
 // @Failure	default		{object}	errorResponse
-// @Router		/api/product/{productId} [delete]
+// @Router		/api/v1/product/{productId} [delete]
 func (h *Handler) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 

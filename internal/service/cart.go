@@ -27,30 +27,28 @@ func (s *CartService) Create(userID int) (int, error) {
 }
 
 func (s *CartService) AddProduct(userID, cartID, productID, amountToPurchase int) (int, error) {
-	user, err := s.userRepo.GetUserByID(userID)
+	_, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return 0, err
 	}
-	if user.Role == model.ADMIN || user.ID == userID {
-		product, err := s.productRepo.GetByID(productID)
-		if err != nil {
-			return 0, err
-		}
-		if _, err = s.cartRepo.GetProductByID(cartID, productID); err != nil {
-			switch err {
-			case postgres.ErrNotFound:
-				if product.Amount < amountToPurchase {
-					return 0, ErrInvalidAmount
-				}
-				return s.cartRepo.AddProduct(cartID, productID, amountToPurchase)
-			default:
-				return 0, err
-			}
-		}
-		return 0, ErrAddDuplicate
+	// if user.Role == model.ADMIN || user.ID == userID {
+	product, err := s.productRepo.GetByID(productID)
+	if err != nil {
+		return 0, err
 	}
-
-	return 0, ErrPermissionDenied
+	_, err = s.cartRepo.GetProductByID(cartID, productID)
+	if err == postgres.ErrNotFound {
+		if amountToPurchase > product.Amount {
+			return 0, ErrInvalidAmount
+		}
+		return s.cartRepo.AddProduct(cartID, productID, amountToPurchase)
+	}
+	if err != nil {
+		return 0, err
+	}
+	return 0, ErrAddDuplicate
+	// }
+	// return 0, ErrPermissionDenied
 }
 
 func (s *CartService) GetByUserID(userID int) (model.Cart, error) {
@@ -61,7 +59,6 @@ func (s *CartService) GetByUserID(userID int) (model.Cart, error) {
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.cartRepo.GetByUserID(userID)
 	}
-
 	return model.Cart{}, ErrPermissionDenied
 }
 
@@ -73,7 +70,6 @@ func (s *CartService) GetAllProducts(userID, cartID int, q model.ProductQueryInp
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.cartRepo.GetAllProducts(cartID, q)
 	}
-
 	return []model.Product{}, ErrPermissionDenied
 }
 
@@ -92,7 +88,6 @@ func (s *CartService) UpdateProductAmount(userID, cartID, productID, amountToPur
 		}
 		return s.cartRepo.UpdateProductAmount(cartID, productID, amountToPurchase)
 	}
-
 	return ErrPermissionDenied
 }
 
@@ -104,7 +99,6 @@ func (s *CartService) DeleteProduct(userID, cartID, productID int) error {
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.cartRepo.DeleteProduct(cartID, productID)
 	}
-
 	return ErrPermissionDenied
 }
 
@@ -116,6 +110,5 @@ func (s *CartService) DeleteAllProducts(userID, cartID int) error {
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.cartRepo.DeleteAllProducts(cartID)
 	}
-
 	return ErrPermissionDenied
 }

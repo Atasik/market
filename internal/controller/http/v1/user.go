@@ -16,6 +16,11 @@ func (h *Handler) initUserRoutes(api *mux.Router) {
 	user.HandleFunc("/{userId}/products", queryMiddleware(h.getProductsByUserID)).Methods("GET")
 }
 
+type signUpInput struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
 // @Summary	Register in the market
 // @Tags		user
 // @ID			register
@@ -26,7 +31,7 @@ func (h *Handler) initUserRoutes(api *mux.Router) {
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
 // @Failure	default	{object}	errorResponse
-// @Router		/api/register [post]
+// @Router		/api/v1/user/sign-up [post]
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -41,19 +46,21 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var user model.User
-	if err = json.Unmarshal(body, &user); err != nil {
+	var inp signUpInput
+	if err = json.Unmarshal(body, &inp); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	user.Role = model.USER
-
-	if err = h.validator.Struct(user); err != nil {
+	if err = h.validator.Struct(inp); err != nil {
 		newErrorResponse(w, "invalid input", http.StatusBadRequest)
 		return
 	}
 
+	user := model.User{
+		Username: inp.Username,
+		Password: inp.Password,
+	}
 	userID, err := h.services.User.CreateUser(user)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
@@ -100,7 +107,7 @@ type signInInput struct {
 // @Failure	400,404	{object}	errorResponse
 // @Failure	500		{object}	errorResponse
 // @Failure	default	{object}	errorResponse
-// @Router		/api/login [post]
+// @Router		/api/v1/user/sign-in [post]
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
 	if r.Header.Get("Content-Type") != appJSON {
@@ -115,18 +122,18 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	var input signInInput
-	if err = json.Unmarshal(body, &input); err != nil {
+	var inp signInInput
+	if err = json.Unmarshal(body, &inp); err != nil {
 		newErrorResponse(w, "cant unpack payload", http.StatusBadRequest)
 		return
 	}
 
-	if err = h.validator.Struct(input); err != nil {
+	if err = h.validator.Struct(inp); err != nil {
 		newErrorResponse(w, "invalid input", http.StatusBadRequest)
 		return
 	}
 
-	token, err := h.services.User.GenerateToken(input.Username, input.Password)
+	token, err := h.services.User.GenerateToken(inp.Username, inp.Password)
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusInternalServerError)
 		return

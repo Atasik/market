@@ -22,11 +22,7 @@ func NewProductService(productRepo repository.ProductRepo, userRepo repository.U
 }
 
 func (s *ProductService) Create(product model.Product) (int, error) {
-	id, err := s.productRepo.Create(product)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
+	return s.productRepo.Create(product)
 }
 
 func (s *ProductService) GetAll(q model.ProductQueryInput) ([]model.Product, error) {
@@ -41,11 +37,7 @@ func (s *ProductService) GetProductsByCategory(productType string, q model.Produ
 }
 
 func (s *ProductService) GetByID(productID int) (model.Product, error) {
-	product, err := s.productRepo.GetByID(productID)
-	if err != nil {
-		return model.Product{}, err
-	}
-	return product, nil
+	return s.productRepo.GetByID(productID)
 }
 
 func (s *ProductService) Update(userID, productID int, input model.UpdateProductInput) error {
@@ -59,7 +51,6 @@ func (s *ProductService) Update(userID, productID int, input model.UpdateProduct
 		}
 		return s.productRepo.Update(productID, input)
 	}
-
 	return ErrPermissionDenied
 }
 
@@ -82,6 +73,5 @@ func (s *ProductService) Delete(userID, productID int) error {
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.productRepo.Delete(productID)
 	}
-
 	return ErrPermissionDenied
 }

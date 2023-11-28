@@ -34,12 +34,7 @@ func (s *UserService) CreateUser(user model.User) (int, error) {
 	}
 
 	user.Password = password
-
-	id, err := s.userRepo.CreateUser(user)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
+	return s.userRepo.CreateUser(user)
 }
 
 func (s *UserService) GenerateToken(username, password string) (string, error) {
@@ -56,6 +51,5 @@ func (s *UserService) GenerateToken(username, password string) (string, error) {
 	if !match {
 		return "", ErrBadPass
 	}
-
 	return s.tokenManager.NewJWT(user.ID, username, s.accessTokenTTL)
 }

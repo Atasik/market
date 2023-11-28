@@ -34,8 +34,6 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 
 		q := model.ProductQueryInput{
 			QueryInput: model.QueryInput{
-				Limit:     0,
-				Offset:    0,
 				SortBy:    model.SortByDate,
 				SortOrder: model.DESCENDING,
 			},
@@ -49,14 +47,8 @@ func (s *OrderService) Create(userID int, order model.Order) (int, error) {
 		if order.Products == nil {
 			return 0, ErrNoProducts
 		}
-
-		lastID, err := s.orderRepo.Create(cart.ID, userID, order)
-		if err != nil {
-			return 0, err
-		}
-		return lastID, nil
+		return s.orderRepo.Create(cart.ID, userID, order)
 	}
-
 	return 0, ErrPermissionDenied
 }
 
@@ -68,7 +60,6 @@ func (s *OrderService) GetAll(userID int, q model.OrderQueryInput) ([]model.Orde
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.orderRepo.GetAll(userID, q)
 	}
-
 	return []model.Order{}, ErrPermissionDenied
 }
 
@@ -78,13 +69,8 @@ func (s *OrderService) GetByID(userID, orderID int) (model.Order, error) {
 		return model.Order{}, err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		order, err := s.orderRepo.GetByID(orderID)
-		if err != nil {
-			return model.Order{}, err
-		}
-		return order, nil
+		return s.orderRepo.GetByID(orderID)
 	}
-
 	return model.Order{}, ErrPermissionDenied
 }
 
@@ -96,6 +82,5 @@ func (s *OrderService) GetProductsByOrderID(userID, orderID int, q model.Product
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.orderRepo.GetProductsByOrderID(orderID, q)
 	}
-
 	return []model.Product{}, ErrPermissionDenied
 }

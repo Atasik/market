@@ -25,7 +25,6 @@ func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, err
 	if err := row.Scan(&productID); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
-
 	return productID, nil
 }
 
@@ -37,7 +36,6 @@ func (repo *ProductPostgresqlRepository) GetAll(q model.ProductQueryInput) ([]mo
 	if err := repo.db.Select(&products, query, q.Limit, q.Offset); err != nil {
 		return nil, postgres.ParsePostgresError(err)
 	}
-
 	return products, nil
 }
 
@@ -60,7 +58,6 @@ func (repo *ProductPostgresqlRepository) GetProductsByUserID(userID int, q model
 	if err := repo.db.Select(&products, query, args...); err != nil {
 		return nil, postgres.ParsePostgresError(err)
 	}
-
 	return products, nil
 }
 
@@ -71,7 +68,6 @@ func (repo *ProductPostgresqlRepository) GetByID(productID int) (model.Product, 
 	if err := repo.db.Get(&product, query, productID); err != nil {
 		return model.Product{}, postgres.ParsePostgresError(err)
 	}
-
 	return product, nil
 }
 
@@ -94,7 +90,6 @@ func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory s
 	if err := repo.db.Select(&products, query, args...); err != nil {
 		return nil, postgres.ParsePostgresError(err)
 	}
-
 	return products, nil
 }
 

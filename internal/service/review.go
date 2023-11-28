@@ -24,12 +24,10 @@ func NewReviewService(reviewRepo repository.ReviewRepo, userRepo repository.User
 
 func (s *ReviewService) Create(review model.Review) (int, error) {
 	if _, err := s.reviewRepo.GetReviewIDByProductIDUserID(review.ProductID, review.UserID); err != nil {
-		switch err {
-		case postgres.ErrNotFound:
+		if err == postgres.ErrNotFound {
 			return s.reviewRepo.Create(review)
-		default:
-			return 0, err
 		}
+		return 0, err
 	}
 	return 0, ErrReviewExists
 }
@@ -44,12 +42,8 @@ func (s *ReviewService) Update(userID, productID int, input model.UpdateReviewIn
 		return err
 	}
 	if user.Role == model.ADMIN || user.ID == userID {
-		if err := input.Validate(); err != nil { // TODO: refactor
-			return err
-		}
 		return s.reviewRepo.Update(userID, productID, input)
 	}
-
 	return ErrPermissionDenied
 }
 
@@ -61,6 +55,5 @@ func (s *ReviewService) Delete(userID, reviewID int) error {
 	if user.Role == model.ADMIN || user.ID == userID {
 		return s.reviewRepo.Delete(reviewID)
 	}
-
 	return ErrPermissionDenied
 }
