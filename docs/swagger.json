@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "qgr9d1cp-8080.euw.devtunnels.ms",
     "basePath": "/",
     "paths": {
         "/api/v1/cart": {

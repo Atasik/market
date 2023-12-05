@@ -18,12 +18,17 @@ import (
 	"syscall"
 	"time"
 
+	"market/docs"
+
 	_ "github.com/lib/pq"
 
 	"github.com/go-playground/validator/v10"
 )
 
-const timeout = 5 * time.Second
+const (
+	timeout = 5 * time.Second
+	tunnel  = "qgr9d1cp-8080.euw.devtunnels.ms"
+)
 
 // @title Market API
 // @version 1.0
@@ -48,7 +53,9 @@ func Run(configDir string) {
 	// 		zapLogger.Error("Error occurred while Sync", map[string]interface{}{"error": err.Error()})
 	// 	}
 	// }()
-	zapLogger, err := logger.NewBlobLogger()
+
+	docs.SwaggerInfo.Host = tunnel
+	zapLogger := logger.NewBlobLogger()
 
 	cfg, err := config.InitConfig(configDir)
 	if err != nil {

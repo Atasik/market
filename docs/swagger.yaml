@@ -147,7 +147,7 @@ definitions:
       status:
         type: string
     type: object
-host: localhost:8080
+host: qgr9d1cp-8080.euw.devtunnels.ms
 info:
   contact: {}
   description: Simple market API
