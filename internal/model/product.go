@@ -26,6 +26,7 @@ type Product struct {
 	ImageID         string    `db:"image_id" json:"-"`
 	Reviews         []Review  `json:"reviews"`
 	RelatedProducts []Product `json:"related_products"`
+	Favorite        bool      `json:"favorite" db:"favorite"`
 }
 
 type Tags []Tag
@@ -45,6 +46,7 @@ type UpdateProductInput struct {
 	Views       *int       `json:"views"`
 	ImageURL    *string    `json:"image_url"`
 	ImageID     *string
+	Favorite    *bool `json:"favorite"`
 }
 
 type ProductQueryInput struct {
@@ -60,7 +62,7 @@ func (i ProductQueryInput) Validate() error {
 }
 
 func (i UpdateProductInput) Validate() error {
-	if i.Title == nil && i.Price == nil && i.Tag == nil && i.Type == nil && i.Description == nil && i.Amount == nil && i.Views == nil && i.UpdatedAt == nil && (i.ImageURL == nil && i.ImageURL != i.ImageID) {
+	if i.Title == nil && i.Price == nil && i.Tag == nil && i.Type == nil && i.Description == nil && i.Amount == nil && i.Views == nil && i.UpdatedAt == nil && (i.ImageURL == nil && i.ImageURL != i.ImageID) && i.Favorite == nil {
 		return errors.New("update structure has no values")
 	}
 	return nil

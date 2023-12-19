@@ -109,3 +109,71 @@ func TestProductService_GetAll(t *testing.T) {
 		}
 	}
 }
+
+func TestProductService_Delete(t *testing.T) {
+	type mockBehaviour func(pr *mock_repository.MockProductRepo, ur *mock_repository.MockUserRepo, userID, productID int)
+
+	tests := []struct {
+		name          string
+		userID        int
+		productID     int
+		mockBehaviour mockBehaviour
+		wantErr       bool
+	}{
+		{
+			name:      "DB OK",
+			userID:    1,
+			productID: 1,
+			mockBehaviour: func(pr *mock_repository.MockProductRepo, ur *mock_repository.MockUserRepo, userID, productID int) {
+				ur.EXPECT().GetUserByID(1).Return(model.User{Role: model.ADMIN}, nil)
+				pr.EXPECT().Delete(productID).Return(nil)
+			},
+		},
+		{
+			name:      "UserID Error",
+			userID:    1,
+			productID: 1,
+			mockBehaviour: func(pr *mock_repository.MockProductRepo, ur *mock_repository.MockUserRepo, userID, productID int) {
+				ur.EXPECT().GetUserByID(1).Return(model.User{}, errors.New("something went wrong"))
+			},
+			wantErr: true,
+		},
+		{
+			name:      "Delete Error",
+			userID:    1,
+			productID: 1,
+			mockBehaviour: func(pr *mock_repository.MockProductRepo, ur *mock_repository.MockUserRepo, userID, productID int) {
+				ur.EXPECT().GetUserByID(1).Return(model.User{Role: model.ADMIN}, nil)
+				pr.EXPECT().Delete(productID).Return(errors.New("something went wrong"))
+			},
+			wantErr: true,
+		},
+		{
+			name:      "Wrong User ID error",
+			userID:    1,
+			productID: 1,
+			mockBehaviour: func(pr *mock_repository.MockProductRepo, ur *mock_repository.MockUserRepo, userID, productID int) {
+				ur.EXPECT().GetUserByID(1).Return(model.User{ID: 3}, nil)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		c := gomock.NewController(t)
+		defer c.Finish()
+
+		repoProduct := mock_repository.NewMockProductRepo(c)
+		repoUser := mock_repository.NewMockUserRepo(c)
+		test.mockBehaviour(repoProduct, repoUser, test.userID, test.productID)
+
+		personService := NewProductService(repoProduct, repoUser)
+
+		err := personService.Delete(test.userID, test.productID)
+		if test.wantErr {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
+		}
+	}
+}

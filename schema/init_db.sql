@@ -40,7 +40,8 @@ CREATE TABLE products
   updated_at    timestamp                                                     not null,
   views         int                                                           not null,
   image_url     varchar(255)                                                  not null,
-  image_id      varchar(255)                                                  not null unique
+  image_id      varchar(255)                                                  not null unique,
+  favorite      boolean                                                       not null
 );
 
 CREATE TABLE tags

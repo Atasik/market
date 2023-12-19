@@ -27,6 +27,7 @@ func (h *Handler) initProductRoutes(api *mux.Router) {
 	product.HandleFunc("/{productId}", queryMiddleware(h.getProductByID)).Methods("GET")
 	product.HandleFunc("/{productId}", h.authMiddleware(h.updateProduct)).Methods("PUT")
 	product.HandleFunc("/{productId}", h.authMiddleware(h.deleteProduct)).Methods("DELETE")
+	product.HandleFunc("/{productId}/toggleFavorite", h.toggleFavorite).Methods("GET")
 	product.HandleFunc("/{productId}/review", h.authMiddleware(h.createReview)).Methods("POST")
 	product.HandleFunc("/{productId}/review/{reviewId}", h.authMiddleware(h.updateReview)).Methods("PUT")
 	product.HandleFunc("/{productId}/review/{reviewId}", h.authMiddleware(h.deleteReview)).Methods("DELETE")
@@ -36,6 +37,43 @@ func (h *Handler) initProductsRoutes(api *mux.Router) {
 	products := api.PathPrefix("/products").Subrouter()
 	products.Methods("GET").HandlerFunc(queryMiddleware(h.getAllProducts))
 	products.HandleFunc("/category/{categoryName}", queryMiddleware(h.getProductsByCategory)).Methods("GET")
+}
+
+// @Summary	ToggleFavorite product
+// @Tags		products
+// @ID			toggle-favorite
+// @Product	json
+// @Param		productId	path		integer	true	"ID of product to add to favorite"
+// @Success	201			{object}	statusResponse
+// @Failure	400,404		{object}	errorResponse
+// @Failure	500			{object}	errorResponse
+// @Failure	default		{object}	errorResponse
+// @Router		/api/v1/product/{productId}/toggleFavorite [get]
+func (h *Handler) toggleFavorite(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	productID, err := strconv.Atoi(vars["productId"])
+	if err != nil {
+		newErrorResponse(w, "Bad Id", http.StatusBadRequest)
+		return
+	}
+
+	product, err := h.services.Product.GetByID(productID)
+	if err != nil {
+		newErrorResponse(w, `Service Error`, http.StatusInternalServerError)
+		return
+	}
+
+	product.Favorite = !product.Favorite
+
+	err = h.services.Product.Update(product.UserID, product.ID, model.UpdateProductInput{
+		Favorite: &product.Favorite,
+	})
+	if err != nil {
+		newErrorResponse(w, `Service Error`, http.StatusInternalServerError)
+		return
+	}
+
+	newStatusReponse(w, "done", http.StatusOK)
 }
 
 // @Summary	Add a new product to the market

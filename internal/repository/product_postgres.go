@@ -26,9 +26,9 @@ func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, err
 	fmt.Println("goyda")
 	fmt.Println(product)
 	var productID int
-	query := "INSERT INTO products (user_id, title, price, category, description, amount, created_at, updated_at, views, image_url, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
+	query := "INSERT INTO products (user_id, title, price, category, description, amount, created_at, updated_at, views, image_url, image_id, favorite) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id"
 
-	row := tx.QueryRow(query, product.UserID, product.Title, product.Price, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID)
+	row := tx.QueryRow(query, product.UserID, product.Title, product.Price, product.Category, product.Description, product.Amount, product.CreatedAt, product.UpdatedAt, product.Views, product.ImageURL, product.ImageID, product.Favorite)
 	if err = row.Scan(&productID); err != nil {
 		return 0, postgres.ParsePostgresError(err)
 	}
@@ -65,13 +65,14 @@ func (repo *ProductPostgresqlRepository) GetAll(q model.ProductQueryInput) ([]mo
    							p.created_at,
     						p.updated_at,
     						p.views,
-						    p.image_url
+						    p.image_url,
+							p.favorite
 						FROM
 						    products p
 						    LEFT JOIN products_tags pt ON pt.product_id = p.id
 						    LEFT JOIN tags t ON pt.tag_id = t.id
 						GROUP BY
-						    p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url
+						    p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url, p.favorite
 						ORDER BY
 						    %s %s
 						LIMIT
@@ -111,7 +112,8 @@ func (repo *ProductPostgresqlRepository) GetProductsByUserID(userID int, q model
 							p.created_at,
 							p.updated_at,
 							p.views,
-							p.image_url
+							p.image_url,
+							p.favorite
 						FROM
 							products p
 							LEFT JOIN products_tags pt ON pt.product_id = p.id
@@ -119,7 +121,7 @@ func (repo *ProductPostgresqlRepository) GetProductsByUserID(userID int, q model
 						WHERE 
 							p.user_id = $1 %s
 						GROUP BY
-						    p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url
+						    p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url, p.favorite
 					    ORDER BY 
 							%s %s 
 						LIMIT 
@@ -147,7 +149,8 @@ func (repo *ProductPostgresqlRepository) GetByID(productID int) (model.Product, 
 				  p.created_at,
 				  p.updated_at,
 				  p.views,
-				  p.image_url
+				  p.image_url,
+				  p.favorite
 			  FROM
 				  products p
 				  LEFT JOIN products_tags pt ON pt.product_id = p.id
@@ -155,7 +158,7 @@ func (repo *ProductPostgresqlRepository) GetByID(productID int) (model.Product, 
 			  WHERE 
 				  p.id = $1
 			  GROUP BY
-				  p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url`
+				  p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url, p.favorite`
 
 	if err := repo.db.Get(&product, query, productID); err != nil {
 		return model.Product{}, postgres.ParsePostgresError(err)
@@ -189,7 +192,8 @@ func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory s
 							p.created_at,
 							p.updated_at,
 							p.views,
-							p.image_url
+							p.image_url,
+							p.favorite
 						FROM
 							products p
 							LEFT JOIN products_tags pt ON pt.product_id = p.id
@@ -197,7 +201,7 @@ func (repo *ProductPostgresqlRepository) GetProductsByCategory(productCategory s
 						WHERE 
 							category = $1 %s 
 						GROUP BY
-							p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url
+							p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, p.created_at, p.updated_at, p.views, p.image_url, p.favorite
 						ORDER BY 
 							%s %s
 						LIMIT 
@@ -265,6 +269,12 @@ func (repo *ProductPostgresqlRepository) Update(productID int, input model.Updat
 	if input.UpdatedAt != nil {
 		setValues = append(setValues, fmt.Sprintf("updated_at=$%d", argID))
 		args = append(args, *input.UpdatedAt)
+		argID++
+	}
+
+	if input.Favorite != nil {
+		setValues = append(setValues, fmt.Sprintf("favorite=$%d", argID))
+		args = append(args, *input.Favorite)
 		argID++
 	}
 

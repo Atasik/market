@@ -25,6 +25,8 @@ definitions:
         type: string
       description:
         type: string
+      favorite:
+        type: boolean
       id:
         type: integer
       image_url:
@@ -860,6 +862,39 @@ paths:
       summary: Update review
       tags:
       - review
+  /api/v1/product/{productId}/toggleFavorite:
+    get:
+      operationId: toggle-favorite
+      parameters:
+      - description: ID of product to add to favorite
+        in: path
+        name: productId
+        required: true
+        type: integer
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.statusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+      summary: ToggleFavorite product
+      tags:
+      - products
   /api/v1/products:
     get:
       operationId: get-all-products

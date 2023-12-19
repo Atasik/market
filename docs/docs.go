@@ -1090,6 +1090,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/product/{productId}/toggleFavorite": {
+            "get": {
+                "tags": [
+                    "products"
+                ],
+                "summary": "ToggleFavorite product",
+                "operationId": "toggle-favorite",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of product to add to favorite",
+                        "name": "productId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.statusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.errorResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/v1.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/products": {
             "get": {
                 "tags": [
@@ -1508,6 +1558,9 @@ const docTemplate = `{
                 },
                 "description": {
                     "type": "string"
+                },
+                "favorite": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "integer"
