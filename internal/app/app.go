@@ -18,8 +18,6 @@ import (
 	"syscall"
 	"time"
 
-	"market/docs"
-
 	_ "github.com/lib/pq"
 
 	"github.com/go-playground/validator/v10"
@@ -54,7 +52,7 @@ func Run(configDir string) {
 	// 	}
 	// }()
 
-	docs.SwaggerInfo.Host = tunnel
+	// docs.SwaggerInfo.Host = tunnel
 	zapLogger := logger.NewBlobLogger()
 
 	cfg, err := config.InitConfig(configDir)

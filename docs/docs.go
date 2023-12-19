@@ -589,9 +589,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "description": "Tag of product",
-                        "name": "tag",
+                        "name": "tags",
                         "in": "formData"
                     },
                     {
@@ -1508,9 +1512,6 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "imageID": {
-                    "type": "string"
-                },
                 "image_url": {
                     "type": "string"
                 },
@@ -1535,8 +1536,11 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Review"
                     }
                 },
-                "tag": {
-                    "type": "string"
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Tag"
+                    }
                 },
                 "title": {
                     "type": "string"
@@ -1581,6 +1585,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Tag": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }
@@ -1696,7 +1708,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "qgr9d1cp-8080.euw.devtunnels.ms",
+	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Market API",

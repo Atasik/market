@@ -3,10 +3,12 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"market/internal/model"
 	"market/pkg/auth"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -45,7 +47,7 @@ func (h *Handler) initProductsRoutes(api *mux.Router) {
 // @Param		file		formData	file	true	"Image to Upload"
 // @Param		title		formData	string	true	"Title of product"
 // @Param		price		formData	number	true	"Price of product"
-// @Param		tag			formData	string	false	"Tag of product"
+// @Param		tags		formData	[]string	false	"Tag of product"
 // @Param		category	formData	string	true	"Category of product"
 // @Param		description	formData	string	false	"Description of product"
 // @Param		amount		formData	integer	true	"Amount of products"
@@ -66,12 +68,22 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		newErrorResponse(w, "Failed to Parse MultipartForm", http.StatusInternalServerError)
 		return
 	}
-	var product model.Product
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
+
+	var product model.Product
+
 	if err = decoder.Decode(&product, r.PostForm); err != nil {
 		newErrorResponse(w, `Bad form`, http.StatusBadRequest)
 		return
+	}
+
+	tagNames := strings.Split(r.Form.Get("tags"), ",")
+
+	fmt.Println(tagNames)
+	for _, tagName := range tagNames {
+		tag := model.Tag{Name: tagName}
+		product.Tags = append(product.Tags, tag)
 	}
 
 	if err = h.validator.Struct(product); err != nil {
@@ -94,11 +106,8 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	product.UserID = token.UserID
-	product.ImageURL = data.ImageURL
-	product.ImageID = data.ImageID
-	product.CreatedAt = time.Now()
-	product.UpdatedAt = time.Now()
+	product.UserID, product.ImageURL, product.ImageID = token.UserID, data.ImageURL, data.ImageID
+	product.CreatedAt, product.UpdatedAt = time.Now(), time.Now()
 
 	productID, err := h.services.Product.Create(product)
 	if err != nil {
@@ -139,7 +148,6 @@ func (h *Handler) createProduct(w http.ResponseWriter, r *http.Request) {
 // @Router		/api/v1/products [get]
 func (h *Handler) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", appJSON)
-
 	options, err := optionsFromContext(r.Context())
 	if err != nil {
 		newErrorResponse(w, err.Error(), http.StatusBadRequest)

@@ -1,16 +1,19 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 )
+
+var errScanValuesError = errors.New("scan Values error")
 
 type Product struct {
 	ID              int       `db:"id" json:"id"`
 	UserID          int       `db:"user_id" json:"user_id"`
 	Title           string    `db:"title" json:"title" schema:"title" validate:"required"`
 	Price           float32   `db:"price" json:"price" schema:"price" validate:"required"`
-	Tag             *string   `db:"tag" json:"tag,omitempty" schema:"tag"`
+	Tags            Tags      `db:"tags" json:"tags,omitempty" schema:"tags"`
 	Category        string    `db:"category" json:"category" schema:"category" validate:"required"`
 	Description     *string   `db:"description" json:"description,omitempty" schema:"description"`
 	Amount          int       `db:"amount" json:"amount" schema:"amount" validate:"required"`
@@ -20,9 +23,15 @@ type Product struct {
 	UpdatedAt       time.Time `db:"updated_at" json:"updated_at"`
 	Views           int       `db:"views" json:"views"`
 	ImageURL        string    `db:"image_url" json:"image_url"`
-	ImageID         string    `db:"image_id"`
+	ImageID         string    `db:"image_id" json:"-"`
 	Reviews         []Review  `json:"reviews"`
 	RelatedProducts []Product `json:"related_products"`
+}
+
+type Tags []Tag
+
+type Tag struct {
+	Name string `db:"name" json:"name"`
 }
 
 type UpdateProductInput struct {
@@ -53,6 +62,23 @@ func (i ProductQueryInput) Validate() error {
 func (i UpdateProductInput) Validate() error {
 	if i.Title == nil && i.Price == nil && i.Tag == nil && i.Type == nil && i.Description == nil && i.Amount == nil && i.Views == nil && i.UpdatedAt == nil && (i.ImageURL == nil && i.ImageURL != i.ImageID) {
 		return errors.New("update structure has no values")
+	}
+	return nil
+}
+
+func (vals *Tags) Scan(src interface{}) error {
+	var data []byte
+	switch v := src.(type) {
+	case []byte:
+		data = v
+	case string:
+		data = []byte(v)
+	default:
+		return errScanValuesError
+	}
+	err := json.Unmarshal(data, vals)
+	if err != nil {
+		return err
 	}
 	return nil
 }

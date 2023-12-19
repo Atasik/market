@@ -29,8 +29,6 @@ definitions:
         type: integer
       image_url:
         type: string
-      imageID:
-        type: string
       order_id:
         type: integer
       price:
@@ -45,8 +43,10 @@ definitions:
         items:
           $ref: '#/definitions/model.Review'
         type: array
-      tag:
-        type: string
+      tags:
+        items:
+          $ref: '#/definitions/model.Tag'
+        type: array
       title:
         type: string
       updated_at:
@@ -82,6 +82,11 @@ definitions:
     required:
     - category
     - text
+    type: object
+  model.Tag:
+    properties:
+      name:
+        type: string
     type: object
   model.User:
     properties:
@@ -147,7 +152,7 @@ definitions:
       status:
         type: string
     type: object
-host: qgr9d1cp-8080.euw.devtunnels.ms
+host: localhost:8080
 info:
   contact: {}
   description: Simple market API
@@ -523,10 +528,13 @@ paths:
         name: price
         required: true
         type: number
-      - description: Tag of product
+      - collectionFormat: csv
+        description: Tag of product
         in: formData
-        name: tag
-        type: string
+        items:
+          type: string
+        name: tags
+        type: array
       - description: Category of product
         in: formData
         name: category

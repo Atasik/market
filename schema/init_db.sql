@@ -1,11 +1,13 @@
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS carts;
 DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS products_carts;
 DROP TABLE IF EXISTS products_users;
 DROP TABLE IF EXISTS products_orders;
+DROP TABLE IF EXISTS products_tags;
 
 CREATE TABLE users 
 (
@@ -30,8 +32,7 @@ CREATE TABLE products
   id            serial                                                        not null unique,
   user_id       int references users(id) on delete cascade                    not null,
   title         varchar(255)                                                  not null,
-  price         numeric                                    check (price > 0)  not null, 
-  tag           varchar(255), 
+  price         numeric                                    check (price > 0)  not null,
   category      varchar(255)                                                  not null,
   description   varchar(255), 
   amount        int                                        check (amount > 0) not null,
@@ -40,6 +41,12 @@ CREATE TABLE products
   views         int                                                           not null,
   image_url     varchar(255)                                                  not null,
   image_id      varchar(255)                                                  not null unique
+);
+
+CREATE TABLE tags
+(
+  id serial not null unique,
+  name varchar(255) not null
 );
 
 CREATE TABLE orders
@@ -82,5 +89,12 @@ CREATE TABLE products_orders
   product_id       int references products (id) on delete cascade                              not null,
   order_id         int references orders (id) on delete cascade                                not null,
   purchased_amount int                                            check (purchased_amount > 0) not null
+);
+
+CREATE TABLE products_tags
+(
+  id serial not null unique,
+  product_id int references products (id) on delete cascade not null,
+  tag_id int references tags (id) on delete cascade not null
 );
 

@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "qgr9d1cp-8080.euw.devtunnels.ms",
+    "host": "localhost:8080",
     "basePath": "/",
     "paths": {
         "/api/v1/cart": {
@@ -583,9 +583,13 @@
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "description": "Tag of product",
-                        "name": "tag",
+                        "name": "tags",
                         "in": "formData"
                     },
                     {
@@ -1502,9 +1506,6 @@
                 "id": {
                     "type": "integer"
                 },
-                "imageID": {
-                    "type": "string"
-                },
                 "image_url": {
                     "type": "string"
                 },
@@ -1529,8 +1530,11 @@
                         "$ref": "#/definitions/model.Review"
                     }
                 },
-                "tag": {
-                    "type": "string"
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Tag"
+                    }
                 },
                 "title": {
                     "type": "string"
@@ -1575,6 +1579,14 @@
                     "type": "integer"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Tag": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }
