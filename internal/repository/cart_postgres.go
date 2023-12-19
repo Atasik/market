@@ -62,7 +62,7 @@ func (repo *CartPostgresqlRepository) GetAllProducts(cartID int, q model.Product
 
 	args = append(args, q.Offset)
 
-	query := fmt.Sprintf(`SELECT p.id, p.user_id, p.title, p.price, p.tag, p.category, p.description, p.amount, pc.purchased_amount, p.created_at, p.updated_at, p.views, p.image_url FROM %s p 
+	query := fmt.Sprintf(`SELECT p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, pc.purchased_amount, p.created_at, p.updated_at, p.views, p.image_url FROM %s p 
 			  			  INNER JOIN %s pc on pc.product_id = p.id
 			  			  INNER JOIN %s c on pc.cart_id = c.id
 			 			  WHERE c.id = $1 ORDER BY %s %s %s OFFSET $%d`, productsTable, productsCartsTable, cartsTable, q.SortBy, q.SortOrder, limitValue, argID)
@@ -75,7 +75,7 @@ func (repo *CartPostgresqlRepository) GetAllProducts(cartID int, q model.Product
 
 func (repo *CartPostgresqlRepository) GetProductByID(cartID, productID int) (model.Product, error) {
 	var product model.Product
-	query := fmt.Sprintf(`SELECT p.id, p.user_id, p.title, p.price, p.tag, p.category, p.description, p.amount, pc.purchased_amount, p.created_at, p.updated_at, p.views, p.image_url FROM %s p 
+	query := fmt.Sprintf(`SELECT p.id, p.user_id, p.title, p.price, p.category, p.description, p.amount, pc.purchased_amount, p.created_at, p.updated_at, p.views, p.image_url FROM %s p 
 			  			  INNER JOIN %s pc on pc.product_id = p.id
 			  			  INNER JOIN %s c on pc.cart_id = c.id
 			 			  WHERE c.id = $1 AND p.id = $2`, productsTable, productsCartsTable, cartsTable)

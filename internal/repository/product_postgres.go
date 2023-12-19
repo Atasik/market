@@ -33,10 +33,7 @@ func (repo *ProductPostgresqlRepository) Create(product model.Product) (int, err
 		return 0, postgres.ParsePostgresError(err)
 	}
 
-	fmt.Println("goyda")
-	fmt.Println(product)
 	for i := 0; i < len(product.Tags); i++ {
-		fmt.Println(i)
 		var tagId int
 		query = "INSERT INTO tags (name) VALUES ($1) ON CONFLICT(id) DO NOTHING RETURNING id"
 		row := tx.QueryRow(query, product.Tags[i].Name)
