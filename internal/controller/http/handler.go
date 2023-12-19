@@ -10,6 +10,7 @@ import (
 	_ "market/docs"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -93,7 +94,11 @@ func (h *Handler) InitRoutes() http.Handler {
 
 	h.initAPI(r)
 
+	headersOk := handlers.AllowedHeaders([]string{"*"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "DELETE", "PUT", "OPTIONS"})
+
 	mux := h.accessLogMiddleware(r)
 	mux = panicMiddleware(mux)
-	return mux
+	return handlers.CORS(originsOk, headersOk, methodsOk)(mux)
 }

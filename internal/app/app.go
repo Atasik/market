@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"market/docs"
 	"market/internal/config"
 	ctrl "market/internal/controller/http"
 	"market/internal/model"
@@ -25,7 +26,7 @@ import (
 
 const (
 	timeout = 5 * time.Second
-	tunnel  = "qgr9d1cp-8080.euw.devtunnels.ms"
+	tunnel  = "62x1fswc-8080.euw.devtunnels.ms"
 )
 
 // @title Market API
@@ -39,20 +40,8 @@ const (
 // @in header
 // @name Authorization
 func Run(configDir string) {
-	// TODO: refactor logger
+	docs.SwaggerInfo.Host = tunnel
 
-	// zapLogger, err := logger.NewZapLogger("zap", context.TODO())
-	// if err != nil {
-	// 	log.Fatalf("Error occurred while loading zapLogger: %v", err.Error())
-	// 	return
-	// }
-	// defer func() {
-	// 	if err = zapLogger.Sync(); err != nil {
-	// 		zapLogger.Error("Error occurred while Sync", map[string]interface{}{"error": err.Error()})
-	// 	}
-	// }()
-
-	// docs.SwaggerInfo.Host = tunnel
 	zapLogger := logger.NewBlobLogger()
 
 	cfg, err := config.InitConfig(configDir)
